@@ -30,7 +30,7 @@ public strictfp class EvasiveArchon {
                 System.out.println(myLoc);
                 float[] directionWeights = new float[12];
                 for (RobotInfo ri : nearbyRobots) {
-                    if (ri.team == RobotPlayer.opponentTeam && ri.type != RobotType.GARDENER) {
+                    if (ri.team == RobotPlayer.opponentTeam && ri.type.canAttack()) {
                         Direction enemyAngle = myLoc.directionTo(ri.location);
                         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
                             float weightOffset = (50 * (180 - Math
