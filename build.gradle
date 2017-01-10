@@ -221,6 +221,6 @@ buildscript {
     }
     configurations.all {
         // Check for updates every build.
-        resolutionStrategy.cacheDynamicVersionsFor 3600, 'seconds'
+        resolutionStrategy.cacheDynamicVersionsFor 60, 'seconds'
     }
 }
