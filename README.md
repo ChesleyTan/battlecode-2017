@@ -225,3 +225,6 @@ We recommend using the map editor to create maps. The map editor can be ran from
 
 Most contestants choose to write their players in Java, but we also support
 Scala (or a mix of Java and Scala) out of the box, with the standard install.
+=======
+# battleCode
+MIT battleCode AI competition
