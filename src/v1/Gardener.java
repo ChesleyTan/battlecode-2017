@@ -7,7 +7,7 @@ public class Gardener extends Globals{
 	private static MapLocation[] otherArchonLoc;
 	private static int numTreesBuilt = 0;
 	private static Direction lastDir = null;
-	private static float detectRadius = 3f;
+	private static float detectRadius = 2.5f;
 	
 	public static void checkspace() throws GameActionException{
 		while(!rc.onTheMap(here.translate(0.001f, 0.001f), detectRadius) || rc.isCircleOccupiedExceptByThisRobot(here.translate(0.001f, 0.001f), detectRadius)){ 
@@ -66,7 +66,7 @@ public class Gardener extends Globals{
 			}
 			else if (rc.canMove(movedir.opposite())){
 				rc.move(movedir.opposite());
-				lastDir = movedir;
+				lastDir = movedir.opposite();
 			}
 			else{
 				float rand = (float)(Math.random() * 2 * Math.PI);
