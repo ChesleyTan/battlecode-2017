@@ -15,7 +15,6 @@ public strictfp class EvasiveArchon extends Globals {
   static int lastMoveAngleIndex = -1;
 
   static void run() throws GameActionException {
-    System.out.println("I'm an archon!");
     for (int angle = 0; angle < 12; ++angle) {
       angleDirections[angle] = new Direction((float) (angle * Math.PI / 6));
     }
@@ -34,6 +33,7 @@ public strictfp class EvasiveArchon extends Globals {
             Direction enemyAngle = here.directionTo(ri.location);
             System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
             for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+              // TODO avoid unnecessary angles
               float weightOffset = (100 * Math.max(0,
                   (70 - Math.abs(degreesBetween(enemyAngle, angleDirections[angleIndex])))));
               directionWeights[angleIndex] -= weightOffset;
@@ -44,11 +44,12 @@ public strictfp class EvasiveArchon extends Globals {
             }
           }
         }
-        TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+        TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5);
         for (TreeInfo ti : nearbyTrees) {
           Direction treeAngle = here.directionTo(ti.location);
           System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+            // TODO avoid unnecessary angles
             float weightOffset = (30 * Math.max(0,
                 (60 - Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex])))));
             directionWeights[angleIndex] -= weightOffset;
@@ -58,54 +59,78 @@ public strictfp class EvasiveArchon extends Globals {
                 + Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex])));
           }
         }
+        BulletInfo[] nearbyBullets = rc.senseNearbyBullets(7);
+        for (int i = 0; i < nearbyBullets.length && i < 5; ++i) {
+          BulletInfo bi = nearbyBullets[i];
+          if (RobotPlayer.willCollideWithMe(bi)) {
+            Direction bulletAngle = bi.location.directionTo(here);
+            System.out.println("Bullet angle: " + bulletAngle.getAngleDegrees());
+            int collisionAngleIndex = (int)bulletAngle.getAngleDegrees() / 30;
+            for (int angleIndexOffset = -1; angleIndexOffset <= 1; ++angleIndexOffset) {
+              int angleIndex = pmod(collisionAngleIndex + angleIndexOffset, 12);
+              // Avoid moving along axis of bullet trajectory
+              float weightOffset = (150 * (60 - 30 * Math.abs(angleIndexOffset)));
+              directionWeights[angleIndex] -= weightOffset;
+              System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
+                  + ":" + weightOffset);
+              System.out.println("Degrees between: "
+                  + Math.abs(degreesBetween(bulletAngle, angleDirections[angleIndex])));
+              // Avoid moving towards bullet
+              angleIndex = pmod(angleIndex + 6, 12);
+              weightOffset = (200 * (60 - 30 * Math.abs(angleIndexOffset)));
+              directionWeights[angleIndex] -= weightOffset;
+              System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
+                  + ":" + weightOffset);
+              System.out.println("Degrees between: "
+                  + Math.abs(degreesBetween(bulletAngle, angleDirections[angleIndex])));
+            }
+          }
+        }
         for (int angleIndex : cardinalAngleIndices) {
-          // Locate edges
-          if (angleIndex % 3 == 0) {
-            // FIXME is ARCHON_SIGHT_RADIUS broken?
-            MapLocation testLocation = here.add(angleDirections[angleIndex],
-                RobotType.ARCHON.sensorRadius - 1);
-            if (!rc.onTheMap(testLocation)) {
-              /*
-              System.out.println(testLocation.x);
-              System.out.println(myLoc.x);
-              System.out.println(testLocation.y);
-              System.out.println(myLoc.y);
-              System.out.println(angleDirections[angleIndex]);
-              */
-              switch (angleIndex) {
-                case 0:
-                  if (maxX == UNKNOWN) {
-                    maxX = testLocation.x;
-                  }
-                  else {
-                    maxX = Math.min(maxX, testLocation.x);
-                  }
-                  break;
-                case 3:
-                  if (maxY == UNKNOWN) {
-                    maxY = testLocation.y;
-                  }
-                  else {
-                    maxY = Math.min(maxY, testLocation.y);
-                  }
-                  break;
-                case 6:
-                  if (minX == UNKNOWN) {
-                    minX = testLocation.x;
-                  }
-                  else {
-                    minX = Math.max(minX, testLocation.x);
-                  }
-                  break;
-                case 9:
-                  if (minY == UNKNOWN) {
-                    minY = testLocation.y;
-                  }
-                  else {
-                    minY = Math.max(minY, testLocation.y);
-                  }
-                  break;
-              }
+          // FIXME is ARCHON_SIGHT_RADIUS broken?
+          MapLocation testLocation = here.add(angleDirections[angleIndex],
+              RobotType.ARCHON.sensorRadius - 1);
+          if (!rc.onTheMap(testLocation)) {
+            /*
+            System.out.println(testLocation.x);
+            System.out.println(myLoc.x);
+            System.out.println(testLocation.y);
+            System.out.println(myLoc.y);
+            System.out.println(angleDirections[angleIndex]);
+            */
+            switch (angleIndex) {
+              case 0:
+                if (maxX == UNKNOWN) {
+                  maxX = testLocation.x;
+                }
+                else {
+                  maxX = Math.min(maxX, testLocation.x);
+                }
+                break;
+              case 3:
+                if (maxY == UNKNOWN) {
+                  maxY = testLocation.y;
+                }
+                else {
+                  maxY = Math.min(maxY, testLocation.y);
+                }
+                break;
+              case 6:
+                if (minX == UNKNOWN) {
+                  minX = testLocation.x;
+                }
+                else {
+                  minX = Math.max(minX, testLocation.x);
+                }
+                break;
+              case 9:
+                if (minY == UNKNOWN) {
+                  minY = testLocation.y;
+                }
+                else {
+                  minY = Math.max(minY, testLocation.y);
+                }
+                break;
             }
           }
         }
@@ -206,6 +231,14 @@ public strictfp class EvasiveArchon extends Globals {
       }
 
     }
+  }
+  
+  private static int pmod(int n, int modulo) {
+    int m = n % modulo;
+    if (m < 0) {
+      return m + modulo;
+    }
+    return m;
   }
 
   public static float radiansBetween(Direction a, Direction b) {
