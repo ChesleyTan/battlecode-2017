@@ -5,7 +5,11 @@ import battlecode.common.*;
 public class Scout extends Globals{
 	
   private static final int attack_start_channel = 500;
-  private static final int defense_start_channel = 500;
+  private static final int defense_start_channel = 250;
+  private static final int target_channel = 451;
+  private enum Mode {ROAM, ATTACK};
+  private static Mode current_mode = Mode.ROAM;
+  private static Direction direction;
   
   public static void dodge() throws GameActionException {
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
@@ -60,15 +64,40 @@ public class Scout extends Globals{
       return;
     }
     else{
+      RobotInfo enemy = enemies[0];
+      rc.broadcast(target_channel, 1);
+      rc.broadcast(target_channel + 1, (int)(enemy.location.x));
+      rc.broadcast(target_channel + 2, (int)(enemy.location.y));
       dodge();
-      RobotInfo target = enemies[0];
-      MapLocation center = target.location;
+      MapLocation center = enemy.location;
       rc.fireSingleShot(here.directionTo(center));
+      current_mode = Mode.ATTACK;
     }
   }
   
   
 	public static void loop() throws GameActionException {
-	  
+	  while(true){
+	    Globals.update();
+  	  if(current_mode == Mode.ROAM){
+  	    int target = rc.readBroadcast(target_channel);
+  	    if (target != 0){
+  	      current_mode = Mode.ATTACK;
+  	      int xLoc = rc.readBroadcast(target_channel + 1);
+  	      int yLoc = rc.readBroadcast(target_channel + 2);
+  	      Direction target_direction = here.directionTo(new MapLocation(xLoc, yLoc));
+  	      direction = target_direction;
+  	      dodge();
+  	      if(rc.canMove(direction) && !rc.hasMoved()){
+  	        rc.move(direction);
+  	      }
+  	      Clock.yield();
+  	    }
+  	    else{
+  	      alert();
+  	    }
+  	  }
+  	  
+	  }
 	}
 }
