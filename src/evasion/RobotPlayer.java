@@ -225,7 +225,7 @@ public strictfp class RobotPlayer extends Globals {
    *         current position.
    */
   static boolean willCollideWithMe(BulletInfo bullet) {
-    MapLocation myLocation = rc.getLocation();
+    MapLocation myLocation = here;
 
     // Get relevant bullet information
     Direction propagationDirection = bullet.dir;
@@ -247,6 +247,6 @@ public strictfp class RobotPlayer extends Globals {
     // line that is the path of the bullet.
     float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
 
-    return (perpendicularDist <= rc.getType().bodyRadius);
+    return (perpendicularDist <= myType.bodyRadius);
   }
 }
