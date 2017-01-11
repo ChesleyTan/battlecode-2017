@@ -4,11 +4,6 @@ import battlecode.common.*;
 
 public strictfp class EvasiveArchon extends Globals {
     // Change to RobotType enums
-    static int ARCHON_BODY_RADIUS = 2;
-    static int ARCHON_HP = 400;
-    static int ARCHON_SIGHT_RADIUS = 10;
-    static int ARCHON_BULLET_SIGHT_RADIUS = 15;
-    static int ARCHON_STRIDE_RADIUS = 1;
     static Direction[] angleDirections = new Direction[12];
     static final int[] cardinalAngleIndices = new int[] { 0, 3, 6, 9 };
     static float UNKNOWN = -1f;
@@ -70,7 +65,7 @@ public strictfp class EvasiveArchon extends Globals {
                     if (angleIndex % 3 == 0) {
                         // FIXME is ARCHON_SIGHT_RADIUS broken?
                         MapLocation testLocation = here.add(angleDirections[angleIndex],
-                                ARCHON_SIGHT_RADIUS - 1);
+                                RobotType.ARCHON.sensorRadius - 1);
                         if (!rc.onTheMap(testLocation)) {
                             /*
                             System.out.println(testLocation.x);
