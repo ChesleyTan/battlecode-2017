@@ -40,9 +40,30 @@ public class LoggerUtils {
    * Will do nothing if Globals.DEBUG = false
    * OR if the channel specified is not the current active channel.
    * @param msg The message to output to the console
+   * @param channel The channel to output on
    */
   public static void log(String channel, String msg) {
     if (Globals.DEBUG && channel.equalsIgnoreCase(activeChannel)) System.out.println(msg);
+  }
+
+  /**
+   * Logs an object to the current active channel.
+   * Will do nothing if Globals.DEBUG = false
+   * @param obj The specified object to output to the console
+   */
+  public static void log(Object obj) {
+    if (Globals.DEBUG) System.out.println(obj);
+  }
+
+  /**
+   * Logs an object to the current active channel.
+   * Will do nothing if Globals.DEBUG = false
+   * OR if the channel specified is not the current active channel.
+   * @param obj The specified object to output to the console
+   * @param channel The channel to output on
+   */
+  public static void log(String channel, Object obj) {
+    if (Globals.DEBUG && channel.equalsIgnoreCase(activeChannel)) System.out.println(obj);
   }
 
   /**
@@ -59,6 +80,7 @@ public class LoggerUtils {
    * Will do nothing if Globals.DEBUG = false
    * OR if the channel specified is not the current active channel.
    * @param e The specified exception
+   * @param channel The channel to output on
    */
   public static void printStackTrace(String channel, Throwable e) {
     if (Globals.DEBUG && channel.equalsIgnoreCase(activeChannel)) e.printStackTrace();
