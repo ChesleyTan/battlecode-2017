@@ -2,18 +2,22 @@ package evasion;
 
 import battlecode.common.*;
 
-public strictfp class EvasiveArchon {
+public strictfp class EvasiveArchon extends Globals {
+    // Change to RobotType enums
     static int ARCHON_BODY_RADIUS = 2;
     static int ARCHON_HP = 400;
     static int ARCHON_SIGHT_RADIUS = 10;
     static int ARCHON_BULLET_SIGHT_RADIUS = 15;
     static int ARCHON_STRIDE_RADIUS = 1;
     static Direction[] angleDirections = new Direction[12];
+    static final int[] cardinalAngleIndices = new int[] { 0, 3, 6, 9 };
     static float UNKNOWN = -1f;
     static float minX = UNKNOWN;
     static float minY = UNKNOWN;
     static float maxX = UNKNOWN;
     static float maxY = UNKNOWN;
+    static final int EDGE_BIAS_RADIUS = 15;
+    static int lastMoveAngleIndex = -1;
 
     static void run() throws GameActionException {
         System.out.println("I'm an archon!");
@@ -25,33 +29,49 @@ public strictfp class EvasiveArchon {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-                RobotInfo[] nearbyRobots = RobotPlayer.rc.senseNearbyRobots();
-                MapLocation myLoc = RobotPlayer.rc.getLocation();
-                System.out.println(myLoc);
+                Globals.update();
+                System.out.println("========== Round: " + rc.getRoundNum() + "==========");
+                RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+                System.out.println(here);
                 float[] directionWeights = new float[12];
                 for (RobotInfo ri : nearbyRobots) {
-                    if (ri.team == RobotPlayer.opponentTeam && ri.type != RobotType.GARDENER) {
-                        Direction enemyAngle = myLoc.directionTo(ri.location);
+                    if (ri.team == them && ri.type.canAttack()) {
+                        Direction enemyAngle = here.directionTo(ri.location);
+                        System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
                         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-                            float weightOffset = (50 * (180 - Math
-                                    .abs(enemyAngle.degreesBetween(angleDirections[angleIndex]))));
+                            float weightOffset = (100 * Math.max(0, (70 - Math.abs(
+                                    degreesBetween(enemyAngle, angleDirections[angleIndex])))));
                             directionWeights[angleIndex] -= weightOffset;
-                            System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
                             System.out.println("Weight for angle "
                                     + angleDirections[angleIndex].getAngleDegrees() + ":"
                                     + weightOffset);
-                            System.out.println("Degrees between: "
-                                    + Math.abs(enemyAngle.degreesBetween(angleDirections[angleIndex])));
+                            System.out.println("Degrees between: " + Math
+                                    .abs(degreesBetween(enemyAngle, angleDirections[angleIndex])));
                         }
                     }
                 }
-                for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+                TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+                for (TreeInfo ti : nearbyTrees) {
+                    Direction treeAngle = here.directionTo(ti.location);
+                    System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
+                    for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+                        float weightOffset = (30 * Math.max(0, (60 - Math
+                                .abs(degreesBetween(treeAngle, angleDirections[angleIndex])))));
+                        directionWeights[angleIndex] -= weightOffset;
+                        System.out.println(
+                                "Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
+                                        + ":" + weightOffset);
+                        System.out.println("Degrees between: "
+                                + Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex])));
+                    }
+                }
+                for (int angleIndex : cardinalAngleIndices) {
                     // Locate edges
                     if (angleIndex % 3 == 0) {
                         // FIXME is ARCHON_SIGHT_RADIUS broken?
-                        MapLocation testLocation = myLoc.add(angleDirections[angleIndex],
+                        MapLocation testLocation = here.add(angleDirections[angleIndex],
                                 ARCHON_SIGHT_RADIUS - 1);
-                        if (!RobotPlayer.rc.onTheMap(testLocation)) {
+                        if (!rc.onTheMap(testLocation)) {
                             /*
                             System.out.println(testLocation.x);
                             System.out.println(myLoc.x);
@@ -103,47 +123,51 @@ public strictfp class EvasiveArchon {
                 System.out.println("maxY: " + maxY);
                 */
                 // Avoid corners and edges
-                /*
-                if (minX != UNKNOWN && myLoc.x - minX < 5) {
+                if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
                     for (int angleIndex = 4; angleIndex < 9; ++angleIndex) {
-                        directionWeights[angleIndex] -= 10000;
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (here.x - minX));
                     }
                 }
-                if (minY != UNKNOWN && myLoc.y - minY < 5) {
+                if (minY != UNKNOWN && here.y - minY < EDGE_BIAS_RADIUS) {
                     for (int angleIndex = 7; angleIndex < 12; ++angleIndex) {
-                        directionWeights[angleIndex] -= 10000;
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (here.y - minY));
                     }
                 }
-                if (maxX != UNKNOWN && maxX - myLoc.x < 5) {
+                if (maxX != UNKNOWN && maxX - here.x < EDGE_BIAS_RADIUS) {
                     for (int angleIndex = 0; angleIndex < 3; ++angleIndex) {
-                        directionWeights[angleIndex] -= 10000;
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxX - here.x));
                     }
                     for (int angleIndex = 10; angleIndex < 12; ++angleIndex) {
-                        directionWeights[angleIndex] -= 10000;
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxX - here.x));
                     }
                 }
-                if (maxY != UNKNOWN && maxY - myLoc.y < 5) {
+                if (maxY != UNKNOWN && maxY - here.y < EDGE_BIAS_RADIUS) {
                     for (int angleIndex = 1; angleIndex < 6; ++angleIndex) {
-                        directionWeights[angleIndex] -= 10000;
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxY - here.y));
                     }
                 }
-                */
                 for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
                     System.out.println("Angle: " + (angleIndex * 30) + ", Weight: "
                             + directionWeights[angleIndex]);
                 }
                 // TODO avoid corners using messaging
-                //RobotPlayer.rc.setIndicatorDot(arg0, arg1, arg2, arg3);
+                //rc.setIndicatorDot(arg0, arg1, arg2, arg3);
                 /*
                 // Generate a random direction
                 Direction dir = RobotPlayer.randomDirection();
                 
                 // Randomly attempt to build a gardener in this direction
                 
-                if (RobotPlayer.rc.canHireGardener(dir)) {
-                    RobotPlayer.rc.hireGardener(dir);
+                if (rc.canHireGardener(dir)) {
+                    rc.hireGardener(dir);
                 }
                 */
+
+                // Increase preference for last direction moved,
+                // helps prevent getting trapped in an oscillation
+                if (lastMoveAngleIndex >= 0) {
+                    directionWeights[lastMoveAngleIndex] += 5000;
+                }
 
                 int moveAngleIndex = 0;
                 int attempts = 0;
@@ -155,16 +179,33 @@ public strictfp class EvasiveArchon {
                             moveAngleIndex = angleIndex;
                         }
                     }
-                    directionWeights[moveAngleIndex] -= 999999;
                     System.out.println(
                             "Trying to move in direction: " + angleDirections[moveAngleIndex]);
                     moved = RobotPlayer.tryMove(angleDirections[moveAngleIndex], 5, 3);
-                } while (!moved && ++attempts <= 3);
-
+                    rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255,
+                            0);
+                    rc.setIndicatorLine(here.add(angleDirections[moveAngleIndex], 1),
+                            here.add(angleDirections[moveAngleIndex], 1.5f), 255, 0, 0);
+                    rc.setIndicatorDot(here, 0, 0, 0);
+                    for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+                        rc.setIndicatorDot(here.add(angleDirections[angleIndex]),
+                                (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
+                                (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
+                                (int) Math.max(-25500, directionWeights[angleIndex]) / (-100));
+                    }
+                    directionWeights[moveAngleIndex] -= 999999;
+                } while (!moved && ++attempts <= 12);
+                if (attempts > 12) {
+                    RobotPlayer.tryMove(Direction.getNorth(), 10, 18);
+                    lastMoveAngleIndex = -1;
+                }
+                else {
+                    lastMoveAngleIndex = moveAngleIndex;
+                }
                 // Broadcast archon's location for other robots on the team to know
-                RobotPlayer.rc.broadcast(0, (int) myLoc.x);
-                RobotPlayer.rc.broadcast(1, (int) myLoc.y);
-
+                rc.broadcast(0, (int) here.x);
+                rc.broadcast(1, (int) here.y);
+                System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
 
@@ -172,6 +213,28 @@ public strictfp class EvasiveArchon {
                 System.out.println("Archon Exception");
                 e.printStackTrace();
             }
+
         }
+    }
+
+    public static float radiansBetween(Direction a, Direction b) {
+        return reduce(b.radians - a.radians);
+    }
+
+    public static float degreesBetween(Direction a, Direction b) {
+        return (float) Math.toDegrees(radiansBetween(a, b));
+    }
+
+    // Internally used to keep angles in the range (-Math.PI,Math.PI]
+    private static float reduce(float rads) {
+        if (rads <= -Math.PI) {
+            int circles = (int) Math.ceil(-(rads + Math.PI) / (2 * Math.PI));
+            return rads + (float) (Math.PI * 2 * circles);
+        }
+        else if (rads > Math.PI) {
+            int circles = (int) Math.ceil((rads - Math.PI) / (2 * Math.PI));
+            return rads - (float) (Math.PI * 2 * circles);
+        }
+        return rads;
     }
 }
