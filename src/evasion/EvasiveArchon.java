@@ -24,39 +24,49 @@ public strictfp class EvasiveArchon extends Globals {
       // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
       try {
         Globals.update();
-        System.out.println("========== Round: " + rc.getRoundNum() + "==========");
+        if (DEBUG) {
+          System.out.println("========== Round: " + rc.getRoundNum() + "==========");
+          System.out.println(here);
+        }
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
-        System.out.println(here);
         float[] directionWeights = new float[12];
         for (RobotInfo ri : nearbyRobots) {
           if (ri.team == them && ri.type.canAttack()) {
             Direction enemyAngle = here.directionTo(ri.location);
-            System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
+            if (DEBUG) {
+              System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
+            }
             for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
               // TODO avoid unnecessary angles
               float weightOffset = (100 * Math.max(0,
                   (70 - Math.abs(degreesBetween(enemyAngle, angleDirections[angleIndex])))));
               directionWeights[angleIndex] -= weightOffset;
-              System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
-                  + ":" + weightOffset);
-              System.out.println("Degrees between: "
-                  + Math.abs(degreesBetween(enemyAngle, angleDirections[angleIndex])));
+              if (DEBUG) {
+                System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
+                    + ":" + weightOffset);
+                System.out.println("Degrees between: "
+                    + Math.abs(degreesBetween(enemyAngle, angleDirections[angleIndex])));
+              }
             }
           }
         }
         TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5);
         for (TreeInfo ti : nearbyTrees) {
           Direction treeAngle = here.directionTo(ti.location);
-          System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
+          if (DEBUG) {
+            System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
+          }
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
             // TODO avoid unnecessary angles
             float weightOffset = (30 * Math.max(0,
                 (60 - Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex])))));
             directionWeights[angleIndex] -= weightOffset;
-            System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
-                + ":" + weightOffset);
-            System.out.println("Degrees between: "
-                + Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex])));
+            if (DEBUG) {
+              System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
+                  + ":" + weightOffset);
+              System.out.println("Degrees between: "
+                  + Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex])));
+            }
           }
         }
         BulletInfo[] nearbyBullets = rc.senseNearbyBullets(7);
@@ -64,25 +74,31 @@ public strictfp class EvasiveArchon extends Globals {
           BulletInfo bi = nearbyBullets[i];
           if (RobotPlayer.willCollideWithMe(bi)) {
             Direction bulletAngle = bi.location.directionTo(here);
-            System.out.println("Bullet angle: " + bulletAngle.getAngleDegrees());
+            if (DEBUG) {
+              System.out.println("Bullet angle: " + bulletAngle.getAngleDegrees());
+            }
             int collisionAngleIndex = (int)bulletAngle.getAngleDegrees() / 30;
             for (int angleIndexOffset = -1; angleIndexOffset <= 1; ++angleIndexOffset) {
               int angleIndex = pmod(collisionAngleIndex + angleIndexOffset, 12);
               // Avoid moving along axis of bullet trajectory
               float weightOffset = (150 * (60 - 30 * Math.abs(angleIndexOffset)));
               directionWeights[angleIndex] -= weightOffset;
-              System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
-                  + ":" + weightOffset);
-              System.out.println("Degrees between: "
-                  + Math.abs(degreesBetween(bulletAngle, angleDirections[angleIndex])));
+              if (DEBUG) {
+                System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
+                    + ":" + weightOffset);
+                System.out.println("Degrees between: "
+                    + Math.abs(degreesBetween(bulletAngle, angleDirections[angleIndex])));
+              }
               // Avoid moving towards bullet
               angleIndex = pmod(angleIndex + 6, 12);
               weightOffset = (200 * (60 - 30 * Math.abs(angleIndexOffset)));
               directionWeights[angleIndex] -= weightOffset;
-              System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
-                  + ":" + weightOffset);
-              System.out.println("Degrees between: "
-                  + Math.abs(degreesBetween(bulletAngle, angleDirections[angleIndex])));
+              if (DEBUG) {
+                System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
+                    + ":" + weightOffset);
+                System.out.println("Degrees between: "
+                    + Math.abs(degreesBetween(bulletAngle, angleDirections[angleIndex])));
+              }
             }
           }
         }
@@ -91,13 +107,6 @@ public strictfp class EvasiveArchon extends Globals {
           MapLocation testLocation = here.add(angleDirections[angleIndex],
               RobotType.ARCHON.sensorRadius - 1);
           if (!rc.onTheMap(testLocation)) {
-            /*
-            System.out.println(testLocation.x);
-            System.out.println(myLoc.x);
-            System.out.println(testLocation.y);
-            System.out.println(myLoc.y);
-            System.out.println(angleDirections[angleIndex]);
-            */
             switch (angleIndex) {
               case 0:
                 if (maxX == UNKNOWN) {
@@ -135,10 +144,12 @@ public strictfp class EvasiveArchon extends Globals {
           }
         }
         /*
-        System.out.println("minX: " + minX);
-        System.out.println("maxX: " + maxX);
-        System.out.println("minY: " + minY);
-        System.out.println("maxY: " + maxY);
+        if (DEBUG) {
+          System.out.println("minX: " + minX);
+          System.out.println("maxX: " + maxX);
+          System.out.println("minY: " + minY);
+          System.out.println("maxY: " + maxY);
+        }
         */
         // Avoid corners and edges
         if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
@@ -164,18 +175,18 @@ public strictfp class EvasiveArchon extends Globals {
             directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxY - here.y));
           }
         }
-        for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-          System.out
-              .println("Angle: " + (angleIndex * 30) + ", Weight: " + directionWeights[angleIndex]);
+        if (DEBUG) {
+          for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+            System.out
+                .println("Angle: " + (angleIndex * 30) + ", Weight: " + directionWeights[angleIndex]);
+          }
         }
         // TODO avoid corners using messaging
-        //rc.setIndicatorDot(arg0, arg1, arg2, arg3);
         /*
         // Generate a random direction
         Direction dir = RobotPlayer.randomDirection();
         
         // Randomly attempt to build a gardener in this direction
-        
         if (rc.canHireGardener(dir)) {
             rc.hireGardener(dir);
         }
@@ -197,17 +208,21 @@ public strictfp class EvasiveArchon extends Globals {
               moveAngleIndex = angleIndex;
             }
           }
-          System.out.println("Trying to move in direction: " + angleDirections[moveAngleIndex]);
+          if (DEBUG) {
+            System.out.println("Trying to move in direction: " + angleDirections[moveAngleIndex]);
+          }
           moved = RobotPlayer.tryMove(angleDirections[moveAngleIndex], 5, 3);
-          rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255, 0);
-          rc.setIndicatorLine(here.add(angleDirections[moveAngleIndex], 1),
-              here.add(angleDirections[moveAngleIndex], 1.5f), 255, 0, 0);
-          rc.setIndicatorDot(here, 0, 0, 0);
-          for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-            rc.setIndicatorDot(here.add(angleDirections[angleIndex]),
-                (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
-                (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
-                (int) Math.max(-25500, directionWeights[angleIndex]) / (-100));
+          if (DEBUG) {
+            rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255, 0);
+            rc.setIndicatorLine(here.add(angleDirections[moveAngleIndex], 1),
+                here.add(angleDirections[moveAngleIndex], 1.5f), 255, 0, 0);
+            rc.setIndicatorDot(here, 0, 0, 0);
+            for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+              rc.setIndicatorDot(here.add(angleDirections[angleIndex]),
+                  (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
+                  (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
+                  (int) Math.max(-25500, directionWeights[angleIndex]) / (-100));
+            }
           }
           directionWeights[moveAngleIndex] -= 999999;
         } while (!moved && ++attempts <= 12);
@@ -221,7 +236,9 @@ public strictfp class EvasiveArchon extends Globals {
         // Broadcast archon's location for other robots on the team to know
         rc.broadcast(0, (int) here.x);
         rc.broadcast(1, (int) here.y);
-        System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
+        if (DEBUG) {
+          System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
+        }
         // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
         Clock.yield();
 
@@ -229,7 +246,6 @@ public strictfp class EvasiveArchon extends Globals {
         System.out.println("Archon Exception");
         e.printStackTrace();
       }
-
     }
   }
   
