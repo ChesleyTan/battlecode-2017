@@ -58,14 +58,14 @@ public class Archon extends Globals{
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
-      System.out.println("========== Round: " + rc.getRoundNum() + "==========");
+      //System.out.println("========== Round: " + rc.getRoundNum() + "==========");
       RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
-      System.out.println(here);
+      //System.out.println(here);
       float[] directionWeights = new float[12];
       for (RobotInfo ri : nearbyRobots) {
           if (ri.team == them && ri.type.canAttack()) {
               Direction enemyAngle = here.directionTo(ri.location);
-              System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
+              //System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
               for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
                   float weightOffset = (100 * Math.max(0, (70 - Math.abs(
                           RobotPlayer.degreesBetween(enemyAngle, angleDirections[angleIndex])))));
@@ -81,16 +81,16 @@ public class Archon extends Globals{
       TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
       for (TreeInfo ti : nearbyTrees) {
           Direction treeAngle = here.directionTo(ti.location);
-          System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
+          //System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
               float weightOffset = (30 * Math.max(0, (60 - Math
                       .abs(RobotPlayer.degreesBetween(treeAngle, angleDirections[angleIndex])))));
               directionWeights[angleIndex] -= weightOffset;
-              System.out.println(
-                      "Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
-                              + ":" + weightOffset);
-              System.out.println("Degrees between: "
-                      + Math.abs(RobotPlayer.degreesBetween(treeAngle, angleDirections[angleIndex])));
+              //System.out.println(
+              //        "Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
+              //                + ":" + weightOffset);
+              //System.out.println("Degrees between: "
+              //        + Math.abs(RobotPlayer.degreesBetween(treeAngle, angleDirections[angleIndex])));
           }
       }
       for (int angleIndex : cardinalAngleIndices) {
@@ -175,8 +175,8 @@ public class Archon extends Globals{
           }
       }
       for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-          System.out.println("Angle: " + (angleIndex * 30) + ", Weight: "
-                  + directionWeights[angleIndex]);
+          //System.out.println("Angle: " + (angleIndex * 30) + ", Weight: "
+          //        + directionWeights[angleIndex]);
       }
       // TODO avoid corners using messaging
       //rc.setIndicatorDot(arg0, arg1, arg2, arg3);
@@ -207,8 +207,8 @@ public class Archon extends Globals{
                   moveAngleIndex = angleIndex;
               }
           }
-          System.out.println(
-                  "Trying to move in direction: " + angleDirections[moveAngleIndex]);
+          //System.out.println(
+          //        "Trying to move in direction: " + angleDirections[moveAngleIndex]);
           moved = tryMove(angleDirections[moveAngleIndex], 5, 3);
           rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255,
                   0);
@@ -236,7 +236,7 @@ public class Archon extends Globals{
       // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
 
     }catch (Exception e) {
-      System.out.println("Archon Exception");
+      //System.out.println("Archon Exception");
       e.printStackTrace();
     }
     
@@ -267,7 +267,7 @@ public class Archon extends Globals{
 				int donationAmount = (int)((int)(rc.getTeamBullets() / 10) * 10 - 150);
 				rc.donate((float)donationAmount);
 			}
-			System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
+			//System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
 			Clock.yield();
 		}
 	}

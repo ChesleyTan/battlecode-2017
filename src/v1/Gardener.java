@@ -85,7 +85,7 @@ public class Gardener extends Globals{
 		while(true){
 			try{
 				Globals.update();
-				if (numTreesBuilt < 6 && rc.canPlantTree(Direction.getNorth().rotateLeftDegrees(60 * numTreesBuilt))){
+				if (numTreesBuilt < 5 && rc.canPlantTree(Direction.getNorth().rotateLeftDegrees(60 * numTreesBuilt))){
 					rc.plantTree(Direction.getNorth().rotateLeftDegrees(60*numTreesBuilt));
 					numTreesBuilt++;
 				}
@@ -93,11 +93,11 @@ public class Gardener extends Globals{
 					checkspace();
 					Clock.yield();
 				}
-				/*else{
-					if(rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth().rotateRightDegrees(60))){
+				else{
+					if(rc.getRoundNum() % 10 == 0 && rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth().rotateRightDegrees(60))){
 						rc.buildRobot(RobotType.SCOUT, Direction.getNorth().rotateRightDegrees(60));
 					}
-				}*/
+				}
 				TreeInfo[] nearbyTrees = rc.senseNearbyTrees(2, us);
 				if (nearbyTrees != null && nearbyTrees.length != 0){
 					TreeInfo minWaterable = nearbyTrees[0];
