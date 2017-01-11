@@ -145,12 +145,16 @@ public class Scout extends Globals{
     	    int target = rc.readBroadcast(target_channel);
     	    if(rc.canSenseRobot(target)){
     	      while(rc.canSenseRobot(target)){
+    	        Globals.update();
     	        engage(target);
     	        Clock.yield();
     	      }
     	      rc.broadcast(target_channel, 0);
             current_mode = "ROAM";
             direction = new Direction((float)(Math.random() * 2 * Math.PI));
+            if (!rc.hasMoved() && rc.canMove(direction)){
+              rc.move(direction);
+            }
     	    }
     	    else{
     	      if (rc.readBroadcast(target_channel) != 0){
