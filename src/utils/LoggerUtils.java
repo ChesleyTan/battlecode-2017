@@ -1,10 +1,11 @@
 package utils;
 
+import v1.Globals;
+
 /**
  * Created by Ryan on 1/11/2017.
  */
 public class LoggerUtils {
-  public static final boolean IS_DEBUG = false;
 
   private static String activeChannel = "";
 
@@ -27,7 +28,7 @@ public class LoggerUtils {
    * @param msg The message to output to the console
    */
   public static void log(String msg) {
-    if (IS_DEBUG) System.out.println(msg);
+    if (Globals.DEBUG) System.out.println(msg);
   }
 
   /**
@@ -37,7 +38,7 @@ public class LoggerUtils {
    * @param msg The message to output to the console
    */
   public static void log(String channel, String msg) {
-    if (IS_DEBUG && channel.equalsIgnoreCase(activeChannel)) System.out.println(msg);
+    if (Globals.DEBUG && channel.equalsIgnoreCase(activeChannel)) System.out.println(msg);
   }
 
 
