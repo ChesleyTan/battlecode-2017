@@ -14,60 +14,45 @@ public class Archon extends Globals{
   static final int[] cardinalAngleIndices = new int[] { 0, 3, 6, 9 };
   static final int EDGE_BIAS_RADIUS = 15;
   static int lastMoveAngleIndex = -1;
-	
-    public static float degreesBetween(Direction a, Direction b) {
-      return (float) Math.toDegrees(radiansBetween(a, b));
-    }
-    public static float radiansBetween(Direction a, Direction b) {
-      return reduce(b.radians - a.radians);
-    }
-    private static float reduce(float rads) {
-      if (rads <= -Math.PI) {
-          int circles = (int) Math.ceil(-(rads + Math.PI) / (2 * Math.PI));
-          return rads + (float) (Math.PI * 2 * circles);
-      }
-      else if (rads > Math.PI) {
-          int circles = (int) Math.ceil((rads - Math.PI) / (2 * Math.PI));
-          return rads - (float) (Math.PI * 2 * circles);
-      }
-      return rads;
-    }
-    static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
-            throws GameActionException {
+  
+  static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
+      throws GameActionException {
 
-        // First, try intended direction
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-            return true;
-        }
-
-        // Now try a bunch of similar angles
-        boolean moved = false;
-        int currentCheck = 1;
-
-        while (currentCheck <= checksPerSide) {
-            // Try the offset of the left side
-            if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
-                rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
-                return true;
-            }
-            // Try the offset on the right side
-            if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
-                rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
-                return true;
-            }
-            // No move performed, try slightly further
-            currentCheck++;
-        }
-
-        // A move never happened, so return false.
-        return false;
+    // First, try intended direction
+    if (rc.canMove(dir)) {
+        rc.move(dir);
+        return true;
     }
     
+    // Now try a bunch of similar angles
+    boolean moved = false;
+    int currentCheck = 1;
+    
+    while (currentCheck <= checksPerSide) {
+        // Try the offset of the left side
+        if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
+            rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
+            return true;
+        }
+        // Try the offset on the right side
+        if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
+            rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
+            return true;
+        }
+        // No move performed, try slightly further
+        currentCheck++;
+    }
+
+    // A move never happened, so return false.
+    return false;
+  }
+    
 	public static void moveDirection() throws GameActionException {
+	  
 	  for (int angle = 0; angle < 12; ++angle) {
       angleDirections[angle] = new Direction((float) (angle * Math.PI / 6));
 	  }
+	  
 	  // The code you want your robot to perform every round should be in this loop
 
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
@@ -83,7 +68,7 @@ public class Archon extends Globals{
               System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
               for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
                   float weightOffset = (100 * Math.max(0, (70 - Math.abs(
-                          degreesBetween(enemyAngle, angleDirections[angleIndex])))));
+                          RobotPlayer.degreesBetween(enemyAngle, angleDirections[angleIndex])))));
                   directionWeights[angleIndex] -= weightOffset;
                   /*System.out.println("Weight for angle "
                           + angleDirections[angleIndex].getAngleDegrees() + ":"
@@ -99,13 +84,13 @@ public class Archon extends Globals{
           System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
               float weightOffset = (30 * Math.max(0, (60 - Math
-                      .abs(degreesBetween(treeAngle, angleDirections[angleIndex])))));
+                      .abs(RobotPlayer.degreesBetween(treeAngle, angleDirections[angleIndex])))));
               directionWeights[angleIndex] -= weightOffset;
               System.out.println(
                       "Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
                               + ":" + weightOffset);
               System.out.println("Degrees between: "
-                      + Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex])));
+                      + Math.abs(RobotPlayer.degreesBetween(treeAngle, angleDirections[angleIndex])));
           }
       }
       for (int angleIndex : cardinalAngleIndices) {
@@ -248,15 +233,15 @@ public class Archon extends Globals{
       // Broadcast archon's location for other robots on the team to know
       rc.broadcast(0, (int) here.x);
       rc.broadcast(1, (int) here.y);
-      System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
       // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
 
-  } catch (Exception e) {
+    }catch (Exception e) {
       System.out.println("Archon Exception");
       e.printStackTrace();
-  }
-
- }
+    }
+    
+	}
+	
 	public static boolean enemyNearby() throws GameActionException {
 		RobotInfo[] robots = rc.senseNearbyRobots();
 		if (robots != null){
@@ -268,6 +253,7 @@ public class Archon extends Globals{
 		}
 		return false;
 	}
+	
 	public static void loop() throws GameActionException{
 		while(true){
 			if(rc.canHireGardener(Direction.getNorth()) && producedGardeners < 5){
@@ -281,7 +267,9 @@ public class Archon extends Globals{
 				int donationAmount = (int)((int)(rc.getTeamBullets() / 10) * 10 - 150);
 				rc.donate((float)donationAmount);
 			}
+			System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
 			Clock.yield();
 		}
 	}
+	
 }
