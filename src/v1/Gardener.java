@@ -8,6 +8,9 @@ public class Gardener extends Globals{
 	private static int numTreesBuilt = 0;
 	private static Direction lastDir = null;
 	private static float detectRadius = 2.5f;
+	private static int red = 255;
+	private static int blue = 0;
+	private static int green = 0;
 	
 	public static void checkspace() throws GameActionException{
 		while(!rc.onTheMap(here.translate(0.001f, 0.001f), detectRadius) || rc.isCircleOccupiedExceptByThisRobot(here.translate(0.001f, 0.001f), detectRadius)){ 
