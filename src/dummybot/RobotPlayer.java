@@ -1,12 +1,9 @@
 package dummybot;
 
+import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
-import utils.LoggerUtils;
-import v1.Archon;
-import v1.Gardener;
 import v1.Globals;
-import v1.Scout;
 
 /**
  * Dummy RobotPlayer that should be used for simple testing purposes only
@@ -35,8 +32,11 @@ public strictfp class RobotPlayer {
           //Run Tank
           break;
       }
+      while (true) {
+        Clock.yield();
+      }
     } catch (Exception e) {
-      LoggerUtils.printStackTrace(e);
+      e.printStackTrace();
     }
 
   }
