@@ -14,6 +14,7 @@ public strictfp class EvasiveArchon {
     static float minY = UNKNOWN;
     static float maxX = UNKNOWN;
     static float maxY = UNKNOWN;
+    static final int EDGE_BIAS_RADIUS = 15;
 
     static void run() throws GameActionException {
         System.out.println("I'm an archon!");
@@ -103,27 +104,27 @@ public strictfp class EvasiveArchon {
                 System.out.println("minY: " + minY);
                 System.out.println("maxY: " + maxY);
                 // Avoid corners and edges
-                if (minX != UNKNOWN && myLoc.x - minX < 10) {
+                if (minX != UNKNOWN && myLoc.x - minX < EDGE_BIAS_RADIUS) {
                     for (int angleIndex = 4; angleIndex < 9; ++angleIndex) {
-                        directionWeights[angleIndex] -= 2000 * (10 - (myLoc.x - minX));
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (myLoc.x - minX));
                     }
                 }
-                if (minY != UNKNOWN && myLoc.y - minY < 10) {
+                if (minY != UNKNOWN && myLoc.y - minY < EDGE_BIAS_RADIUS) {
                     for (int angleIndex = 7; angleIndex < 12; ++angleIndex) {
-                        directionWeights[angleIndex] -= 2000 * (10 - (myLoc.y - minY));
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (myLoc.y - minY));
                     }
                 }
-                if (maxX != UNKNOWN && maxX - myLoc.x < 10) {
+                if (maxX != UNKNOWN && maxX - myLoc.x < EDGE_BIAS_RADIUS) {
                     for (int angleIndex = 0; angleIndex < 3; ++angleIndex) {
-                        directionWeights[angleIndex] -= 2000 * (10 - (maxX - myLoc.x));
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxX - myLoc.x));
                     }
                     for (int angleIndex = 10; angleIndex < 12; ++angleIndex) {
-                        directionWeights[angleIndex] -= 2000 * (10 - (maxX - myLoc.x));
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxX - myLoc.x));
                     }
                 }
-                if (maxY != UNKNOWN && maxY - myLoc.y < 10) {
+                if (maxY != UNKNOWN && maxY - myLoc.y < EDGE_BIAS_RADIUS) {
                     for (int angleIndex = 1; angleIndex < 6; ++angleIndex) {
-                        directionWeights[angleIndex] -= 2000 * (10 - (maxY - myLoc.y));
+                        directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxY - myLoc.y));
                     }
                 }
                 for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
@@ -179,7 +180,7 @@ public strictfp class EvasiveArchon {
                 // Broadcast archon's location for other robots on the team to know
                 RobotPlayer.rc.broadcast(0, (int) myLoc.x);
                 RobotPlayer.rc.broadcast(1, (int) myLoc.y);
-
+                System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
 
