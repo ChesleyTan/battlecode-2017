@@ -7,7 +7,7 @@ import battlecode.common.MapLocation;
  * This class represents the movement data of an object or particle. The class contains information about the object's position AND velocity.
  * The class also provides relevant functions that pertain to the movement of said object or particle.
  *
- * @author TheButlah
+ * @author Ryan Butler
  */
 public class MData implements Cloneable{
 
@@ -43,7 +43,7 @@ public class MData implements Cloneable{
   /**
    * Uses linear projection to predict location with a given time. Will be fully accurate as long as the robot maintains that exact velocity.
    * Also takes walls into account.
-   * @param delta he time elapsed. Should be in terms of the same units as the speed was specified in.
+   * @param delta The time elapsed. Should be in terms of the same units as the speed was specified in.
    * In other words, if the speed is in meters/second, delta should be in seconds.
    * A negative value will predict positions in the past.
    * @return The predicted location, not accounting for collisions other than walls

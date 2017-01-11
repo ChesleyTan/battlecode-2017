@@ -3,7 +3,9 @@ package utils;
 import v1.Globals;
 
 /**
- * Created by Ryan on 1/11/2017.
+ * Provides useful logging functionality to be used throughout the application.
+ *
+ * @author Ryan Butler
  */
 public class LoggerUtils {
 
