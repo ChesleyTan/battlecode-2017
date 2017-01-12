@@ -15,37 +15,6 @@ public class Archon extends Globals{
   static final int EDGE_BIAS_RADIUS = 15;
   static int lastMoveAngleIndex = -1;
   
-  static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
-      throws GameActionException {
-
-    // First, try intended direction
-    if (rc.canMove(dir)) {
-        rc.move(dir);
-        return true;
-    }
-    
-    // Now try a bunch of similar angles
-    boolean moved = false;
-    int currentCheck = 1;
-    
-    while (currentCheck <= checksPerSide) {
-        // Try the offset of the left side
-        if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
-            rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
-            return true;
-        }
-        // Try the offset on the right side
-        if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
-            rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
-            return true;
-        }
-        // No move performed, try slightly further
-        currentCheck++;
-    }
-
-    // A move never happened, so return false.
-    return false;
-  }
     
 	public static void moveDirection() throws GameActionException {
 	  
@@ -209,7 +178,7 @@ public class Archon extends Globals{
           }
           //System.out.println(
           //        "Trying to move in direction: " + angleDirections[moveAngleIndex]);
-          moved = tryMove(angleDirections[moveAngleIndex], 5, 3);
+          moved = RobotPlayer.tryMove(angleDirections[moveAngleIndex], 5, 3);
           rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255,
                   0);
           rc.setIndicatorLine(here.add(angleDirections[moveAngleIndex], 1),
@@ -224,7 +193,7 @@ public class Archon extends Globals{
           directionWeights[moveAngleIndex] -= 999999;
       } while (!moved && ++attempts <= 12);
       if (attempts > 12) {
-          tryMove(Direction.getNorth(), 10, 18);
+          RobotPlayer.tryMove(Direction.getNorth(), 10, 18);
           lastMoveAngleIndex = -1;
       }
       else {
