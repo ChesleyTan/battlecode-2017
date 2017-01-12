@@ -10,7 +10,7 @@ public strictfp class EvasiveArchon extends Globals {
   static float minY = UNKNOWN;
   static float maxX = UNKNOWN;
   static float maxY = UNKNOWN;
-  static final int EDGE_BIAS_RADIUS = 15;
+  static final int EDGE_BIAS_RADIUS = 12;
   static int lastMoveAngleIndex = -1;
   static final int BULLET_DETECT_RADIUS = 7;
   private static MapLocation[] moveLocations = new MapLocation[12];
@@ -47,7 +47,7 @@ public strictfp class EvasiveArchon extends Globals {
               if (angleDelta > 70) {
                 continue;
               }
-              float weightOffset = (100 * (70 - angleDelta));
+              float weightOffset = (200 * (70 - angleDelta));
               directionWeights[angleIndex] -= weightOffset;
               /*
               if (DEBUG) {
@@ -72,7 +72,7 @@ public strictfp class EvasiveArchon extends Globals {
             if (angleDelta > 60) {
               continue;
             }
-            float weightOffset = (50 * (60 - angleDelta));
+            float weightOffset = (70 * (60 - angleDelta));
             directionWeights[angleIndex] -= weightOffset;
             /*
             if (DEBUG) {
@@ -85,7 +85,8 @@ public strictfp class EvasiveArchon extends Globals {
         }
         BulletInfo[] nearbyBullets = rc.senseNearbyBullets(BULLET_DETECT_RADIUS);
         // TODO don't move if it guarantees you will be hit by a bullet?
-        for (int i = 0; i < nearbyBullets.length && i < 5; ++i) {
+        int numBulletsAnalyzed = 0;
+        for (int i = 0; i < nearbyBullets.length && numBulletsAnalyzed < 5; ++i) {
           BulletInfo bi = nearbyBullets[i];
           // Get relevant bullet information
           Direction propagationDirection = bi.dir;
@@ -101,6 +102,7 @@ public strictfp class EvasiveArchon extends Globals {
             if (Math.abs(theta) > Math.PI / 2) {
               continue;
             }
+            ++numBulletsAnalyzed;
             // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
             // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
             // This corresponds to the smallest radius circle centered at our location that would intersect with the
@@ -165,26 +167,29 @@ public strictfp class EvasiveArchon extends Globals {
         // Avoid corners and edges
         if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
           for (int angleIndex = 4; angleIndex < 9; ++angleIndex) {
-            directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (here.x - minX));
+            directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (here.x - minX));
           }
         }
         if (minY != UNKNOWN && here.y - minY < EDGE_BIAS_RADIUS) {
           for (int angleIndex = 7; angleIndex < 12; ++angleIndex) {
-            directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (here.y - minY));
+            directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (here.y - minY));
           }
         }
         if (maxX != UNKNOWN && maxX - here.x < EDGE_BIAS_RADIUS) {
           for (int angleIndex = 0; angleIndex < 3; ++angleIndex) {
-            directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxX - here.x));
+            directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (maxX - here.x));
           }
           for (int angleIndex = 10; angleIndex < 12; ++angleIndex) {
-            directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxX - here.x));
+            directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (maxX - here.x));
           }
         }
         if (maxY != UNKNOWN && maxY - here.y < EDGE_BIAS_RADIUS) {
           for (int angleIndex = 1; angleIndex < 6; ++angleIndex) {
-            directionWeights[angleIndex] -= 2000 * (EDGE_BIAS_RADIUS - (maxY - here.y));
+            directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (maxY - here.y));
           }
+        }
+        if (lastMoveAngleIndex >= 0) {
+          directionWeights[lastMoveAngleIndex] += 5000;
         }
         if (DEBUG) {
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
@@ -205,9 +210,6 @@ public strictfp class EvasiveArchon extends Globals {
 
         // Increase preference for last direction moved,
         // helps prevent getting trapped in an oscillation
-        if (lastMoveAngleIndex >= 0) {
-          directionWeights[lastMoveAngleIndex] += 5000;
-        }
 
         int moveAngleIndex = 0;
         int attempts = 0;
