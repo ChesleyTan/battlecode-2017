@@ -124,9 +124,8 @@ public strictfp class EvasiveArchon extends Globals {
             }
           }
         }
-        // FIXME is ARCHON_SIGHT_RADIUS broken?
         if (minX == UNKNOWN) {
-          float lookAhead = RobotType.ARCHON.sensorRadius - 1;
+          float lookAhead = RobotType.ARCHON.sensorRadius;
           MapLocation testLocation = here.add(angleDirections[6], lookAhead);
           while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
             minX = testLocation.x;
@@ -135,7 +134,7 @@ public strictfp class EvasiveArchon extends Globals {
           }
         }
         if (maxX == UNKNOWN) {
-          float lookAhead = RobotType.ARCHON.sensorRadius - 1;
+          float lookAhead = RobotType.ARCHON.sensorRadius;
           MapLocation testLocation = here.add(angleDirections[0], lookAhead);
           while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
             maxX = testLocation.x;
@@ -144,7 +143,7 @@ public strictfp class EvasiveArchon extends Globals {
           }
         }
         if (minY == UNKNOWN) {
-          float lookAhead = RobotType.ARCHON.sensorRadius - 1;
+          float lookAhead = RobotType.ARCHON.sensorRadius;
           MapLocation testLocation = here.add(angleDirections[9], lookAhead);
           while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
             minY = testLocation.y;
@@ -153,7 +152,7 @@ public strictfp class EvasiveArchon extends Globals {
           }
         }
         if (maxY == UNKNOWN) {
-          float lookAhead = RobotType.ARCHON.sensorRadius - 1;
+          float lookAhead = RobotType.ARCHON.sensorRadius;
           MapLocation testLocation = here.add(angleDirections[3], lookAhead);
           while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
             maxY = testLocation.y;
