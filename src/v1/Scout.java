@@ -2,8 +2,8 @@ package v1;
 
 import battlecode.common.*;
 
-public class Scout extends Globals{
-	
+public class Scout extends Globals {
+
   private static final int attack_start_channel = 500;
   private static final int defense_start_channel = 250;
   private static final int target_channel = 451;
@@ -45,7 +45,7 @@ public class Scout extends Globals{
     MapLocation[] startLocs = new MapLocation[nearbyBullets.length];
     MapLocation[] endLocs = new MapLocation[nearbyBullets.length];
     int index = 0;
-    for(BulletInfo b: nearbyBullets){
+    for (BulletInfo b : nearbyBullets) {
       MapLocation finalLoc = b.location.add(b.dir, b.speed);
       startLocs[index] = b.location;
       endLocs[index] = finalLoc;
@@ -55,7 +55,7 @@ public class Scout extends Globals{
       if(dist < RobotType.SCOUT.bodyRadius){
         willHit = true;
       }*/
-      if (willCollideWithMe(b)){
+      if (RobotPlayer.willCollideWithMe(b)) {
         System.out.println("true");
         willHit = true;
       }
@@ -71,11 +71,15 @@ public class Scout extends Globals{
         float a = x1 - x0;
         float b = y0 - y1;
         float c = x0 * y1 - y0 * x1;
-        float distance = (float)(Math.abs(a* here.x + b* here.y + c)/Math.sqrt(Math.pow(a,2) + Math.pow(b, 2)));
-        float x2 = (float)((b * (b * here.x - a * here.y) - a * c)/(Math.pow(a, 2) + Math.pow(b, 2)));
-        float y2 = (float)((a * (a * here.y - b * here.x) - b * c)/(Math.pow(a, 2) + Math.pow(b, 2)));
+        float distance = (float)(Math.abs(a* here.x + b* here.y + c)
+            / Math.sqrt(Math.pow(a,2) + Math.pow(b, 2)));
+        float x2 = (float)((b * (b * here.x - a * here.y) - a * c)
+            / (Math.pow(a, 2) + Math.pow(b, 2)));
+        float y2 = (float)((a * (a * here.y - b * here.x) - b * c)
+            / (Math.pow(a, 2) + Math.pow(b, 2)));
         Direction away = here.directionTo(new MapLocation(x2, y2)).opposite();
-        float weighted = (RobotType.SCOUT.bulletSightRadius - distance) / RobotType.SCOUT.bulletSightRadius * RobotType.SCOUT.strideRadius;
+        float weighted = (RobotType.SCOUT.bulletSightRadius - distance) 
+            / RobotType.SCOUT.bulletSightRadius * RobotType.SCOUT.strideRadius;
         sumX += away.getDeltaX(weighted);
         sumY += away.getDeltaY(weighted);
       }
@@ -103,7 +107,7 @@ public class Scout extends Globals{
       }
     }
   }
-  
+
   public static void alert() throws GameActionException {
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadius, them);
@@ -143,11 +147,11 @@ public class Scout extends Globals{
       }
     }
   }
-  
-  public static void engage(int target) throws GameActionException{
+
+  public static void engage(int target) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
-    rc.broadcast(target_channel + 1, (int)targetRobot.location.x);
-    rc.broadcast(target_channel + 2, (int)targetRobot.location.y);
+    rc.broadcast(target_channel + 1, (int) targetRobot.location.x);
+    rc.broadcast(target_channel + 2, (int) targetRobot.location.y);
     direction = here.directionTo(targetRobot.location);
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadius, them);
@@ -155,33 +159,33 @@ public class Scout extends Globals{
       dodge(nearbyBullets, nearbyRobots);
     }
     //System.out.println(target);
-    else{
-      float absolute_dist = (float)Math.sqrt(Math.pow(here.x - targetRobot.location.x, 2) + Math.pow(here.y - targetRobot.location.y, 2));
-      if (absolute_dist > keepaway_radius + RobotType.SCOUT.strideRadius){
-        if(rc.canMove(direction)){
+    else {
+      float absolute_dist = (float) Math.sqrt(Math.pow(here.x - targetRobot.location.x, 2)
+          + Math.pow(here.y - targetRobot.location.y, 2));
+      if (absolute_dist > keepaway_radius + RobotType.SCOUT.strideRadius) {
+        if (rc.canMove(direction)) {
           rc.move(direction);
         }
       }
-      else{
+      else {
         Direction rotated20 = direction.opposite().rotateLeftDegrees(20);
         MapLocation newLoc = targetRobot.location.add(rotated20, keepaway_radius);
-        if (rc.canMove(newLoc)){
+        if (rc.canMove(newLoc)) {
           rc.move(newLoc);
         }
-        else{
+        else {
           rotated20 = direction.opposite().rotateRightDegrees(20);
           newLoc = targetRobot.location.add(rotated20, keepaway_radius);
-          if (rc.canMove(newLoc)){
+          if (rc.canMove(newLoc)) {
             rc.move(newLoc);
           }
         }
       }
     }
-    if (rc.canFireSingleShot()){
+    if (rc.canFireSingleShot()) {
       rc.fireSingleShot(direction);
     }
-  }
-  
+  }  
 	public static void loop() throws GameActionException {
 	  try{
 	    Globals.update();
@@ -257,13 +261,14 @@ public class Scout extends Globals{
     	        if (!rc.hasMoved() && rc.canMove(direction)){
                 rc.move(direction);
               }
-    	      }
-    	    }
-    	  }
-  	    Clock.yield();
-  	  }
-	  }catch(Exception e){
-	    e.printStackTrace();
-	  }
-	}
+              //System.out.println(direction.getAngleDegrees());
+            }
+          }
+        }
+        Clock.yield();
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 }
