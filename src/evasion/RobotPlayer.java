@@ -15,8 +15,10 @@ public strictfp class RobotPlayer extends Globals {
     // You can add the missing ones or rewrite this into your own control structure.
     switch (rc.getType()) {
       case ARCHON:
-        EvasiveArchon.run();
-        break;
+        EvasiveArchon.init();
+        while (true) {
+          EvasiveArchon.move();
+        }
       case GARDENER:
         runGardener();
         break;
