@@ -15,6 +15,9 @@ public class Globals {
 	public static int myID;
 	public static RobotType myType;
 	public static Random rand;
+  public static final int PRODUCED_GARDENERS_CHANNEL = 50;
+  public static final int EARLY_SCOUTS_CHANNEL = 5;
+  public static Direction NORTH, SOUTH, EAST, WEST;
 
 	public static void init(RobotController theRC){
 		rc = theRC;
@@ -24,6 +27,10 @@ public class Globals {
 		myType = rc.getType();
 		here = rc.getLocation();
 		rand = new Random(theRC.getID());
+		NORTH = Direction.getNorth();
+		SOUTH = Direction.getSouth();
+		EAST = Direction.getEast();
+		WEST = Direction.getWest();
 	}
 	
 	public static void update(){

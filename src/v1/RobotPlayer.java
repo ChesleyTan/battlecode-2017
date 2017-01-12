@@ -2,29 +2,29 @@ package v1;
 
 import battlecode.common.*;
 
-public class RobotPlayer extends Globals{
-	
-	public static void run(RobotController rc) throws GameActionException{
-		Globals.init(rc);
-		switch(rc.getType()){
-			case ARCHON:
-				Archon.loop();
-				break;
-			case GARDENER:
-				Gardener.loop();
-				break;
-			case SCOUT:
-				Scout.loop();
-				break;
-			case SOLDIER:
-				//Run Soldier
-			case TANK:
-				//Run Tank
-			break;
-		}
-	}
-	
-	public static float degreesBetween(Direction a, Direction b) {
+public class RobotPlayer extends Globals {
+
+  public static void run(RobotController rc) throws GameActionException {
+    Globals.init(rc);
+    switch (rc.getType()) {
+      case ARCHON:
+        Archon.loop();
+        break;
+      case GARDENER:
+        Gardener.loop();
+        break;
+      case SCOUT:
+        Scout.loop();
+        break;
+      case SOLDIER:
+        //Run Soldier
+      case TANK:
+        //Run Tank
+        break;
+    }
+  }
+
+  public static float degreesBetween(Direction a, Direction b) {
     return (float) Math.toDegrees(radiansBetween(a, b));
   }
 
@@ -119,7 +119,8 @@ public class RobotPlayer extends Globals{
     return (perpendicularDist <= myType.bodyRadius);
   }
 
-  static boolean willCollideWithMyLocation(MapLocation bulletLocation, Direction propagationDirection, MapLocation myLocation) {
+  static boolean willCollideWithMyLocation(MapLocation bulletLocation,
+      Direction propagationDirection, MapLocation myLocation) {
 
     // Calculate bullet relations to this robot
     Direction directionToRobot = bulletLocation.directionTo(myLocation);
@@ -139,4 +140,15 @@ public class RobotPlayer extends Globals{
 
     return (perpendicularDist <= myType.bodyRadius);
   }
+
+  public static boolean enemyNearby() throws GameActionException {
+    RobotInfo[] robots = rc.senseNearbyRobots();
+    for (RobotInfo x : robots) {
+      if (x.getTeam() == them) {
+        return true;
+      }
+    }
+    return false;
+  }
+
 }

@@ -1,4 +1,4 @@
-package evasion;
+package v1;
 
 import battlecode.common.*;
 
@@ -47,16 +47,7 @@ public strictfp class EvasiveArchon extends Globals {
             if (angleDelta > 70) {
               continue;
             }
-            float weightOffset;
-            if (ri.type == RobotType.SCOUT) {
-               weightOffset = (100 * (70 - angleDelta));
-            }
-            else if (ri.type == RobotType.SOLDIER) {
-               weightOffset = (150 * (70 - angleDelta));
-            }
-            else {
-               weightOffset = (200 * (70 - angleDelta));
-            }
+            float weightOffset = (200 * (70 - angleDelta));
             directionWeights[angleIndex] -= weightOffset;
             /*
             if (DEBUG) {
@@ -180,25 +171,25 @@ public strictfp class EvasiveArchon extends Globals {
       // Avoid corners and edges
       if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
         for (int angleIndex = 4; angleIndex < 9; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (here.x - minX));
+          directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (here.x - minX));
         }
       }
       if (minY != UNKNOWN && here.y - minY < EDGE_BIAS_RADIUS) {
         for (int angleIndex = 7; angleIndex < 12; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (here.y - minY));
+          directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (here.y - minY));
         }
       }
       if (maxX != UNKNOWN && maxX - here.x < EDGE_BIAS_RADIUS) {
         for (int angleIndex = 0; angleIndex < 3; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (maxX - here.x));
+          directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (maxX - here.x));
         }
         for (int angleIndex = 10; angleIndex < 12; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (maxX - here.x));
+          directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (maxX - here.x));
         }
       }
       if (maxY != UNKNOWN && maxY - here.y < EDGE_BIAS_RADIUS) {
         for (int angleIndex = 1; angleIndex < 6; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (maxY - here.y));
+          directionWeights[angleIndex] -= 1500 * (EDGE_BIAS_RADIUS - (maxY - here.y));
         }
       }
       if (lastMoveAngleIndex >= 0) {
