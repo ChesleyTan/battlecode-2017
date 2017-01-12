@@ -157,16 +157,16 @@ public class Scout extends Globals {
     MapLocation outerEdge = here.add(targetDir, RobotType.SCOUT.bodyRadius);
     for (RobotInfo r : friendlies){
       if (RobotPlayer.willCollideWithMyLocation(outerEdge, targetDir, r.location)){
-        return true;
+        return false;
       }
     }
     TreeInfo[] trees = rc.senseNearbyTrees();
     for (TreeInfo t : trees){
       if (RobotPlayer.willCollideWithMyLocation(outerEdge, targetDir, t.location)){
-        return true;
+        return false;
       }
     }
-    return false;
+    return true;
   }
   
   public static void engage(int target) throws GameActionException {
