@@ -16,11 +16,15 @@ public class MData implements Cloneable{
   private Direction direction;
   private float speed;
 
+
   public MData(MapLocation loc, Direction dir, float time, float speed) {
     this.time = time;
     this.speed = speed;
     this.location = loc;
     this.direction = dir;
+    if (loc == null) System.out.println("loc is null!");
+    if (dir == null) System.out.println("dir is null!");
+
   }
 
   public MData(float x, float y, float angle, float time, float speed ) {
