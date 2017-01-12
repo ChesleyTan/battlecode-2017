@@ -11,10 +11,12 @@ public class Archon extends Globals {
     int producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
     if (producedGardeners == 0) {
       // TODO unrestrict gardener from north?
-      if (rc.canHireGardener(NORTH)) {
-        rc.hireGardener(NORTH);
-        rc.broadcast(PRODUCED_GARDENERS_CHANNEL, 1);
+      Direction randomDir = new Direction((float)(rand.nextFloat() * 2 * Math.PI));
+      while(!rc.canHireGardener(randomDir)) {
+        randomDir = randomDir.rotateLeftDegrees(10);
       }
+      rc.hireGardener(randomDir);
+      rc.broadcast(PRODUCED_GARDENERS_CHANNEL, 1);
     }
     while (true) {
       int producedScouts = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
