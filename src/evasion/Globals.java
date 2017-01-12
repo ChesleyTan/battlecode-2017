@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class Globals {
 
-  public static final boolean DEBUG = false;
+  public static final boolean DEBUG = true;
 
   public static RobotController rc;
   public static MapLocation here;

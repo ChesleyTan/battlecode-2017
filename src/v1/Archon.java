@@ -18,14 +18,12 @@ public class Archon extends Globals {
     }
     while (true) {
       int producedScouts = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-      System.out.println("S: " + producedScouts);
       if (producedScouts < 3) {
         EvasiveArchon.move();
         Clock.yield();
         continue;
       }
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
-      System.out.println("G: " + producedGardeners);
       if (rc.canHireGardener(NORTH) && producedGardeners < 5 * ArchonCount) {
         rc.hireGardener(NORTH);
         rc.broadcast(PRODUCED_GARDENERS_CHANNEL, producedGardeners + 1);
