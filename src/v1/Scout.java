@@ -129,13 +129,13 @@ public class Scout extends Globals {
     RobotInfo[] friendlies = rc.senseNearbyRobots(-1, us);
     MapLocation outerEdge = here.add(targetDir, RobotType.SCOUT.bodyRadius);
     for (RobotInfo r : friendlies){
-      if (RobotPlayer.willCollideWithMyLocation(outerEdge, targetDir, r.location)){
+      if (RobotPlayer.willCollideWithTargetLocation(outerEdge, targetDir, r.location, r.getRadius())){
         return false;
       }
     }
     TreeInfo[] trees = rc.senseNearbyTrees();
     for (TreeInfo t : trees){
-      if (RobotPlayer.willCollideWithMyLocation(outerEdge, targetDir, t.location)){
+      if (RobotPlayer.willCollideWithTargetLocation(outerEdge, targetDir, t.location, t.getRadius())){
         return false;
       }
     }
