@@ -82,6 +82,19 @@ public class Gardener extends Globals{
 	}
 	public static void loop() throws GameActionException{
 		checkspace();
+		if (rc.getRoundNum() < 100){
+		  int scoutCount = 0;
+		  while(scoutCount < 3){
+		    if (rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth())){
+		      rc.buildRobot(RobotType.SCOUT, Direction.getNorth());
+		      scoutCount++;
+		    }
+		    else{
+		      checkspace();
+		    }
+		    Clock.yield();
+		  }
+		}
 		while(true){
 			try{
 				Globals.update();
@@ -94,7 +107,7 @@ public class Gardener extends Globals{
 					Clock.yield();
 				}
 				else{
-					if(rc.getRoundNum() % 10 == 0 && rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth().rotateRightDegrees(60))){
+					if(rc.getRoundNum() % 100 == 0 && rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth().rotateRightDegrees(60))){
 						rc.buildRobot(RobotType.SCOUT, Direction.getNorth().rotateRightDegrees(60));
 					}
 				}
