@@ -32,10 +32,10 @@ public strictfp class EvasiveArchon extends Globals {
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
           moveLocations[angleIndex] = here.add(angleDirections[angleIndex]);
         }
-        RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+        RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
         float[] directionWeights = new float[12];
         for (RobotInfo ri : nearbyRobots) {
-          if (ri.team == them && ri.type.canAttack()) {
+          if (ri.type.canAttack()) {
             Direction enemyAngle = here.directionTo(ri.location);
             /*
             if (DEBUG) {
