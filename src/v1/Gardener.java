@@ -1,7 +1,6 @@
 package v1;
 
 import battlecode.common.*;
-import sun.tools.tree.SynchronizedStatement;
 
 public class Gardener extends Globals {
 
