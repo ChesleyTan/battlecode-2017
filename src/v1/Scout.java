@@ -126,7 +126,7 @@ public class Scout extends Globals {
             rc.broadcast(target_channel + 2, (int)(enemy.location.y));
             MapLocation center = enemy.location;
             direction = here.directionTo(center);
-            if (rc.canFireSingleShot()){
+            if (rc.canFireSingleShot() && clearShot(enemy.location)){
               rc.fireSingleShot(here.directionTo(center));
             }
             current_mode = ATTACK;
@@ -140,14 +140,35 @@ public class Scout extends Globals {
         rc.broadcast(target_channel + 2, (int)(enemy.location.y));
         MapLocation center = enemy.location;
         direction = here.directionTo(center);
-        if (rc.canFireSingleShot()){
+        if (rc.canFireSingleShot() && clearShot(enemy.location)){
           rc.fireSingleShot(here.directionTo(center));
         }
         current_mode = ATTACK;
       }
     }
   }
-
+  
+  /*
+   * Returns True if I have a clear shot at the person, false otherwise;
+   */
+  public static boolean clearShot(MapLocation target){
+    Direction targetDir = here.directionTo(target);
+    RobotInfo[] friendlies = rc.senseNearbyRobots(-1, us);
+    MapLocation outerEdge = here.add(targetDir, RobotType.SCOUT.bodyRadius);
+    for (RobotInfo r : friendlies){
+      if (RobotPlayer.willCollideWithMyLocation(outerEdge, targetDir, r.location)){
+        return true;
+      }
+    }
+    TreeInfo[] trees = rc.senseNearbyTrees();
+    for (TreeInfo t : trees){
+      if (RobotPlayer.willCollideWithMyLocation(outerEdge, targetDir, t.location)){
+        return true;
+      }
+    }
+    return false;
+  }
+  
   public static void engage(int target) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
     rc.broadcast(target_channel + 1, (int) targetRobot.location.x);
@@ -182,7 +203,7 @@ public class Scout extends Globals {
         }
       }
     }
-    if (rc.canFireSingleShot()) {
+    if (rc.canFireSingleShot() && clearShot(targetRobot.location)) {
       rc.fireSingleShot(direction);
     }
   }  

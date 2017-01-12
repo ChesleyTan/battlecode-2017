@@ -119,10 +119,7 @@ public class RobotPlayer extends Globals{
     return (perpendicularDist <= myType.bodyRadius);
   }
 
-  static boolean willCollideWithMyLocation(BulletInfo bullet, MapLocation myLocation) {
-    // Get relevant bullet information
-    Direction propagationDirection = bullet.dir;
-    MapLocation bulletLocation = bullet.location;
+  static boolean willCollideWithMyLocation(MapLocation bulletLocation, Direction propagationDirection, MapLocation myLocation) {
 
     // Calculate bullet relations to this robot
     Direction directionToRobot = bulletLocation.directionTo(myLocation);
