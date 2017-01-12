@@ -9,6 +9,7 @@ public class Gardener extends Globals{
 	private static Direction lastDir = null;
 	private static float detectRadius = 2.5f;
 	private static final int defense_start_channel = 250;
+	private static final int early_scouts_channel = 5;
 	
 	public static void checkspace() throws GameActionException{
 		while(!rc.onTheMap(here.translate(0.001f, 0.001f), detectRadius) || rc.isCircleOccupiedExceptByThisRobot(here.translate(0.001f, 0.001f), detectRadius)){ 
@@ -83,16 +84,17 @@ public class Gardener extends Globals{
 	public static void loop() throws GameActionException{
 		checkspace();
 		if (rc.getRoundNum() < 100){
-		  int scoutCount = 0;
+		  int scoutCount = rc.readBroadcast(early_scouts_channel);
 		  while(scoutCount < 3){
 		    if (rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth())){
 		      rc.buildRobot(RobotType.SCOUT, Direction.getNorth());
-		      scoutCount++;
+		      rc.broadcast(early_scouts_channel, scoutCount + 1);
 		    }
 		    else{
 		      checkspace();
 		    }
 		    Clock.yield();
+		    scoutCount = rc.readBroadcast(early_scouts_channel);
 		  }
 		}
 		while(true){

@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Archon extends Globals{
 	
-  static int producedGardeners = 0;
+  static int producedGardeners_channel = 50;
 	static Direction[] angleDirections = new Direction[12];
   static float UNKNOWN = -1f;
   static float minX = UNKNOWN;
@@ -14,6 +14,7 @@ public class Archon extends Globals{
   static final int[] cardinalAngleIndices = new int[] { 0, 3, 6, 9 };
   static final int EDGE_BIAS_RADIUS = 15;
   static int lastMoveAngleIndex = -1;
+  static int ArchonCount = rc.getInitialArchonLocations(us).length;
   
   static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
       throws GameActionException {
@@ -256,9 +257,10 @@ public class Archon extends Globals{
 	
 	public static void loop() throws GameActionException{
 		while(true){
-			if(rc.canHireGardener(Direction.getNorth()) && producedGardeners < 5){
+		  int producedGardeners = rc.readBroadcast(producedGardeners_channel);
+			if(rc.canHireGardener(Direction.getNorth()) && producedGardeners < 5*ArchonCount){
 				rc.hireGardener(Direction.getNorth());
-				producedGardeners ++;
+				rc.broadcast(producedGardeners_channel, producedGardeners + 1); 
 			}
 			moveDirection();
 			if (rc.getTeamBullets() > 200){

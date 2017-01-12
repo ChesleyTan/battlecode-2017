@@ -10,7 +10,7 @@ public class Scout extends Globals{
   private String[] Modes = {"ROAM", "ATTACK"};
   private static String current_mode = "ROAM";
   private static Direction direction;
-  private static final int keepaway_radius = 5;
+  private static final int keepaway_radius = 3;
   
   static boolean willCollideWithMe(BulletInfo bullet) {
     MapLocation myLocation = here;
@@ -38,7 +38,7 @@ public class Scout extends Globals{
     return (perpendicularDist <= myType.bodyRadius);
   }
   
-  public static void dodge(BulletInfo[] nearbyBullets) throws GameActionException {
+  public static void dodge(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots) throws GameActionException {
     boolean willHit = false;
     MapLocation[] startLocs = new MapLocation[nearbyBullets.length];
     MapLocation[] endLocs = new MapLocation[nearbyBullets.length];
@@ -58,27 +58,34 @@ public class Scout extends Globals{
         willHit = true;
       }
     }
-    if (willHit == false){
-      //Don't move
-      return;
-    }
     float sumX = 0;
     float sumY = 0;
-    for(int i = 0; i < index; i++){
-      float x0 = startLocs[i].x;
-      float y0 = startLocs[i].y;
-      float x1 = endLocs[i].x;
-      float y1 = endLocs[i].y;
-      float a = x1 - x0;
-      float b = y0 - y1;
-      float c = x0 * y1 - y0 * x1;
-      float distance = (float)(Math.abs(a* here.x + b* here.y + c)/Math.sqrt(Math.pow(a,2) + Math.pow(b, 2)));
-      float x2 = (float)((b * (b * here.x - a * here.y) - a * c)/(Math.pow(a, 2) + Math.pow(b, 2)));
-      float y2 = (float)((a * (a * here.y - b * here.x) - b * c)/(Math.pow(a, 2) + Math.pow(b, 2)));
-      Direction away = here.directionTo(new MapLocation(x2, y2)).opposite();
-      float weighted = (RobotType.SCOUT.bulletSightRadius - distance) / RobotType.SCOUT.bulletSightRadius * RobotType.SCOUT.strideRadius;
-      sumX += away.getDeltaX(weighted);
-      sumY += away.getDeltaY(weighted);
+    if(willHit){
+      for(int i = 0; i < index; i++){
+        float x0 = startLocs[i].x;
+        float y0 = startLocs[i].y;
+        float x1 = endLocs[i].x;
+        float y1 = endLocs[i].y;
+        float a = x1 - x0;
+        float b = y0 - y1;
+        float c = x0 * y1 - y0 * x1;
+        float distance = (float)(Math.abs(a* here.x + b* here.y + c)/Math.sqrt(Math.pow(a,2) + Math.pow(b, 2)));
+        float x2 = (float)((b * (b * here.x - a * here.y) - a * c)/(Math.pow(a, 2) + Math.pow(b, 2)));
+        float y2 = (float)((a * (a * here.y - b * here.x) - b * c)/(Math.pow(a, 2) + Math.pow(b, 2)));
+        Direction away = here.directionTo(new MapLocation(x2, y2)).opposite();
+        float weighted = (RobotType.SCOUT.bulletSightRadius - distance) / RobotType.SCOUT.bulletSightRadius * RobotType.SCOUT.strideRadius;
+        sumX += away.getDeltaX(weighted);
+        sumY += away.getDeltaY(weighted);
+      }
+    }
+    for (RobotInfo r: nearbyRobots){
+      if(r.getType() == RobotType.LUMBERJACK){
+        Direction their_direction = here.directionTo(r.location).opposite();
+        float their_distance = (RobotType.SCOUT.sensorRadius - here.distanceTo(r.location))/RobotType.SCOUT.sensorRadius * RobotType.SCOUT.strideRadius;
+        sumX += their_direction.getDeltaX(their_distance);
+        sumY += their_direction.getDeltaY(their_distance);
+        index ++;
+      }
     }
     MapLocation destination = new MapLocation(here.x + sumX / index, here.y + sumY / index);
     if(rc.canMove(destination) && !rc.hasMoved()){
@@ -88,15 +95,15 @@ public class Scout extends Globals{
   
   public static void alert() throws GameActionException {
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
-    if (nearbyBullets != null && nearbyBullets.length != 0){
-      dodge(nearbyBullets);
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadius, them);
+    if (nearbyBullets != null && nearbyBullets.length != 0 || nearbyRobots != null && nearbyRobots.length != 0){
+      dodge(nearbyBullets, nearbyRobots);
     }
-    RobotInfo[] enemies = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadius, them);
-    if (enemies == null || enemies.length == 0){
+    if (nearbyRobots == null || nearbyRobots.length == 0){
       return;
     }
     else{
-      RobotInfo enemy = enemies[0];
+      RobotInfo enemy = nearbyRobots[0];
       rc.broadcast(target_channel, enemy.ID);
       rc.broadcast(target_channel + 1, (int)(enemy.location.x));
       rc.broadcast(target_channel + 2, (int)(enemy.location.y));
@@ -115,8 +122,9 @@ public class Scout extends Globals{
     rc.broadcast(target_channel + 2, (int)targetRobot.location.y);
     direction = here.directionTo(targetRobot.location);
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
-    if (nearbyBullets != null && nearbyBullets.length != 0){
-      dodge(nearbyBullets);
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadius, them);
+    if (nearbyBullets != null && nearbyBullets.length != 0 || nearbyRobots != null && nearbyRobots.length != 0){
+      dodge(nearbyBullets, nearbyRobots);
     }
     //System.out.println(target);
     else{
@@ -168,8 +176,9 @@ public class Scout extends Globals{
     	      Direction target_direction = here.directionTo(new MapLocation(xLoc, yLoc));
     	      direction = target_direction;
     	      BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
-    	      if (nearbyBullets != null && nearbyBullets.length != 0){
-    	        dodge(nearbyBullets);
+    	      RobotInfo[] nearbyRobots = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadius, them);
+    	      if (nearbyBullets != null && nearbyBullets.length != 0 || nearbyRobots != null && nearbyRobots.length != 0){
+    	        dodge(nearbyBullets, nearbyRobots);
     	      }
     	      else if(rc.canMove(direction) && !rc.hasMoved()){
     	        rc.move(direction);
