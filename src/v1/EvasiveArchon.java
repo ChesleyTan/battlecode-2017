@@ -1,4 +1,4 @@
-package evasion;
+package v1;
 
 import battlecode.common.*;
 
