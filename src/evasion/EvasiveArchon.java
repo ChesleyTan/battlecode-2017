@@ -15,6 +15,8 @@ public strictfp class EvasiveArchon extends Globals {
   static int lastMoveAngleIndex = -1;
 
   static void run() throws GameActionException {
+    //reveal archon position to enemy for testing
+    rc.broadcast(1,1);
     for (int angle = 0; angle < 12; ++angle) {
       angleDirections[angle] = new Direction((float) (angle * Math.PI / 6));
     }

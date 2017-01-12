@@ -1,5 +1,7 @@
 package soldiertest;
 import battlecode.common.*;
+import utils.MData;
+import utils.TargetingUtils;
 
 public strictfp class RobotPlayer {
     static RobotController rc;
@@ -55,8 +57,8 @@ public strictfp class RobotPlayer {
 
                 // Broadcast archon's location for other robots on the team to know
                 MapLocation myLocation = rc.getLocation();
-                rc.broadcast(0,(int)myLocation.x);
-                rc.broadcast(1,(int)myLocation.y);
+                //rc.broadcast(0,(int)myLocation.x);
+                //rc.broadcast(1,(int)myLocation.y);
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
@@ -104,39 +106,64 @@ public strictfp class RobotPlayer {
     }
 
     static void runSoldier() throws GameActionException {
-        System.out.println("I'm an soldier!");
-        Team enemy = rc.getTeam().opponent();
+      System.out.println("I'm an soldier!");
+      Team enemy = rc.getTeam().opponent();
+      MapLocation locLast = null;
+      MapLocation locCurr = null;
 
-        // The code you want your robot to perform every round should be in this loop
-        while (true) {
+      // The code you want your robot to perform every round should be in this loop
+      while (true) {
 
-            // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
-            try {
-                MapLocation myLocation = rc.getLocation();
-
-                // See if there are any nearby enemy robots
-                RobotInfo[] robots = rc.senseNearbyRobots(-1, enemy);
-
-                // If there are some...
-                if (robots.length > 0) {
-                    // And we have enough bullets, and haven't attacked yet this turn...
-                    if (rc.canFireSingleShot()) {
-                        // ...Then fire a bullet in the direction of the enemy.
-                        rc.fireSingleShot(rc.getLocation().directionTo(robots[0].location));
-                    }
-                }
-
-                // Move randomly
-                tryMove(randomDirection());
-
-                // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
-                Clock.yield();
-
-            } catch (Exception e) {
-                System.out.println("Soldier Exception");
-                e.printStackTrace();
+        // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
+        try {
+          MapLocation myLocation = rc.getLocation();
+          // See if there are any nearby enemy robots
+          MapLocation[] locs = rc.senseBroadcastingRobotLocations();
+          // If there are some...
+          if (locs.length > 0) {
+            locCurr = locs[0];
+          }
+          if (locCurr == null) {
+            locLast = null;
+            continue;
+          }
+          MapLocation firingSoln = null;
+          if (locLast == null) {
+            //System.out.println("loclast was null so doing direct targeting");
+            firingSoln = locCurr;
+          } else {
+            Direction dir = locLast.directionTo(locCurr);
+            if (dir == null) {
+              firingSoln = locCurr;
+              //System.out.println("dir was null so doing direct targeting");
+            } else {
+              //System.out.println("Doing linear targeting");
+              float speed = locLast.distanceTo(locCurr);
+              MData mdata = new MData(locCurr, dir, rc.getRoundNum(), speed);
+              firingSoln = TargetingUtils.getLinearTargetPoint(mdata, myLocation, rc.getType().bulletSpeed);
             }
+          }
+          if (firingSoln != null) {
+            try{
+              rc.setIndicatorDot(firingSoln, 255, 0 ,0);
+            } catch (GameActionException e){
+              //Do nothing because predicted loc is off the map
+            }
+            rc.fireSingleShot(myLocation.directionTo(firingSoln));
+          }
+
+          locLast = locCurr;
+          // Move randomly
+          tryMove(randomDirection());
+
+          // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
+          Clock.yield();
+
+        } catch (Exception e) {
+          System.out.println("Soldier Exception");
+          e.printStackTrace();
         }
+      }
     }
 
     static void runLumberjack() throws GameActionException {

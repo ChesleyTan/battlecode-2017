@@ -4,7 +4,7 @@ import battlecode.common.*;
 
 public class Globals {
 
-  public static final boolean DEBUG = true;
+  public static final boolean DEBUG = false;
   public static RobotController rc;
   public static MapLocation here;
   public static Team us;
