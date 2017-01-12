@@ -224,7 +224,7 @@ public strictfp class RobotPlayer extends Globals {
    * @return True if the line of the bullet's path intersects with this robot's
    *         current position.
    */
-  static boolean willCollideWithMe(BulletInfo bullet) {
+  public static boolean willCollideWithMe(BulletInfo bullet) {
     MapLocation myLocation = here;
 
     // Get relevant bullet information
