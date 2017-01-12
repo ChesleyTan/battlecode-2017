@@ -69,20 +69,20 @@ public class Gardener extends Globals {
     System.out.println("SumY: " + sumY);
   }
 
-  public static void loop() throws GameActionException {
+  public static void loop() {
 
     // Initial setup moves to a clear spot and spawns 3 scouts
-    checkspace();
-    Clock.yield();
-    int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-    if (scoutCount < 3) {
-      initialSetup = true;
-    }
-    // Loop: Build trees and water them, and occasionally build scouts
-    while (true) {
-      scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-      initialSetup = scoutCount < 3;
-      try {
+    try {
+      checkspace();
+      Clock.yield();
+      int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+      if (scoutCount < 3) {
+        initialSetup = true;
+      }
+      // Loop: Build trees and water them, and occasionally build scouts
+      while (true) {
+        scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+        initialSetup = scoutCount < 3;
         Globals.update();
         if (!rc.onTheMap(here, detectRadius)
             || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant) {
@@ -127,9 +127,9 @@ public class Gardener extends Globals {
           }
         }
         Clock.yield();
-      } catch (Exception e) {
-        e.printStackTrace();
       }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 }

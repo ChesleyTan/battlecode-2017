@@ -24,6 +24,14 @@ public class RobotPlayer extends Globals {
     }
   }
 
+  public static int pmod(int n, int modulo) {
+    int m = n % modulo;
+    if (m < 0) {
+      return m + modulo;
+    }
+    return m;
+  }
+
   public static float degreesBetween(Direction a, Direction b) {
     return (float) Math.toDegrees(radiansBetween(a, b));
   }

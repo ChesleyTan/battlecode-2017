@@ -43,7 +43,7 @@ public strictfp class EvasiveArchon extends Globals {
           }
           */
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-            float angleDelta = Math.abs(degreesBetween(enemyAngle, angleDirections[angleIndex]));
+            float angleDelta = Math.abs(RobotPlayer.degreesBetween(enemyAngle, angleDirections[angleIndex]));
             if (angleDelta > 70) {
               continue;
             }
@@ -82,7 +82,7 @@ public strictfp class EvasiveArchon extends Globals {
         }
         */
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-          float angleDelta = Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex]));
+          float angleDelta = Math.abs(RobotPlayer.degreesBetween(treeAngle, angleDirections[angleIndex]));
           if (angleDelta > 60) {
             continue;
           }
@@ -278,34 +278,5 @@ public strictfp class EvasiveArchon extends Globals {
       System.out.println("Archon Exception");
       e.printStackTrace();
     }
-  }
-
-  private static int pmod(int n, int modulo) {
-    int m = n % modulo;
-    if (m < 0) {
-      return m + modulo;
-    }
-    return m;
-  }
-
-  public static float radiansBetween(Direction a, Direction b) {
-    return reduce(b.radians - a.radians);
-  }
-
-  public static float degreesBetween(Direction a, Direction b) {
-    return (float) Math.toDegrees(radiansBetween(a, b));
-  }
-
-  // Internally used to keep angles in the range (-Math.PI,Math.PI]
-  private static float reduce(float rads) {
-    if (rads <= -Math.PI) {
-      int circles = (int) Math.ceil(-(rads + Math.PI) / (2 * Math.PI));
-      return rads + (float) (Math.PI * 2 * circles);
-    }
-    else if (rads > Math.PI) {
-      int circles = (int) Math.ceil((rads - Math.PI) / (2 * Math.PI));
-      return rads - (float) (Math.PI * 2 * circles);
-    }
-    return rads;
   }
 }
