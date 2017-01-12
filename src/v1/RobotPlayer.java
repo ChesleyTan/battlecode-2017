@@ -11,13 +11,8 @@ public class RobotPlayer{
 				Archon.loop();
 				break;
 			case GARDENER:
-				try{
-					Gardener.loop();
-					break;
-				}
-				catch(Exception e){
-					e.printStackTrace();
-				}
+				Gardener.loop();
+				break;
 			case SCOUT:
 				Scout.loop();
 				break;

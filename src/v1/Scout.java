@@ -8,7 +8,9 @@ public class Scout extends Globals{
   private static final int defense_start_channel = 250;
   private static final int target_channel = 451;
   private String[] Modes = {"ROAM", "ATTACK"};
-  private static String current_mode = "ROAM";
+  private final static int ROAM = 0;
+  private final static int ATTACK = 1;
+  private static int current_mode = ROAM;
   private static Direction direction;
   private static final int keepaway_radius = 3;
   
@@ -87,9 +89,18 @@ public class Scout extends Globals{
         index ++;
       }
     }
-    MapLocation destination = new MapLocation(here.x + sumX / index, here.y + sumY / index);
-    if(rc.canMove(destination) && !rc.hasMoved()){
-      rc.move(destination);
+    float finaldist = (float)Math.sqrt(Math.pow(sumX, 2) + Math.pow(sumY, 2));
+    if(finaldist <= RobotType.SCOUT.strideRadius){
+      MapLocation destination = new MapLocation(here.x + sumX , here.y + sumY);
+      if(rc.canMove(destination) && !rc.hasMoved()){
+        rc.move(destination);
+      }
+    }
+    else{
+      Direction finalDir = new Direction(sumX, sumY);
+      if(rc.canMove(finalDir) && !rc.hasMoved()){
+        rc.move(finalDir);
+      }
     }
   }
   
@@ -103,16 +114,33 @@ public class Scout extends Globals{
       return;
     }
     else{
-      RobotInfo enemy = nearbyRobots[0];
-      rc.broadcast(target_channel, enemy.ID);
-      rc.broadcast(target_channel + 1, (int)(enemy.location.x));
-      rc.broadcast(target_channel + 2, (int)(enemy.location.y));
-      MapLocation center = enemy.location;
-      direction = here.directionTo(center);
-      if (rc.canFireSingleShot()){
-        rc.fireSingleShot(here.directionTo(center));
+      if (rc.getRoundNum() < 100){
+        for (RobotInfo enemy : nearbyRobots){
+          if(enemy.getType() != RobotType.ARCHON){
+            rc.broadcast(target_channel, enemy.ID);
+            rc.broadcast(target_channel + 1, (int)(enemy.location.x));
+            rc.broadcast(target_channel + 2, (int)(enemy.location.y));
+            MapLocation center = enemy.location;
+            direction = here.directionTo(center);
+            if (rc.canFireSingleShot()){
+              rc.fireSingleShot(here.directionTo(center));
+            }
+            current_mode = ATTACK;
+          }
+        }
       }
-      current_mode = "ATTACK";
+      else{
+        RobotInfo enemy = nearbyRobots[0];
+        rc.broadcast(target_channel, enemy.ID);
+        rc.broadcast(target_channel + 1, (int)(enemy.location.x));
+        rc.broadcast(target_channel + 2, (int)(enemy.location.y));
+        MapLocation center = enemy.location;
+        direction = here.directionTo(center);
+        if (rc.canFireSingleShot()){
+          rc.fireSingleShot(here.directionTo(center));
+        }
+        current_mode = ATTACK;
+      }
     }
   }
   
@@ -167,10 +195,10 @@ public class Scout extends Globals{
 	    }
   	  while(true){
   	    Globals.update();
-    	  if(current_mode == "ROAM"){
+    	  if(current_mode == ROAM){
     	    int target = rc.readBroadcast(target_channel);
     	    if (target != 0){
-    	      current_mode = "ATTACK";
+    	      current_mode = ATTACK;
     	      int xLoc = rc.readBroadcast(target_channel + 1);
     	      int yLoc = rc.readBroadcast(target_channel + 2);
     	      Direction target_direction = here.directionTo(new MapLocation(xLoc, yLoc));
@@ -208,7 +236,7 @@ public class Scout extends Globals{
     	        Clock.yield();
     	      }
     	      rc.broadcast(target_channel, 0);
-            current_mode = "ROAM";
+            current_mode = ROAM;
             direction = new Direction((float)(Math.random() * 2 * Math.PI));
             if (!rc.hasMoved() && rc.canMove(direction)){
               rc.move(direction);
@@ -224,7 +252,7 @@ public class Scout extends Globals{
               }
     	      }
     	      else{
-    	        current_mode = "ROAM";
+    	        current_mode = ROAM;
     	        direction = new Direction((float)(Math.random() * 2 * Math.PI));
     	        if (!rc.hasMoved() && rc.canMove(direction)){
                 rc.move(direction);

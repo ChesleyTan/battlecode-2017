@@ -1,102 +1,93 @@
 package v1;
 
 import battlecode.common.*;
+import sun.tools.tree.SynchronizedStatement;
 
 public class Gardener extends Globals{
 	
 	private static MapLocation[] otherArchonLoc;
 	private static int numTreesBuilt = 0;
 	private static Direction lastDir = null;
-	private static float detectRadius = 2.5f;
+	private static float detectRadius = 3f;
 	private static final int defense_start_channel = 250;
 	private static final int early_scouts_channel = 5;
 	
+	
+	/*
+	 * Checks that there is enough space around the unit to begin planting
+	 */
 	public static void checkspace() throws GameActionException{
-		while(!rc.onTheMap(here.translate(0.001f, 0.001f), detectRadius) || rc.isCircleOccupiedExceptByThisRobot(here.translate(0.001f, 0.001f), detectRadius)){ 
+		while(!rc.onTheMap(here, detectRadius) || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius)){ 
 			Globals.update();
-			if (lastDir != null && rc.canMove(lastDir)){
-				rc.move(lastDir);
-				Clock.yield();
+			float sumX = 0;
+			float sumY = 0;
+			
+			// Opposing forces created by Robots
+			RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+			for (RobotInfo r: nearbyRobots){
+        Direction their_direction = here.directionTo(r.location).opposite();
+        float their_distance = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location))/RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
+        sumX += their_direction.getDeltaX(their_distance);
+        sumY += their_direction.getDeltaY(their_distance);
+	    }
+			
+			// Opposing forces created by Trees
+			TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+			for (TreeInfo t: nearbyTrees){
+        Direction their_direction = here.directionTo(t.location).opposite();
+        float their_distance = (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location))/RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
+        sumX += their_direction.getDeltaX(their_distance);
+        sumY += their_direction.getDeltaY(their_distance);
+	    }
+			
+			// Opposing forces created by Edge of Map
+			if (!rc.onTheMap(new MapLocation(here.x - 1, here.y))){
+			  sumX += RobotType.GARDENER.strideRadius;
 			}
-			float[] volatileDirections = new float[10];
-			int index = 0;
-			if (!rc.onTheMap(here.add(Direction.getSouth(), detectRadius))){
-				volatileDirections[index] = Direction.getSouth().getAngleDegrees();
-				index ++;
+			if (!rc.onTheMap(new MapLocation(here.x + 1, here.y))){
+			  sumX -= RobotType.GARDENER.strideRadius;
 			}
-			else if (!rc.onTheMap(here.add(Direction.getEast(), detectRadius))){
-				volatileDirections[index] = Direction.getEast().getAngleDegrees();
-				index ++;
+			if (!rc.onTheMap(new MapLocation(here.x, here.y - 1))){
+			  sumY += RobotType.GARDENER.strideRadius;
 			}
-			else if (!rc.onTheMap(here.add(Direction.getNorth(), detectRadius))){
-				volatileDirections[index] = Direction.getNorth().getAngleDegrees();
-				index ++;
+			if (!rc.onTheMap(new MapLocation(here.x, here.y + 1))){
+			  sumY -= RobotType.GARDENER.strideRadius;
 			}
-			else if (!rc.onTheMap(here.add(Direction.getWest(), detectRadius))){
-				volatileDirections[index] = Direction.getWest().getAngleDegrees();
-				index ++;
-			}
-		
-			RobotInfo[] nearbyRobots = rc.senseNearbyRobots(detectRadius);
-			if (nearbyRobots != null && nearbyRobots.length > 0 && !rc.hasMoved()){
-				for(int i = 0; i < nearbyRobots.length; i++){
-					if (nearbyRobots[i] != null){
-						volatileDirections[index] = here.directionTo(nearbyRobots[i].location).getAngleDegrees();
-						index++;
-					}
-				}
-			}
-			TreeInfo[] nearbyTrees = rc.senseNearbyTrees(detectRadius);
-			if (nearbyTrees != null && nearbyTrees.length > 0){
-				for(int i = 0; i < nearbyTrees.length; i++){
-					if (nearbyTrees[i] != null){
-						volatileDirections[index] = here.directionTo(nearbyTrees[i].location).getAngleDegrees();
-						index++;
-					}
-				}
-			}
-			float sum = 0;
-			for(int i = 0; i < index; i++){
-				sum += volatileDirections[i];
-			}
-			sum = sum / index;
-			sum = sum / 180 * (float)(Math.PI);
-			Direction movedir = new Direction(sum);
-			if(rc.canMove(movedir)){
-				rc.move(movedir);
-				lastDir = movedir;
-			}
-			else if (rc.canMove(movedir.opposite())){
-				rc.move(movedir.opposite());
-				lastDir = movedir.opposite();
-			}
-			else{
-				float rand = (float)(Math.random() * 2 * Math.PI);
-				Direction newdir = new Direction(rand);
-				if (rc.canMove(newdir)){
-					rc.move(newdir);
-					lastDir = newdir;
-				}	
-			}
-			Clock.yield();
+			float finaldist = (float)Math.sqrt(Math.pow(sumX, 2) + Math.pow(sumY, 2));
+			
+      Direction finalDir = new Direction(sumX, sumY);
+      if(rc.canMove(finalDir) && !rc.hasMoved()){
+        rc.move(finalDir);
+      }
+      else {
+        while (!rc.canMove(finalDir)){
+          finalDir = finalDir.rotateLeftDegrees(20);
+        }
+        rc.move(finalDir);
+      }
+	    System.out.println("SumX: " + sumX);
+	    System.out.println("SumY: "+ sumY);
+	    Clock.yield();
 		}
 	}
 	public static void loop() throws GameActionException{
+	  
+	  // Initial setup moves to a clear spot and spawns 3 scouts
 		checkspace();
-		if (rc.getRoundNum() < 100){
-		  int scoutCount = rc.readBroadcast(early_scouts_channel);
-		  while(scoutCount < 3){
-		    if (rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth())){
-		      rc.buildRobot(RobotType.SCOUT, Direction.getNorth());
-		      rc.broadcast(early_scouts_channel, scoutCount + 1);
-		    }
-		    else{
-		      checkspace();
-		    }
-		    Clock.yield();
-		    scoutCount = rc.readBroadcast(early_scouts_channel);
-		  }
-		}
+	  int scoutCount = rc.readBroadcast(early_scouts_channel);
+	  while(scoutCount < 3){
+	    if (rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth())){
+	      rc.buildRobot(RobotType.SCOUT, Direction.getNorth());
+	      rc.broadcast(early_scouts_channel, scoutCount + 1);
+	    }
+	    else{
+	      checkspace();
+	    }
+	    Clock.yield();
+	    scoutCount = rc.readBroadcast(early_scouts_channel);
+	  }
+	  checkspace();
+	  // Loop: Build trees and water them, and occasionally build scouts
 		while(true){
 			try{
 				Globals.update();
