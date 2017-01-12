@@ -5,7 +5,6 @@ import battlecode.common.*;
 public strictfp class EvasiveArchon extends Globals {
   // Change to RobotType enums
   static Direction[] angleDirections = new Direction[12];
-  static final int[] cardinalAngleIndices = new int[] { 0, 3, 6, 9 };
   static float UNKNOWN = -1f;
   static float minX = UNKNOWN;
   static float minY = UNKNOWN;
@@ -118,45 +117,41 @@ public strictfp class EvasiveArchon extends Globals {
             }
           }
         }
-        for (int angleIndex : cardinalAngleIndices) {
-          // FIXME is ARCHON_SIGHT_RADIUS broken?
-          MapLocation testLocation = here.add(angleDirections[angleIndex],
-              RobotType.ARCHON.sensorRadius - 1);
-          if (!rc.onTheMap(testLocation)) {
-            switch (angleIndex) {
-              case 0:
-                if (maxX == UNKNOWN) {
-                  maxX = testLocation.x;
-                }
-                else {
-                  maxX = Math.min(maxX, testLocation.x);
-                }
-                break;
-              case 3:
-                if (maxY == UNKNOWN) {
-                  maxY = testLocation.y;
-                }
-                else {
-                  maxY = Math.min(maxY, testLocation.y);
-                }
-                break;
-              case 6:
-                if (minX == UNKNOWN) {
-                  minX = testLocation.x;
-                }
-                else {
-                  minX = Math.max(minX, testLocation.x);
-                }
-                break;
-              case 9:
-                if (minY == UNKNOWN) {
-                  minY = testLocation.y;
-                }
-                else {
-                  minY = Math.max(minY, testLocation.y);
-                }
-                break;
-            }
+        // FIXME is ARCHON_SIGHT_RADIUS broken?
+        if (minX == UNKNOWN) {
+          float lookAhead = RobotType.ARCHON.sensorRadius - 1;
+          MapLocation testLocation = here.add(angleDirections[6], lookAhead);
+          while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
+            minX = testLocation.x;
+            --lookAhead;
+            testLocation = here.add(angleDirections[6], lookAhead);
+          }
+        }
+        if (maxX == UNKNOWN) {
+          float lookAhead = RobotType.ARCHON.sensorRadius - 1;
+          MapLocation testLocation = here.add(angleDirections[0], lookAhead);
+          while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
+            maxX = testLocation.x;
+            --lookAhead;
+            testLocation = here.add(angleDirections[0], lookAhead);
+          }
+        }
+        if (minY == UNKNOWN) {
+          float lookAhead = RobotType.ARCHON.sensorRadius - 1;
+          MapLocation testLocation = here.add(angleDirections[9], lookAhead);
+          while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
+            minY = testLocation.y;
+            --lookAhead;
+            testLocation = here.add(angleDirections[9], lookAhead);
+          }
+        }
+        if (maxY == UNKNOWN) {
+          float lookAhead = RobotType.ARCHON.sensorRadius - 1;
+          MapLocation testLocation = here.add(angleDirections[3], lookAhead);
+          while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
+            maxY = testLocation.y;
+            --lookAhead;
+            testLocation = here.add(angleDirections[3], lookAhead);
           }
         }
         /*
