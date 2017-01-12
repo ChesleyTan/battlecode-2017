@@ -11,13 +11,15 @@ public class Gardener extends Globals{
 	private static float detectRadius = 3f;
 	private static final int defense_start_channel = 250;
 	private static final int early_scouts_channel = 5;
+	private static boolean initialSetup = false;
+	private static boolean plant = false;
+	private static int spawnRound;
 	
 	
 	/*
 	 * Checks that there is enough space around the unit to begin planting
 	 */
-	public static void checkspace() throws GameActionException{
-		while(!rc.onTheMap(here, detectRadius) || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius)){ 
+	public static void checkspace() throws GameActionException{ 
 			Globals.update();
 			float sumX = 0;
 			float sumY = 0;
@@ -69,35 +71,38 @@ public class Gardener extends Globals{
 	    System.out.println("SumY: "+ sumY);
 	    Clock.yield();
 		}
-	}
 	public static void loop() throws GameActionException{
 	  
 	  // Initial setup moves to a clear spot and spawns 3 scouts
 		checkspace();
 	  int scoutCount = rc.readBroadcast(early_scouts_channel);
-	  while(scoutCount < 3){
-	    if (rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth())){
-	      rc.buildRobot(RobotType.SCOUT, Direction.getNorth());
-	      rc.broadcast(early_scouts_channel, scoutCount + 1);
-	    }
-	    else{
-	      checkspace();
-	    }
-	    Clock.yield();
-	    scoutCount = rc.readBroadcast(early_scouts_channel);
+	  if (scoutCount < 3){
+	    initialSetup = true;
 	  }
-	  checkspace();
 	  // Loop: Build trees and water them, and occasionally build scouts
 		while(true){
+		  scoutCount = rc.readBroadcast(early_scouts_channel);
+      initialSetup = scoutCount < 3;
 			try{
 				Globals.update();
+				if(!rc.onTheMap(here, detectRadius) || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant){
+				  checkspace();
+				}
+				if (initialSetup){
+				  if (rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth())){
+		        rc.buildRobot(RobotType.SCOUT, Direction.getNorth());
+		        rc.broadcast(early_scouts_channel, scoutCount + 1);
+		        Clock.yield();
+		        continue;
+		      }
+				}
 				if (numTreesBuilt < 5 && rc.canPlantTree(Direction.getNorth().rotateLeftDegrees(60 * numTreesBuilt))){
 					rc.plantTree(Direction.getNorth().rotateLeftDegrees(60*numTreesBuilt));
 					numTreesBuilt++;
+					plant = true;
 				}
-				else if (numTreesBuilt == 0){
+				else if (numTreesBuilt == 0 && !rc.hasMoved()){
 					checkspace();
-					Clock.yield();
 				}
 				else{
 					if(rc.getRoundNum() % 100 == 0 && rc.canBuildRobot(RobotType.SCOUT, Direction.getNorth().rotateRightDegrees(60))){
