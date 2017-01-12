@@ -4,41 +4,11 @@ import battlecode.common.*;
 
 public class Scout extends Globals {
 
-  private static final int attack_start_channel = 500;
-  private static final int defense_start_channel = 250;
-  private static final int target_channel = 451;
-  private String[] Modes = {"ROAM", "ATTACK"};
   private final static int ROAM = 0;
   private final static int ATTACK = 1;
   private static int current_mode = ROAM;
   private static Direction direction;
-  private static final int keepaway_radius = 3;
-  
-  static boolean willCollideWithMe(BulletInfo bullet) {
-    MapLocation myLocation = here;
-
-    // Get relevant bullet information
-    Direction propagationDirection = bullet.dir;
-    MapLocation bulletLocation = bullet.location;
-
-    // Calculate bullet relations to this robot
-    Direction directionToRobot = bulletLocation.directionTo(myLocation);
-    float distToRobot = bulletLocation.distanceTo(myLocation);
-    float theta = propagationDirection.radiansBetween(directionToRobot);
-
-    // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
-    if (Math.abs(theta) > Math.PI / 2) {
-      return false;
-    }
-
-    // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
-    // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
-    // This corresponds to the smallest radius circle centered at our location that would intersect with the
-    // line that is the path of the bullet.
-    float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
-
-    return (perpendicularDist <= myType.bodyRadius);
-  }
+  private static final int KEEPAWAY_RADIUS = 3;
   
   public static void dodge(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots) throws GameActionException {
     boolean willHit = false;
@@ -121,9 +91,9 @@ public class Scout extends Globals {
       if (rc.getRoundNum() < 100){
         for (RobotInfo enemy : nearbyRobots){
           if(enemy.getType() != RobotType.ARCHON){
-            rc.broadcast(target_channel, enemy.ID);
-            rc.broadcast(target_channel + 1, (int)(enemy.location.x));
-            rc.broadcast(target_channel + 2, (int)(enemy.location.y));
+            rc.broadcast(TARGET_CHANNEL, enemy.ID);
+            rc.broadcast(TARGET_CHANNEL + 1, (int)(enemy.location.x));
+            rc.broadcast(TARGET_CHANNEL + 2, (int)(enemy.location.y));
             MapLocation center = enemy.location;
             direction = here.directionTo(center);
             if (rc.canFireSingleShot() && clearShot(enemy.location)){
@@ -138,9 +108,9 @@ public class Scout extends Globals {
       }
       else{
         RobotInfo enemy = nearbyRobots[0];
-        rc.broadcast(target_channel, enemy.ID);
-        rc.broadcast(target_channel + 1, (int)(enemy.location.x));
-        rc.broadcast(target_channel + 2, (int)(enemy.location.y));
+        rc.broadcast(TARGET_CHANNEL, enemy.ID);
+        rc.broadcast(TARGET_CHANNEL + 1, (int)(enemy.location.x));
+        rc.broadcast(TARGET_CHANNEL + 2, (int)(enemy.location.y));
         MapLocation center = enemy.location;
         direction = here.directionTo(center);
         if (rc.canFireSingleShot() && clearShot(enemy.location)){
@@ -174,8 +144,8 @@ public class Scout extends Globals {
   
   public static void engage(int target) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
-    rc.broadcast(target_channel + 1, (int) targetRobot.location.x);
-    rc.broadcast(target_channel + 2, (int) targetRobot.location.y);
+    rc.broadcast(TARGET_CHANNEL + 1, (int) targetRobot.location.x);
+    rc.broadcast(TARGET_CHANNEL + 2, (int) targetRobot.location.y);
     direction = here.directionTo(targetRobot.location);
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadius, them);
@@ -186,20 +156,20 @@ public class Scout extends Globals {
     else {
       float absolute_dist = (float) Math.sqrt(Math.pow(here.x - targetRobot.location.x, 2)
           + Math.pow(here.y - targetRobot.location.y, 2));
-      if (absolute_dist > keepaway_radius + RobotType.SCOUT.strideRadius) {
+      if (absolute_dist > KEEPAWAY_RADIUS + RobotType.SCOUT.strideRadius) {
         if (rc.canMove(direction)) {
           rc.move(direction);
         }
       }
       else {
         Direction rotated20 = direction.opposite().rotateLeftDegrees(20);
-        MapLocation newLoc = targetRobot.location.add(rotated20, keepaway_radius);
+        MapLocation newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
         if (rc.canMove(newLoc)) {
           rc.move(newLoc);
         }
         else {
           rotated20 = direction.opposite().rotateRightDegrees(20);
-          newLoc = targetRobot.location.add(rotated20, keepaway_radius);
+          newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
           if (rc.canMove(newLoc)) {
             rc.move(newLoc);
           }
@@ -224,11 +194,11 @@ public class Scout extends Globals {
   	  while(true){
   	    Globals.update();
     	  if(current_mode == ROAM){
-    	    int target = rc.readBroadcast(target_channel);
+    	    int target = rc.readBroadcast(TARGET_CHANNEL);
     	    if (target != 0){
     	      current_mode = ATTACK;
-    	      int xLoc = rc.readBroadcast(target_channel + 1);
-    	      int yLoc = rc.readBroadcast(target_channel + 2);
+    	      int xLoc = rc.readBroadcast(TARGET_CHANNEL + 1);
+    	      int yLoc = rc.readBroadcast(TARGET_CHANNEL + 2);
     	      Direction target_direction = here.directionTo(new MapLocation(xLoc, yLoc));
     	      direction = target_direction;
     	      BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
@@ -256,14 +226,14 @@ public class Scout extends Globals {
     	    }
     	  }
     	  else{
-    	    int target = rc.readBroadcast(target_channel);
+    	    int target = rc.readBroadcast(TARGET_CHANNEL);
     	    if(rc.canSenseRobot(target)){
     	      while(rc.canSenseRobot(target)){
     	        Globals.update();
     	        engage(target);
     	        Clock.yield();
     	      }
-    	      rc.broadcast(target_channel, 0);
+    	      rc.broadcast(TARGET_CHANNEL, 0);
             current_mode = ROAM;
             direction = new Direction((float)(Math.random() * 2 * Math.PI));
             if (!rc.hasMoved() && rc.canMove(direction)){
@@ -271,9 +241,9 @@ public class Scout extends Globals {
             }
     	    }
     	    else{
-    	      if (rc.readBroadcast(target_channel) != 0){
-      	      int xLoc = rc.readBroadcast(target_channel + 1);
-              int yLoc = rc.readBroadcast(target_channel + 2);
+    	      if (rc.readBroadcast(TARGET_CHANNEL) != 0){
+      	      int xLoc = rc.readBroadcast(TARGET_CHANNEL + 1);
+              int yLoc = rc.readBroadcast(TARGET_CHANNEL + 2);
               Direction target_direction = here.directionTo(new MapLocation(xLoc, yLoc));
               if(rc.canMove(target_direction)){
                 rc.move(target_direction);
