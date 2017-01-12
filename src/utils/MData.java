@@ -35,8 +35,8 @@ public class MData implements Cloneable{
    * @return The predicted position of the object, not accounting for collisions with walls or other objects.
    */
   public MapLocation predictPositionLinear(double delta) {
-    double predictedX = this.getX() + this.getSpeed()*delta*Math.sin(this.getAngle());
-    double predictedY = this.getY() + this.getSpeed()*delta*Math.cos(this.getAngle());
+    double predictedX = this.getX() + this.getSpeed()*delta*Math.cos(this.getAngle());
+    double predictedY = this.getY() + this.getSpeed()*delta*Math.sin(this.getAngle());
     return new MapLocation((float)predictedX,(float)predictedY);
   }
 
@@ -50,8 +50,8 @@ public class MData implements Cloneable{
    */
   public MapLocation predictPositionLinearBounded(double delta, double upperboundX, double lowerboundX, double upperboundY, double lowerboundY) {
 
-    double predictedX = this.getX() + this.getSpeed()*delta*Math.sin(this.getAngle());
-    double predictedY = this.getY() + this.getSpeed()*delta*Math.cos(this.getAngle());
+    double predictedX = this.getX() + this.getSpeed()*delta*Math.cos(this.getAngle());
+    double predictedY = this.getY() + this.getSpeed()*delta*Math.sin(this.getAngle());
     double dx = predictedX - this.getX();
     double dy = predictedY - this.getY();
 
@@ -101,7 +101,7 @@ public class MData implements Cloneable{
   }
 
   public float getAngle() {
-    return direction.getAngleDegrees();
+    return direction.radians;
   }
 
   public Direction getDirection() {
