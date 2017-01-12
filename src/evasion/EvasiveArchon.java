@@ -167,12 +167,14 @@ public strictfp class EvasiveArchon extends Globals {
         }
       }
       */
+      /*
       if (DEBUG) {
         System.out.println("minX: " + minX);
         System.out.println("maxX: " + maxX);
         System.out.println("minY: " + minY);
         System.out.println("maxY: " + maxY);
       }
+      */
       // Avoid corners and edges
       if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
         for (int angleIndex = 4; angleIndex < 9; ++angleIndex) {
