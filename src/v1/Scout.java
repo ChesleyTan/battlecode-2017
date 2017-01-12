@@ -131,6 +131,9 @@ public class Scout extends Globals {
             }
             current_mode = ATTACK;
           }
+          else{
+            return;
+          }
         }
       }
       else{

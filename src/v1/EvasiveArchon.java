@@ -152,7 +152,7 @@ public strictfp class EvasiveArchon extends Globals {
         }
       }
       if (maxY == UNKNOWN) {
-        float lookAhead = RobotType.ARCHON.sensorRadius;
+        float lookAhead = RobotType.ARCHON.sensorRadius - 1;
         MapLocation testLocation = here.add(angleDirections[3], lookAhead);
         while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
           maxY = testLocation.y;
