@@ -1,6 +1,11 @@
 package evasion;
 
-import battlecode.common.*;
+import java.util.Random;
+
+import battlecode.common.MapLocation;
+import battlecode.common.RobotController;
+import battlecode.common.RobotType;
+import battlecode.common.Team;
 
 public class Globals {
 
@@ -11,6 +16,7 @@ public class Globals {
   public static Team them;
   public static int myID;
   public static RobotType myType;
+	public static Random rand;
 
   public static void init(RobotController theRC) {
     rc = theRC;
@@ -19,6 +25,7 @@ public class Globals {
     myID = rc.getID();
     myType = rc.getType();
     here = rc.getLocation();
+		rand = new Random(theRC.getID());
   }
 
   public static void update() {
