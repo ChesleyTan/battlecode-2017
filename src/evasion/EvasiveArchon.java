@@ -13,6 +13,8 @@ public strictfp class EvasiveArchon extends Globals {
   static float maxY = UNKNOWN;
   static final int EDGE_BIAS_RADIUS = 15;
   static int lastMoveAngleIndex = -1;
+  static final int BULLET_DETECT_RADIUS = 7;
+  private static MapLocation[] moveLocations = new MapLocation[12];
 
   static void run() throws GameActionException {
     for (int angle = 0; angle < 12; ++angle) {
@@ -28,76 +30,90 @@ public strictfp class EvasiveArchon extends Globals {
           System.out.println("========== Round: " + rc.getRoundNum() + "==========");
           System.out.println(here);
         }
+        for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+          moveLocations[angleIndex] = here.add(angleDirections[angleIndex]);
+        }
         RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
         float[] directionWeights = new float[12];
         for (RobotInfo ri : nearbyRobots) {
           if (ri.team == them && ri.type.canAttack()) {
             Direction enemyAngle = here.directionTo(ri.location);
+            /*
             if (DEBUG) {
               System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
             }
+            */
             for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-              // TODO avoid unnecessary angles
-              float weightOffset = (100 * Math.max(0,
-                  (70 - Math.abs(degreesBetween(enemyAngle, angleDirections[angleIndex])))));
-              directionWeights[angleIndex] -= weightOffset;
-              if (DEBUG) {
-                System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
-                    + ":" + weightOffset);
-                System.out.println("Degrees between: "
-                    + Math.abs(degreesBetween(enemyAngle, angleDirections[angleIndex])));
+              float angleDelta = Math.abs(degreesBetween(enemyAngle, angleDirections[angleIndex]));
+              if (angleDelta > 70) {
+                continue;
               }
+              float weightOffset = (100 * (70 - angleDelta));
+              directionWeights[angleIndex] -= weightOffset;
+              /*
+              if (DEBUG) {
+                System.out.println("Weight for angle "
+                    + angleDirections[angleIndex].getAngleDegrees() + ":" + weightOffset);
+                System.out.println("Degrees between: " + angleDelta);
+              }
+              */
             }
           }
         }
         TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5);
         for (TreeInfo ti : nearbyTrees) {
           Direction treeAngle = here.directionTo(ti.location);
+          /*
           if (DEBUG) {
             System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
           }
+          */
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-            // TODO avoid unnecessary angles
-            float weightOffset = (30 * Math.max(0,
-                (60 - Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex])))));
+            float angleDelta = Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex]));
+            if (angleDelta > 60) {
+              continue;
+            }
+            float weightOffset = (50 * (60 - angleDelta));
             directionWeights[angleIndex] -= weightOffset;
+            /*
             if (DEBUG) {
               System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
                   + ":" + weightOffset);
-              System.out.println("Degrees between: "
-                  + Math.abs(degreesBetween(treeAngle, angleDirections[angleIndex])));
+              System.out.println("Degrees between: " + angleDelta);
             }
+            */
           }
         }
-        BulletInfo[] nearbyBullets = rc.senseNearbyBullets(7);
+        BulletInfo[] nearbyBullets = rc.senseNearbyBullets(BULLET_DETECT_RADIUS);
+        // TODO don't move if it guarantees you will be hit by a bullet?
         for (int i = 0; i < nearbyBullets.length && i < 5; ++i) {
           BulletInfo bi = nearbyBullets[i];
-          if (RobotPlayer.willCollideWithMe(bi)) {
-            Direction bulletAngle = bi.location.directionTo(here);
-            if (DEBUG) {
-              System.out.println("Bullet angle: " + bulletAngle.getAngleDegrees());
+          // Get relevant bullet information
+          Direction propagationDirection = bi.dir;
+          MapLocation bulletLocation = bi.location;
+          if (DEBUG) {
+            System.out.println("Bullet direction: " + propagationDirection);
+          }
+          for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+            // Calculate bullet relations to this robot
+            Direction directionToRobot = bulletLocation.directionTo(moveLocations[angleIndex]);
+            float theta = propagationDirection.radiansBetween(directionToRobot);
+            // If theta > 90 degrees, then the bullet is traveling away from us and we can continue
+            if (Math.abs(theta) > Math.PI / 2) {
+              continue;
             }
-            int collisionAngleIndex = (int)bulletAngle.getAngleDegrees() / 30;
-            for (int angleIndexOffset = -1; angleIndexOffset <= 1; ++angleIndexOffset) {
-              int angleIndex = pmod(collisionAngleIndex + angleIndexOffset, 12);
-              // Avoid moving along axis of bullet trajectory
-              float weightOffset = (150 * (60 - 30 * Math.abs(angleIndexOffset)));
-              directionWeights[angleIndex] -= weightOffset;
+            // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
+            // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
+            // This corresponds to the smallest radius circle centered at our location that would intersect with the
+            // line that is the path of the bullet.
+            float distToRobot = bulletLocation.distanceTo(moveLocations[angleIndex]);
+            float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta));
+            boolean willCollide = (perpendicularDist <= myType.bodyRadius);
+            if (willCollide) {
+              directionWeights[angleIndex] -= (10000
+                  + 1000 * (myType.strideRadius + BULLET_DETECT_RADIUS - distToRobot));
               if (DEBUG) {
-                System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
-                    + ":" + weightOffset);
-                System.out.println("Degrees between: "
-                    + Math.abs(degreesBetween(bulletAngle, angleDirections[angleIndex])));
-              }
-              // Avoid moving towards bullet
-              angleIndex = pmod(angleIndex + 6, 12);
-              weightOffset = (200 * (60 - 30 * Math.abs(angleIndexOffset)));
-              directionWeights[angleIndex] -= weightOffset;
-              if (DEBUG) {
-                System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
-                    + ":" + weightOffset);
-                System.out.println("Degrees between: "
-                    + Math.abs(degreesBetween(bulletAngle, angleDirections[angleIndex])));
+                System.out.println("Angle " + (angleIndex * 30) + " is unsafe.");
               }
             }
           }
@@ -177,8 +193,8 @@ public strictfp class EvasiveArchon extends Globals {
         }
         if (DEBUG) {
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-            System.out
-                .println("Angle: " + (angleIndex * 30) + ", Weight: " + directionWeights[angleIndex]);
+            System.out.println(
+                "Angle: " + (angleIndex * 30) + ", Weight: " + directionWeights[angleIndex]);
           }
         }
         // TODO avoid corners using messaging
@@ -201,9 +217,16 @@ public strictfp class EvasiveArchon extends Globals {
         int moveAngleIndex = 0;
         int attempts = 0;
         boolean moved = false;
+
+        int movementBiasSeed = Math.abs(rand.nextInt());
         do {
-          moveAngleIndex = 0;
-          for (int angleIndex = 1; angleIndex < 12; ++angleIndex) {
+          // Prevent clockwise bias in movement angle starting from 0 degrees
+          moveAngleIndex = movementBiasSeed % 12;
+          movementBiasSeed /= 12;
+          for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+            if (angleIndex == moveAngleIndex) {
+              continue;
+            }
             if (directionWeights[angleIndex] > directionWeights[moveAngleIndex]) {
               moveAngleIndex = angleIndex;
             }
@@ -218,7 +241,7 @@ public strictfp class EvasiveArchon extends Globals {
                 here.add(angleDirections[moveAngleIndex], 1.5f), 255, 0, 0);
             rc.setIndicatorDot(here, 0, 0, 0);
             for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-              rc.setIndicatorDot(here.add(angleDirections[angleIndex]),
+              rc.setIndicatorDot(here.add(angleDirections[angleIndex], 2),
                   (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
                   (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
                   (int) Math.max(-25500, directionWeights[angleIndex]) / (-100));
@@ -239,6 +262,7 @@ public strictfp class EvasiveArchon extends Globals {
         if (DEBUG) {
           System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
         }
+        //System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
         // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
         Clock.yield();
 
@@ -248,7 +272,7 @@ public strictfp class EvasiveArchon extends Globals {
       }
     }
   }
-  
+
   private static int pmod(int n, int modulo) {
     int m = n % modulo;
     if (m < 0) {
