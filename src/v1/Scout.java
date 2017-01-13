@@ -102,7 +102,7 @@ public class Scout extends Globals {
       return;
     }
     else{
-      if (rc.getRoundNum() < 100){
+      if (rc.getRoundNum() < 200){
         for (RobotInfo enemy : nearbyRobots){
           if(enemy.getType() != RobotType.ARCHON){
             rc.broadcast(squad_channel + 1, enemy.ID);
@@ -159,6 +159,7 @@ public class Scout extends Globals {
   
   public static void engage(int target) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
+    rc.broadcast(squad_channel + 1, targetRobot.ID);
     rc.broadcast(squad_channel + 2, (int) targetRobot.location.x);
     rc.broadcast(squad_channel + 3, (int) targetRobot.location.y);
     direction = here.directionTo(targetRobot.location);
@@ -169,10 +170,15 @@ public class Scout extends Globals {
     }
     //System.out.println(target);
     if (!rc.hasMoved()){
-      float absolute_dist = (float) Math.sqrt(Math.pow(here.x - targetRobot.location.x, 2)
-          + Math.pow(here.y - targetRobot.location.y, 2));
-      if (absolute_dist > KEEPAWAY_RADIUS + RobotType.SCOUT.strideRadius) {
+      float absolute_dist = (float) here.distanceTo(targetRobot.location);
+      if (absolute_dist > KEEPAWAY_RADIUS + targetRobot.getType().bodyRadius) {
         if (rc.canMove(direction)) {
+          rc.move(direction);
+        }
+        else{
+          while(!rc.canMove(direction)){
+            direction = direction.rotateLeftDegrees(10);
+          }
           rc.move(direction);
         }
       }
@@ -209,9 +215,10 @@ public class Scout extends Globals {
 	      direction = new Direction((float)(Math.random() * 2 * Math.PI));
 	    }
   	  while(true){
+  	    System.out.println(rc.readBroadcast(squad_channel+1));
   	    Globals.update();
     	  if(current_mode == ROAM){
-    	    //rc.setIndicatorDot(here, 0, 0, 255);
+    	    rc.setIndicatorDot(here, 0, 0, 255);
     	    int target = rc.readBroadcast(squad_channel + 1);
     	    if (target != 0){
     	      current_mode = ATTACK;
@@ -247,7 +254,7 @@ public class Scout extends Globals {
     	    }
     	  }
     	  else{
-    	    //rc.setIndicatorDot(here, 0, 255, 0);
+    	    rc.setIndicatorDot(here, 0, 255, 0);
     	    int target = rc.readBroadcast(squad_channel + 1);
     	    if(rc.canSenseRobot(target)){
     	      while(rc.canSenseRobot(target)){
