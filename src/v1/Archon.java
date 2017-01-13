@@ -25,7 +25,7 @@ public class Archon extends Globals {
         continue;
       }
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
-      if (rc.canHireGardener(NORTH) && producedGardeners < 5 * ArchonCount) {
+      if (rc.canHireGardener(NORTH) && producedGardeners < 3 * ArchonCount) {
         rc.hireGardener(NORTH);
         rc.broadcast(PRODUCED_GARDENERS_CHANNEL, producedGardeners + 1);
       }

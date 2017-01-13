@@ -240,7 +240,6 @@ public class Scout extends Globals {
 	      direction = new Direction((float)(Math.random() * 2 * Math.PI));
 	    }
   	  while(true){
-  	    System.out.println(rc.readBroadcast(squad_channel+1));
   	    Globals.update();
     	  if(current_mode == ROAM){
     	    rc.setIndicatorDot(here, 0, 0, 255);

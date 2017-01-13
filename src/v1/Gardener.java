@@ -124,7 +124,8 @@ public class Gardener extends Globals {
           plant = true;
         }
         else {
-          if (rc.getRoundNum() % 154/(rc.getTreeCount() + 1) == 0
+          int division_factor = (int)(154/(rc.getTreeCount() + 1));
+          if (rc.getRoundNum() % division_factor == 0
               && freeSpaces[0] != null
               && rc.canBuildRobot(RobotType.SCOUT, freeSpaces[0])) {
             rc.buildRobot(RobotType.SCOUT, freeSpaces[0]);
@@ -141,6 +142,11 @@ public class Gardener extends Globals {
           if (rc.canWater(minWaterable.ID)) {
             rc.water(minWaterable.ID);
           }
+        }
+        if (rc.getHealth() < 3 && rc.senseNearbyRobots(1, them).length > 0){
+          int gardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
+          rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners - 1);
+          rc.disintegrate();
         }
         Clock.yield();
       }
