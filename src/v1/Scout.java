@@ -8,6 +8,7 @@ public class Scout extends Globals {
   private final static int ATTACK = 1;
   private static int current_mode = ROAM;
   private static final int KEEPAWAY_RADIUS = 3;
+  private static final int GARDENER_KEEPAWAY_RADIUS = 1;
   private static Direction targetDirection = null;
   private static int squad_channel;
 
@@ -223,9 +224,13 @@ public class Scout extends Globals {
         }
       }
       else {
+        int shootingDist = KEEPAWAY_RADIUS;
+        if (targetRobot.type == RobotType.GARDENER) {
+          shootingDist = GARDENER_KEEPAWAY_RADIUS;
+        }
         boolean currentlyHasClearShot = clearShot(here, targetRobot.location);
         Direction rotated20 = direction.opposite().rotateLeftDegrees(20);
-        MapLocation newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
+        MapLocation newLoc = targetRobot.location.add(rotated20, shootingDist);
         if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
           if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
             System.out.println("d");
@@ -237,7 +242,7 @@ public class Scout extends Globals {
         }
         else {
           rotated20 = direction.opposite().rotateRightDegrees(20);
-          newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
+          newLoc = targetRobot.location.add(rotated20, shootingDist);
           if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
             if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
               System.out.println("e");
@@ -260,8 +265,8 @@ public class Scout extends Globals {
         System.out.println(bi.location);
       }
       */
-      rc.setIndicatorDot(targetRobot.location, 255, 0, 0);
     }
+    rc.setIndicatorDot(targetRobot.location, (us == Team.A) ? 255 : 0, 0, (us == Team.B ? 255 : 0));
   }
 
   public static void loop() {
@@ -315,6 +320,11 @@ public class Scout extends Globals {
               }
               else if (!rc.onTheMap(here.add(targetDirection, RobotType.SCOUT.strideRadius))
                   || rc.senseNearbyRobots(2.5f, us) != null) {
+                targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
+                if (rc.canMove(targetDirection)) {
+                  rc.move(targetDirection);
+                }
+                /*
                 Direction newDir = targetDirection.rotateRightDegrees(10);
                 while (!rc.canMove(newDir)) {
                   newDir = newDir.rotateRightDegrees(10);
@@ -322,6 +332,7 @@ public class Scout extends Globals {
                 targetDirection = newDir;
                 System.out.println("h");
                 rc.move(targetDirection);
+                */
                 //System.out.println(direction.getAngleDegrees());
               }
             }
