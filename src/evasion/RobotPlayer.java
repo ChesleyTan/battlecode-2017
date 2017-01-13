@@ -100,16 +100,12 @@ public strictfp class RobotPlayer extends Globals {
     // Calculate bullet relations to this robot
     Direction directionToRobot = bulletLocation.directionTo(myLocation);
     float theta = propagationDirection.radiansBetween(directionToRobot);
+    float distToRobot = bulletLocation.distanceTo(myLocation);
 
     // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
-    if (Math.abs(theta) > Math.PI / 2) {
+    if (distToRobot > myType.bodyRadius && Math.abs(theta) > Math.PI / 2) {
       return false;
     } 
-
-    float distToRobot = bulletLocation.distanceTo(myLocation);
-    if (distToRobot < myType.bodyRadius) {
-      return true;
-    }
 
     // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
     // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
@@ -126,17 +122,13 @@ public strictfp class RobotPlayer extends Globals {
     // Calculate bullet relations to this robot
     Direction directionToRobot = bulletLocation.directionTo(TargetLocation);
     float theta = propagationDirection.radiansBetween(directionToRobot);
+    float distToRobot = bulletLocation.distanceTo(TargetLocation);
 
     // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
-    if (Math.abs(theta) > Math.PI / 2) {
+    if (distToRobot > bodyRadius && Math.abs(theta) > Math.PI / 2) {
       return false;
     }
     
-    float distToRobot = bulletLocation.distanceTo(TargetLocation);
-    if (distToRobot < bodyRadius) {
-      return true;
-    }
-
     // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
     // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
     // This corresponds to the smallest radius circle centered at our location that would intersect with the

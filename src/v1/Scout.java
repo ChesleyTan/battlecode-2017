@@ -115,7 +115,7 @@ public class Scout extends Globals {
             rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
             rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
             MapLocation center = enemy.location;
-            if (rc.canFireSingleShot() && clearShot(enemy.location)) {
+            if (rc.canFireSingleShot() && clearShot(here, enemy.location)) {
               rc.fireSingleShot(here.directionTo(center));
             }
             current_mode = ATTACK;
@@ -127,12 +127,25 @@ public class Scout extends Globals {
         }
       }
       else {
+        /*
+        RobotInfo enemy = null;
+        // Preferred targets
+        for (RobotInfo ri : nearbyRobots) {
+          if (ri.type == RobotType.GARDENER) {
+            enemy = ri;
+            break;
+          }
+        }
+        if (enemy == null) {
+          enemy = nearbyRobots[0];
+        }
+        */
         RobotInfo enemy = nearbyRobots[0];
         rc.broadcast(squad_channel + 1, enemy.ID);
         rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
         rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
         MapLocation center = enemy.location;
-        if (rc.canFireSingleShot() && clearShot(center)) {
+        if (rc.canFireSingleShot() && clearShot(here, center)) {
           rc.fireSingleShot(here.directionTo(center));
           rc.setIndicatorDot(center, 255, 0, 0);
         }
@@ -144,11 +157,11 @@ public class Scout extends Globals {
   /*
    * Returns True if I have a clear shot at the person, false otherwise;
    */
-  public static boolean clearShot(MapLocation target) {
-    Direction targetDir = here.directionTo(target);
-    float distanceTarget = here.distanceTo(target);
+  public static boolean clearShot(MapLocation shooterLoc, MapLocation target) {
+    Direction targetDir = shooterLoc.directionTo(target);
+    float distanceTarget = shooterLoc.distanceTo(target);
     RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, us);
-    MapLocation outerEdge = here.add(targetDir, RobotType.SCOUT.bodyRadius);
+    MapLocation outerEdge = shooterLoc.add(targetDir, RobotType.SCOUT.bodyRadius + 0.1f);
     for (RobotInfo r : friendlies) {
       if (RobotPlayer.willCollideWithTargetLocation(outerEdge, targetDir, r.location,
           r.getRadius())) {
@@ -191,8 +204,8 @@ public class Scout extends Globals {
     Direction direction = here.directionTo(targetRobot.location);
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.LUMBERJACK_DETECT_RADIUS, them);
-    if ((nearbyBullets != null && nearbyBullets.length != 0)
-        || (nearbyRobots != null && nearbyRobots.length != 0)) {
+    if (!rc.hasMoved() && ((nearbyBullets != null && nearbyBullets.length != 0)
+        || (nearbyRobots != null && nearbyRobots.length != 0))) {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
     }
     //System.out.println(target);
@@ -214,7 +227,7 @@ public class Scout extends Globals {
         MapLocation newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
         boolean locIsSafe = true;
         if (rc.canMove(newLoc)) {
-          if (isLocationSafe(nearbyBullets, newLoc)) {
+          if (clearShot(newLoc, targetRobot.location) && isLocationSafe(nearbyBullets, newLoc)) {
             System.out.println("d");
             rc.move(newLoc);
           }
@@ -226,7 +239,7 @@ public class Scout extends Globals {
           rotated20 = direction.opposite().rotateRightDegrees(20);
           newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
           if (rc.canMove(newLoc)) {
-            if (isLocationSafe(nearbyBullets, newLoc)) {
+            if (clearShot(newLoc, targetRobot.location) && isLocationSafe(nearbyBullets, newLoc)) {
               System.out.println("e");
               rc.move(newLoc);
             }
@@ -237,8 +250,16 @@ public class Scout extends Globals {
         }
       }
     }
-    if (shouldShoot && rc.canFireSingleShot() && clearShot(targetRobot.location)) {
+    Globals.update();
+    direction = here.directionTo(targetRobot.location);
+    if (shouldShoot && rc.canFireSingleShot() && clearShot(here, targetRobot.location)) {
+      System.out.println("CLEARSHOT!");
       rc.fireSingleShot(direction);
+      /*
+      for (BulletInfo bi : rc.senseNearbyBullets()) {
+        System.out.println(bi.location);
+      }
+      */
       rc.setIndicatorDot(targetRobot.location, 255, 0, 0);
     }
   }
