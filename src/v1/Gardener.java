@@ -64,8 +64,6 @@ public class Gardener extends Globals {
       }
       rc.move(finalDir);
     }
-    System.out.println("SumX: " + sumX);
-    System.out.println("SumY: " + sumY);
   }
   
   private static void spawnScout() throws GameActionException{

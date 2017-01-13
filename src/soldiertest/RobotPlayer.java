@@ -144,11 +144,7 @@ public strictfp class RobotPlayer {
             }
           }
           if (firingSoln != null) {
-            try{
-              rc.setIndicatorDot(firingSoln, 255, 0 ,0);
-            } catch (GameActionException e){
-              //Do nothing because predicted loc is off the map
-            }
+            rc.setIndicatorDot(firingSoln, 255, 0 ,0);
             rc.fireSingleShot(myLocation.directionTo(firingSoln));
           }
 
