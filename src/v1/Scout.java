@@ -67,12 +67,14 @@ public class Scout extends Globals {
     if(finaldist <= RobotType.SCOUT.strideRadius){
       MapLocation destination = new MapLocation(here.x + sumX , here.y + sumY);
       if(rc.canMove(destination) && !rc.hasMoved()){
+        System.out.println("a");
         rc.move(destination);
       }
     }
     else{
       Direction finalDir = new Direction(sumX, sumY);
       if(rc.canMove(finalDir) && !rc.hasMoved()){
+        System.out.println("b");
         rc.move(finalDir);
       }
     }
@@ -93,10 +95,10 @@ public class Scout extends Globals {
   }
 
   public static void alert() throws GameActionException {
-    BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
+    BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(KEEPAWAY_RADIUS, them);
     if (nearbyBullets != null && nearbyBullets.length != 0 || nearbyRobots != null && nearbyRobots.length != 0){
-      dodge(nearbyBullets, nearbyRobots);
+      EvasiveScout.move(nearbyBullets, nearbyRobots);
     }
     if (nearbyRobots == null || nearbyRobots.length == 0){
       return;
@@ -156,48 +158,77 @@ public class Scout extends Globals {
     }
     return true;
   }
+
+  private static boolean noBulletsAtLocation(BulletInfo[] nearbyBullets, MapLocation loc) {
+    for (BulletInfo bi : nearbyBullets) {
+      if (loc.distanceTo(bi.location) < myType.bodyRadius) {
+        return false;
+      }
+    }
+    return true;
+  }
   
   public static void engage(int target) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
     rc.broadcast(squad_channel + 2, (int) targetRobot.location.x);
     rc.broadcast(squad_channel + 3, (int) targetRobot.location.y);
     direction = here.directionTo(targetRobot.location);
-    BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
-    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(RobotType.SCOUT.sensorRadius, them);
+    BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.LUMBERJACK_DETECT_RADIUS, them);
     if (nearbyBullets != null && nearbyBullets.length != 0 || nearbyRobots != null && nearbyRobots.length != 0){
-      dodge(nearbyBullets, nearbyRobots);
+      EvasiveScout.move(nearbyBullets, nearbyRobots);
     }
     //System.out.println(target);
+    boolean shouldShoot = true;
     if (!rc.hasMoved()){
       float absolute_dist = (float) Math.sqrt(Math.pow(here.x - targetRobot.location.x, 2)
           + Math.pow(here.y - targetRobot.location.y, 2));
       if (absolute_dist > KEEPAWAY_RADIUS + RobotType.SCOUT.strideRadius) {
-        if (rc.canMove(direction)) {
-          rc.move(direction);
-        }
-      }
-      else {
-        Direction rotated20 = direction.opposite().rotateLeftDegrees(20);
-        MapLocation newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS - 2);
+        shouldShoot = false;
+        MapLocation newLoc = here.add(direction);
         if (rc.canMove(newLoc)) {
-          rc.move(newLoc);
-        }
-        else {
-          rotated20 = direction.opposite().rotateRightDegrees(20);
-          newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS - 2);
-          if (rc.canMove(newLoc)) {
+          if (noBulletsAtLocation(nearbyBullets, newLoc)) {
+            System.out.println("c");
             rc.move(newLoc);
           }
         }
       }
+      else {
+        Direction rotated20 = direction.opposite().rotateLeftDegrees(20);
+        MapLocation newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
+        boolean locIsSafe = true;
+        if (rc.canMove(newLoc)) {
+          if (noBulletsAtLocation(nearbyBullets, newLoc)) {
+            System.out.println("d");
+            rc.move(newLoc);
+          }
+          else {
+            shouldShoot = false;
+          }
+        }
+        else {
+          rotated20 = direction.opposite().rotateRightDegrees(20);
+          newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
+          if (rc.canMove(newLoc)) {
+            if (noBulletsAtLocation(nearbyBullets, newLoc)) {
+              System.out.println("e");
+              rc.move(newLoc);
+            }
+            else {
+              shouldShoot = false;
+            }
+          }
+        }
+      }
     }
-    if (rc.canFireSingleShot() && clearShot(targetRobot.location)) {
+    if (shouldShoot && rc.canFireSingleShot() && clearShot(targetRobot.location)) {
       rc.fireSingleShot(direction);
     }
   }  
 	public static void loop() throws GameActionException {
 	  try{
 	    Globals.update();
+	    EvasiveScout.init();
 	    if (rc.getRoundNum() < 100){
 	      squad_channel = 100;
 	      MapLocation[] enemies = rc.getInitialArchonLocations(them);
@@ -219,12 +250,13 @@ public class Scout extends Globals {
     	      int yLoc = rc.readBroadcast(squad_channel + 3);
     	      Direction target_direction = here.directionTo(new MapLocation(xLoc, yLoc));
     	      direction = target_direction;
-    	      BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
+    	      BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     	      RobotInfo[] nearbyRobots = rc.senseNearbyRobots(KEEPAWAY_RADIUS, them);
     	      if (nearbyBullets != null && nearbyBullets.length != 0 || nearbyRobots != null && nearbyRobots.length != 0){
-    	        dodge(nearbyBullets, nearbyRobots);
+    	        EvasiveScout.move(nearbyBullets, nearbyRobots);
     	      }
     	      else if(rc.canMove(direction) && !rc.hasMoved()){
+    	        System.out.println("f");
     	        rc.move(direction);
     	      }
     	    }
@@ -232,6 +264,7 @@ public class Scout extends Globals {
     	      alert();
     	      if (!rc.hasMoved()){
       	      if (rc.canMove(direction)){
+      	        System.out.println("g");
       	        rc.move(direction);
       	      }
       	      else if (!rc.onTheMap(here.add(direction, RobotType.SCOUT.strideRadius)) || rc.senseNearbyRobots(2.5f, us) != null){
@@ -240,6 +273,7 @@ public class Scout extends Globals {
       	          newDir = newDir.rotateRightDegrees(10);
       	        }
                 direction = newDir;
+                System.out.println("h");
       	        rc.move(direction);
       	        //System.out.println(direction.getAngleDegrees());
       	      }
@@ -259,6 +293,7 @@ public class Scout extends Globals {
             current_mode = ROAM;
             direction = new Direction((float)(Math.random() * 2 * Math.PI));
             if (!rc.hasMoved() && rc.canMove(direction)){
+              System.out.println("i");
               rc.move(direction);
             }
     	    }
@@ -268,6 +303,7 @@ public class Scout extends Globals {
               int yLoc = rc.readBroadcast(squad_channel + 3);
               Direction target_direction = here.directionTo(new MapLocation(xLoc, yLoc));
               if(rc.canMove(target_direction)){
+                System.out.println("j");
                 rc.move(target_direction);
               }
     	      }
@@ -275,6 +311,7 @@ public class Scout extends Globals {
     	        current_mode = ROAM;
     	        direction = new Direction((float)(Math.random() * 2 * Math.PI));
     	        if (!rc.hasMoved() && rc.canMove(direction)){
+    	          System.out.println("k");
                 rc.move(direction);
               }
               //System.out.println(direction.getAngleDegrees());
