@@ -36,7 +36,7 @@ public class MathUtils {
    * Useful to avoid floating point errors.
    */
   public static boolean isNear(double a, double b) {
-    return (Math.abs(a-b) < 0.00001d) ? true : false;
+    return (Math.abs(a-b) < 0.000001d) ? true : false;
   }
 
   /**
@@ -44,7 +44,7 @@ public class MathUtils {
    * Useful to avoid floating point errors.
    */
   public static boolean isNear(float a, float b) {
-    return (Math.abs(a-b) < 0.00001f) ? true : false;
+    return (Math.abs(a-b) < 0.000001f) ? true : false;
   }
 
   /**
