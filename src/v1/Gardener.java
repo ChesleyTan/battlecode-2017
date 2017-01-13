@@ -148,6 +148,10 @@ public class Gardener extends Globals {
           rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners - 1);
           rc.disintegrate();
         }
+        if (rc.getTeamBullets() > 1000){
+          float donateAmt = ((int)(rc.getTeamBullets() / 10) * 10) - 640;
+          rc.donate(donateAmt);
+        }
         Clock.yield();
       }
     } catch (Exception e) {
