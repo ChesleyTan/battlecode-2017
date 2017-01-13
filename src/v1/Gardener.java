@@ -124,7 +124,7 @@ public class Gardener extends Globals {
           plant = true;
         }
         else {
-          if (rc.getRoundNum() % 40 == 0
+          if (rc.getRoundNum() % 154/(rc.getTreeCount() + 1) == 0
               && freeSpaces[0] != null
               && rc.canBuildRobot(RobotType.SCOUT, freeSpaces[0])) {
             rc.buildRobot(RobotType.SCOUT, freeSpaces[0]);
