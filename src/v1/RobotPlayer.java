@@ -64,6 +64,38 @@ public class RobotPlayer extends Globals {
     return false;
   }
 
+  static boolean tryMoveDist(Direction dir, float distance, float degreeOffset, int checksPerSide)
+      throws GameActionException {
+
+    // First, try intended direction
+    if (rc.canMove(dir, distance)) {
+      rc.move(dir, distance);
+      return true;
+    }
+
+    // Now try a bunch of similar angles
+    boolean moved = false;
+    int currentCheck = 1;
+
+    while (currentCheck <= checksPerSide) {
+      // Try the offset of the left side
+      if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck), distance)) {
+        rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck), distance);
+        return true;
+      }
+      // Try the offset on the right side
+      if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck), distance)) {
+        rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck), distance);
+        return true;
+      }
+      // No move performed, try slightly further
+      currentCheck++;
+    }
+
+    // A move never happened, so return false.
+    return false;
+  }
+
   /**
    * A slightly more complicated example function, this returns true if the
    * given bullet is on a collision course with the current robot. Doesn't take
@@ -88,12 +120,16 @@ public class RobotPlayer extends Globals {
     if (Math.abs(theta) > Math.PI / 2) {
       return false;
     }
+    
+    float distToRobot = bulletLocation.distanceTo(myLocation);
+    if (distToRobot < myType.bodyRadius) {
+      return true;
+    }
 
     // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
     // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
     // This corresponds to the smallest radius circle centered at our location that would intersect with the
     // line that is the path of the bullet.
-    float distToRobot = bulletLocation.distanceTo(myLocation);
     float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
 
     return (perpendicularDist <= myType.bodyRadius);
@@ -110,12 +146,16 @@ public class RobotPlayer extends Globals {
     if (Math.abs(theta) > Math.PI / 2) {
       return false;
     }
+    
+    float distToRobot = bulletLocation.distanceTo(TargetLocation);
+    if (distToRobot < bodyRadius) {
+      return true;
+    }
 
     // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
     // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
     // This corresponds to the smallest radius circle centered at our location that would intersect with the
     // line that is the path of the bullet.
-    float distToRobot = bulletLocation.distanceTo(TargetLocation);
     float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
 
     return (perpendicularDist <= bodyRadius);
