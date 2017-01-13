@@ -7,6 +7,7 @@ public class Lumberjack extends Globals{
   
   private static Direction mydir;
   private static RobotInfo target;
+  private static TreeInfo targetTree;
   
   public static void roam() throws GameActionException{
     if(rc.canMove(mydir)){
@@ -76,7 +77,33 @@ public class Lumberjack extends Globals{
       rc.strike();
     }
   }
-  public static RobotInfo priority(RobotInfo[] enemies){
+  
+  public static TreeInfo reachable(RobotInfo target){
+    Direction toThere = here.directionTo(target.location);
+    TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+    for (TreeInfo t : nearbyTrees){
+      Direction toTree = here.directionTo(t.getLocation());
+      if (Math.abs(toThere.degreesBetween(toTree)) < 90){
+        float distToTree = here.distanceTo(t.location) - t.getRadius();
+        float distToTarget = here.distanceTo(target.location) - target.getRadius();
+        if (distToTree < distToTarget){
+          return t;
+        }
+      }
+    }
+    return null;
+  }
+  
+  public static void switchTarget(TreeInfo tree){
+    target = null;
+    targetTree = tree;
+  }
+  
+  public static void tryChop(TreeInfo tree){
+    
+  }
+  
+  public static RobotInfo priorityReachable(RobotInfo[] enemies, TreeInfo[] trees){
     RobotInfo result = null;
     for (RobotInfo r : enemies){
       int currvalue = 0;
@@ -110,15 +137,27 @@ public class Lumberjack extends Globals{
       mydir = new Direction((float)(rand.nextFloat() * 2 * Math.PI));
       while(true){
         Globals.update();
+        // Consider targets that are behind trees
         if (target != null){
-          chase();
+          // reachable should not automatically switch targets
+          TreeInfo closerTree = reachable(target);
+          if (closerTree == null){
+            chase();
+          }
+          else{
+            switchTarget(closerTree);
+            tryChop(targetTree);
+          }
         }
-        RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
-        if(enemies.length != 0){
-          target = priority(enemies);
-          chase();
+        else{
+          RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
+          TreeInfo[] trees = rc.senseNearbyTrees();
+          if(enemies.length != 0){
+            target = priorityReachable(enemies, trees);
+            chase();
+          }
+          roam();
         }
-        roam();
       }
     }catch(GameActionException e){
       e.printStackTrace();
