@@ -79,10 +79,12 @@ public strictfp class EvasiveArchon extends Globals {
         int nearestAngle = (int) treeAngle.getAngleDegrees() / 30;
         for (int angleIndexOffset = 0; angleIndexOffset < 3; ++angleIndexOffset) {
           float weightOffset = (70 * (60 - angleIndexOffset * 30));
+          //int startBytecodes = Clock.getBytecodeNum();
           directionWeights[Math.floorMod(nearestAngle + angleIndexOffset, 12)] -= weightOffset;
           if (angleIndexOffset != 0) {
             directionWeights[Math.floorMod(nearestAngle - angleIndexOffset, 12)] -= weightOffset;
           }
+          //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
         }
       }
       BulletInfo[] nearbyBullets = rc.senseNearbyBullets(BULLET_DETECT_RADIUS);
@@ -134,7 +136,6 @@ public strictfp class EvasiveArchon extends Globals {
         System.out.println("maxY: " + maxY);
       }
       */
-      //int startBytecodes = Clock.getBytecodeNum();
       // Avoid corners and edges
       if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
         float weightOffset = 1200 * (EDGE_BIAS_RADIUS - (here.x - minX));
@@ -166,7 +167,6 @@ public strictfp class EvasiveArchon extends Globals {
       if (lastMoveAngleIndex >= 0) {
         directionWeights[lastMoveAngleIndex] += 5000;
       }
-      //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
       /*
       if (DEBUG) {
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {

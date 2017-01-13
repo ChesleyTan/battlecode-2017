@@ -41,14 +41,6 @@ public strictfp class RobotPlayer extends Globals {
   static void runLumberjack() throws GameActionException {
   }
 
-  public static int pmod(int n, int modulo) {
-    int m = n % modulo;
-    if (m < 0) {
-      return m + modulo;
-    }
-    return m;
-  }
-
   /**
    * Returns a random Direction
    * @return a random Direction
