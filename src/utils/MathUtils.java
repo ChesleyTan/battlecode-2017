@@ -11,6 +11,27 @@ import battlecode.common.MapLocation;
 public class MathUtils {
 
   /**
+   * Checks if a number is within a given range. The range is inclusive.
+   */
+  public static boolean isInRange(double min, double max, double x) {
+    return (x>=min) && (x<=max);
+  }
+
+  /**
+   * Checks if a number is within a given range. The range is inclusive.
+   */
+  public static boolean isInRange(float min, float max, float x) {
+    return (x>=min) && (x<=max);
+  }
+
+  /**
+   * Checks if a number is within a given range. The range is inclusive.
+   */
+  public static boolean isInRange(int min, int max, int x) {
+    return (x>=min) && (x<=max);
+  }
+
+  /**
    * Checks if two numbers are near enough to each other to be considered equal.
    * Useful to avoid floating point errors.
    */
