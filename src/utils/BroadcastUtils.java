@@ -34,7 +34,8 @@ public class BroadcastUtils {
   /**
    * Adds a region directive to the broadcast channels.
    * @param directive The ID of the directive. Use BroadcastUtils.Directives class to get the ID.
-   * @param priority The priority of the directive. This will overwrite any other directives with that priority
+   * @param priority The priority of the directive. Values closer to 0 have higher priority.
+   *                 Should be in the range of 0 to DIRECTIVE_NUM (exclusive)
    * @param x The x location of the directive. Must be from 0 to 1024 (exclusive)
    * @param y The y location of the directive. Must be from 0 to 1024 (exclusive)
    * @param radius The radius of the directive. Must be from 0 to 64 (exclusive)
