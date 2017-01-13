@@ -5,11 +5,6 @@ import battlecode.common.*;
 public strictfp class EvasiveArchon extends Globals {
   // Change to RobotType enums
   static Direction[] angleDirections = new Direction[12];
-  static float UNKNOWN = -1f;
-  static float minX = UNKNOWN;
-  static float minY = UNKNOWN;
-  static float maxX = UNKNOWN;
-  static float maxY = UNKNOWN;
   static final int EDGE_BIAS_RADIUS = 12;
   static int lastMoveAngleIndex = -1;
   static final int BULLET_DETECT_RADIUS = 7;
@@ -133,6 +128,8 @@ public strictfp class EvasiveArchon extends Globals {
           }
         }
       }
+      updateMapBoundaries();
+      /*
       if (minX == UNKNOWN) {
         float lookAhead = RobotType.ARCHON.sensorRadius;
         MapLocation testLocation = here.add(angleDirections[6], lookAhead);
@@ -143,7 +140,7 @@ public strictfp class EvasiveArchon extends Globals {
         }
       }
       if (maxX == UNKNOWN) {
-        float lookAhead = RobotType.ARCHON.sensorRadius;
+        float lookAhead = RobotType.ARCHON.sensorRadius - 1;
         MapLocation testLocation = here.add(angleDirections[0], lookAhead);
         while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
           maxX = testLocation.x;
@@ -161,7 +158,7 @@ public strictfp class EvasiveArchon extends Globals {
         }
       }
       if (maxY == UNKNOWN) {
-        float lookAhead = RobotType.ARCHON.sensorRadius;
+        float lookAhead = RobotType.ARCHON.sensorRadius - 1;
         MapLocation testLocation = here.add(angleDirections[3], lookAhead);
         while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
           maxY = testLocation.y;
@@ -169,6 +166,7 @@ public strictfp class EvasiveArchon extends Globals {
           testLocation = here.add(angleDirections[3], lookAhead);
         }
       }
+      */
       /*
       if (DEBUG) {
         System.out.println("minX: " + minX);
@@ -204,12 +202,14 @@ public strictfp class EvasiveArchon extends Globals {
       if (lastMoveAngleIndex >= 0) {
         directionWeights[lastMoveAngleIndex] += 5000;
       }
+      /*
       if (DEBUG) {
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
           System.out
               .println("Angle: " + (angleIndex * 30) + ", Weight: " + directionWeights[angleIndex]);
         }
       }
+      */
       // TODO avoid corners using messaging
       /*
       // Generate a random direction

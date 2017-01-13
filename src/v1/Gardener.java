@@ -67,50 +67,69 @@ public class Gardener extends Globals {
     System.out.println("SumX: " + sumX);
     System.out.println("SumY: " + sumY);
   }
-
+  
+  private static void spawnScout() throws GameActionException{
+    Direction randomDir = new Direction(rand.nextFloat() * 2 * (float)(Math.PI));
+    while (!rc.canBuildRobot(RobotType.SCOUT, randomDir)){
+      randomDir = randomDir.rotateLeftDegrees(10);
+    }
+    rc.buildRobot(RobotType.SCOUT, randomDir);
+  }
+  
+  private static Direction[] possibleTrees() throws GameActionException{
+    Direction[] freeSpaces = new Direction[6];
+    int index = 0;
+    int rotateAmt = 0;
+    Direction startDirection = NORTH;
+    while (rotateAmt < 6){
+      MapLocation treeDest = here.add(startDirection, RobotType.GARDENER.bodyRadius + GameConstants.BULLET_TREE_RADIUS);
+      if (!rc.isCircleOccupiedExceptByThisRobot(treeDest, GameConstants.BULLET_TREE_RADIUS)){
+        freeSpaces[index] = startDirection;
+        index++;
+      }
+      startDirection = startDirection.rotateLeftDegrees(60);
+      rotateAmt++;
+    }
+    return freeSpaces;
+  }
+  
   public static void loop() {
 
     // Initial setup moves to a clear spot and spawns 3 scouts
     try {
-      checkspace();
-      Clock.yield();
       int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-      if (scoutCount < 3) {
-        initialSetup = true;
-      }
-      // Loop: Build trees and water them, and occasionally build scouts
-      while (true) {
-        scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-        initialSetup = scoutCount < 3;
-        Globals.update();
-        if (!rc.onTheMap(here, detectRadius)
-            || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant) {
+      if (scoutCount == 0) {
+        while(scoutCount < 3){
           checkspace();
+          spawnScout();
+          rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
           Clock.yield();
+          scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
           continue;
         }
-        if (initialSetup) {
-          if (rc.canBuildRobot(RobotType.SCOUT, NORTH)) {
-            rc.buildRobot(RobotType.SCOUT, NORTH);
-            rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
+      }
+      spawnRound = rc.getRoundNum();
+      // Loop: Build trees and water them, and occasionally build scouts
+      while (true) {
+        Globals.update();
+        if (rc.getRoundNum() - spawnRound < 30){
+          if (!rc.onTheMap(here, detectRadius)
+              || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant) {
+            checkspace();
             Clock.yield();
             continue;
           }
         }
-        if (numTreesBuilt < 5 && rc.canPlantTree(NORTH.rotateLeftDegrees(60 * numTreesBuilt))) {
-          rc.plantTree(NORTH.rotateLeftDegrees(60 * numTreesBuilt));
-          numTreesBuilt++;
+        Direction[] freeSpaces = possibleTrees();
+        if (freeSpaces[1] != null && rc.canPlantTree(freeSpaces[1])) {
+          rc.plantTree(freeSpaces[1]);
           plant = true;
         }
-        else if (numTreesBuilt == 0 && !rc.hasMoved()) {
-          checkspace();
-          Clock.yield();
-          continue;
-        }
         else {
-          if (rc.getRoundNum() % 100 == 0
-              && rc.canBuildRobot(RobotType.SCOUT, NORTH.rotateRightDegrees(60))) {
-            rc.buildRobot(RobotType.SCOUT, NORTH.rotateRightDegrees(60));
+          if (rc.getRoundNum() % 40 == 0
+              && freeSpaces[0] != null
+              && rc.canBuildRobot(RobotType.SCOUT, freeSpaces[0])) {
+            rc.buildRobot(RobotType.SCOUT, freeSpaces[0]);
           }
         }
         TreeInfo[] nearbyTrees = rc.senseNearbyTrees(2, us);

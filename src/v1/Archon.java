@@ -10,7 +10,6 @@ public class Archon extends Globals {
     EvasiveArchon.init();
     int producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
     if (producedGardeners == 0) {
-      // TODO unrestrict gardener from north?
       Direction randomDir = new Direction((float)(rand.nextFloat() * 2 * Math.PI));
       while(!rc.canHireGardener(randomDir)) {
         randomDir = randomDir.rotateLeftDegrees(10);
@@ -31,10 +30,10 @@ public class Archon extends Globals {
         rc.broadcast(PRODUCED_GARDENERS_CHANNEL, producedGardeners + 1);
       }
       EvasiveArchon.move();
-      if (rc.getTeamBullets() > 200) {
+      /*if (rc.getTeamBullets() >= 200) {
         float donationAmount = ((int) (rc.getTeamBullets() / 10)) * 10 - 150;
         rc.donate(donationAmount);
-      }
+      }*/
       //System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
       Clock.yield();
     }
