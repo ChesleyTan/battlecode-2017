@@ -173,7 +173,16 @@ public class Scout extends Globals {
     }
     return true;
   }
-
+  
+  private static boolean isLocationSafe(BulletInfo[] nearbyBullets, MapLocation loc) {
+    for (BulletInfo bi : nearbyBullets) {
+      if (RobotPlayer.willCollideWithTargetLocation(bi.location, bi.dir, loc, myType.bodyRadius)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
   public static void engage(int target) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
     rc.broadcast(squad_channel + 1, targetRobot.ID);
@@ -194,19 +203,18 @@ public class Scout extends Globals {
         shouldShoot = false;
         MapLocation newLoc = here.add(direction);
         if (rc.canMove(newLoc)) {
-          if (noBulletsAtLocation(nearbyBullets, newLoc)) {
+          if (isLocationSafe(nearbyBullets, newLoc)) {
             System.out.println("c");
             rc.move(newLoc);
           }
         }
       }
       else {
-        /*
         Direction rotated20 = direction.opposite().rotateLeftDegrees(20);
         MapLocation newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
         boolean locIsSafe = true;
         if (rc.canMove(newLoc)) {
-          if (noBulletsAtLocation(nearbyBullets, newLoc)) {
+          if (isLocationSafe(nearbyBullets, newLoc)) {
             System.out.println("d");
             rc.move(newLoc);
           }
@@ -218,7 +226,7 @@ public class Scout extends Globals {
           rotated20 = direction.opposite().rotateRightDegrees(20);
           newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
           if (rc.canMove(newLoc)) {
-            if (noBulletsAtLocation(nearbyBullets, newLoc)) {
+            if (isLocationSafe(nearbyBullets, newLoc)) {
               System.out.println("e");
               rc.move(newLoc);
             }
@@ -227,7 +235,6 @@ public class Scout extends Globals {
             }
           }
         }
-        */
       }
     }
     if (shouldShoot && rc.canFireSingleShot() && clearShot(targetRobot.location)) {
