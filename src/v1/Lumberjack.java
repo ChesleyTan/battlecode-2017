@@ -76,6 +76,9 @@ public class Lumberjack extends Globals{
     if (here.distanceTo(target.location) <= 2){
       rc.strike();
     }
+    if (target.getHealth() <= 0){
+      target = null;
+    }
   }
   
   public static TreeInfo reachable(RobotInfo target){
@@ -94,16 +97,61 @@ public class Lumberjack extends Globals{
     return null;
   }
   
+  public static RobotInfo reachable(TreeInfo target){
+    Direction toThere = here.directionTo(target.location);
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+    for (RobotInfo r : nearbyRobots){
+      Direction toTree = here.directionTo(r.getLocation());
+      if (Math.abs(toThere.degreesBetween(toTree)) < 90){
+        float distToTree = here.distanceTo(r.location) - r.getRadius();
+        float distToTarget = here.distanceTo(target.location) - target.getRadius();
+        if (distToTree < distToTarget){
+          return r;
+        }
+      }
+    }
+    return null;
+  }
+  
   public static void switchTarget(TreeInfo tree){
     target = null;
     targetTree = tree;
   }
   
-  public static void tryChop(TreeInfo tree){
-    
+  public static void switchTarget(RobotInfo robot){
+    target = robot;
+    targetTree = null;
   }
   
-  public static RobotInfo priorityReachable(RobotInfo[] enemies, TreeInfo[] trees){
+  public static void tryChop() throws GameActionException{
+    float distanceBetween = here.distanceTo(targetTree.location);
+    if(distanceBetween - RobotType.LUMBERJACK.bodyRadius - targetTree.getRadius() > RobotType.LUMBERJACK.strideRadius){
+      Direction towardsTree = here.directionTo(targetTree.location);
+      if (rc.canMove(towardsTree)){
+        rc.move(towardsTree);
+      }
+      else{
+        towardsTree = towardsTree.rotateLeftDegrees(45);
+        int attempts = 0;
+        while (attempts < 9){
+          if (rc.canMove(towardsTree)){
+            rc.move(towardsTree);
+            break;
+          }
+          towardsTree.rotateRightDegrees(10);
+          attempts ++;
+        }
+      }
+      if(rc.canChop(targetTree.location)){
+        rc.chop(targetTree.location);
+      }
+      if(targetTree.getHealth() <= 0){
+        targetTree = null;
+      }
+    }
+  }
+  
+  public static RobotInfo priority(RobotInfo[] enemies){
     RobotInfo result = null;
     for (RobotInfo r : enemies){
       int currvalue = 0;
@@ -138,22 +186,34 @@ public class Lumberjack extends Globals{
       while(true){
         Globals.update();
         // Consider targets that are behind trees
-        if (target != null){
+        if (target != null || targetTree != null){
           // reachable should not automatically switch targets
-          TreeInfo closerTree = reachable(target);
-          if (closerTree == null){
-            chase();
+          if (target != null){
+            TreeInfo closerTree = reachable(target);
+            if (closerTree == null){
+              chase();
+            }
+            else{
+              switchTarget(closerTree);
+              tryChop();
+            }
           }
-          else{
-            switchTarget(closerTree);
-            tryChop(targetTree);
+          else if (targetTree != null){
+            RobotInfo closerRobot = reachable(targetTree);
+            if (closerRobot == null){
+              tryChop();
+            }
+            else{
+              switchTarget(closerRobot);
+              chase();
+            }
           }
         }
         else{
           RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
           TreeInfo[] trees = rc.senseNearbyTrees();
           if(enemies.length != 0){
-            target = priorityReachable(enemies, trees);
+            target = priority(enemies);
             chase();
           }
           roam();
