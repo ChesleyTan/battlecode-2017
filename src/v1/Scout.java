@@ -70,14 +70,14 @@ public class Scout extends Globals {
     if (finaldist <= RobotType.SCOUT.strideRadius) {
       MapLocation destination = new MapLocation(here.x + sumX, here.y + sumY);
       if (rc.canMove(destination) && !rc.hasMoved()) {
-        System.out.println("a");
+        //System.out.println("a");
         rc.move(destination);
       }
     }
     else {
       Direction finalDir = new Direction(sumX, sumY);
       if (rc.canMove(finalDir) && !rc.hasMoved()) {
-        System.out.println("b");
+        //System.out.println("b");
         rc.move(finalDir);
       }
     }
@@ -87,7 +87,7 @@ public class Scout extends Globals {
     int i = ATTACK_START_CHANNEL;
     while (i < 900) {
       int squad_count = rc.readBroadcast(i);
-      System.out.println(squad_count);
+      //System.out.println(squad_count);
       if (squad_count < 5) {
         squad_channel = i;
         rc.broadcast(i, squad_count + 1);
@@ -218,7 +218,7 @@ public class Scout extends Globals {
         MapLocation newLoc = here.add(direction);
         if (rc.canMove(newLoc)) {
           if (isLocationSafe(nearbyBullets, newLoc)) {
-            System.out.println("c");
+            //System.out.println("c");
             rc.move(newLoc);
           }
         }
@@ -233,7 +233,7 @@ public class Scout extends Globals {
         MapLocation newLoc = targetRobot.location.add(rotated20, shootingDist);
         if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
           if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
-            System.out.println("d");
+            //System.out.println("d");
             rc.move(newLoc);
           }
           else if (!currentlyHasClearShot) {
@@ -245,7 +245,7 @@ public class Scout extends Globals {
           newLoc = targetRobot.location.add(rotated20, shootingDist);
           if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
             if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
-              System.out.println("e");
+              //System.out.println("e");
               rc.move(newLoc);
             }
             else if (!currentlyHasClearShot) {
@@ -258,7 +258,7 @@ public class Scout extends Globals {
     Globals.update();
     direction = here.directionTo(targetRobot.location);
     if (shouldShoot && rc.canFireSingleShot() && clearShot(here, targetRobot.location)) {
-      System.out.println("CLEARSHOT!");
+      //System.out.println("CLEARSHOT!");
       rc.fireSingleShot(direction);
       /*
       for (BulletInfo bi : rc.senseNearbyBullets()) {
@@ -307,7 +307,7 @@ public class Scout extends Globals {
               EvasiveScout.move(nearbyBullets, nearbyRobots);
             }
             else if (rc.canMove(targetDirection)) {
-              System.out.println("f");
+              //System.out.println("f");
               rc.move(targetDirection);
             }
           }
@@ -315,7 +315,7 @@ public class Scout extends Globals {
             alert();
             if (!rc.hasMoved()) {
               if (rc.canMove(targetDirection)) {
-                System.out.println("g");
+                //System.out.println("g");
                 rc.move(targetDirection);
               }
               else if (!rc.onTheMap(here.add(targetDirection, RobotType.SCOUT.strideRadius))
@@ -353,7 +353,7 @@ public class Scout extends Globals {
             current_mode = ROAM;
             targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
             if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-              System.out.println("i");
+              //System.out.println("i");
               rc.move(targetDirection);
             }
           }
@@ -364,7 +364,7 @@ public class Scout extends Globals {
               int yLoc = rc.readBroadcast(squad_channel + 3);
               targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
               if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-                System.out.println("j");
+                //System.out.println("j");
                 rc.move(targetDirection);
               }
             }
@@ -372,7 +372,7 @@ public class Scout extends Globals {
               current_mode = ROAM;
               targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
               if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-                System.out.println("k");
+                //System.out.println("k");
                 rc.move(targetDirection);
               }
               //System.out.println(direction.getAngleDegrees());

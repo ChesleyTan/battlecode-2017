@@ -20,10 +20,12 @@ public strictfp class EvasiveArchon extends Globals {
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
+      /*
       if (DEBUG) {
         System.out.println("========== Round: " + rc.getRoundNum() + "==========");
         System.out.println(here);
       }
+      */
       for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
         moveLocations[angleIndex] = here.add(angleDirections[angleIndex]);
       }
@@ -95,9 +97,11 @@ public strictfp class EvasiveArchon extends Globals {
         // Get relevant bullet information
         Direction propagationDirection = bi.dir;
         MapLocation bulletLocation = bi.location;
+        /*
         if (DEBUG) {
           System.out.println("Bullet direction: " + propagationDirection);
         }
+        */
         boolean couldCollide = false;
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
           // Calculate bullet relations to this robot
@@ -118,9 +122,11 @@ public strictfp class EvasiveArchon extends Globals {
           if (willCollide) {
             directionWeights[angleIndex] -= (10000
                 + 1000 * (myType.strideRadius + BULLET_DETECT_RADIUS - distToRobot));
+            /*
             if (DEBUG) {
               System.out.println("Angle " + (angleIndex * 30) + " is unsafe.");
             }
+            */
           }
         }
         if (couldCollide) {
@@ -206,10 +212,13 @@ public strictfp class EvasiveArchon extends Globals {
             moveAngleIndex = angleIndex;
           }
         }
+        /*
         if (DEBUG) {
           System.out.println("Trying to move in direction: " + angleDirections[moveAngleIndex]);
         }
+        */
         moved = RobotPlayer.tryMove(angleDirections[moveAngleIndex], 5, 3);
+        /*
         if (DEBUG) {
           rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255, 0);
           rc.setIndicatorLine(here.add(angleDirections[moveAngleIndex], 1),
@@ -222,6 +231,7 @@ public strictfp class EvasiveArchon extends Globals {
                 (int) Math.max(-25500, directionWeights[angleIndex]) / (-100));
           }
         }
+        */
         directionWeights[moveAngleIndex] -= 999999;
       } while (!moved && ++attempts <= 12);
       if (attempts > 12) {
@@ -234,9 +244,11 @@ public strictfp class EvasiveArchon extends Globals {
       // Broadcast archon's location for other robots on the team to know
       rc.broadcast(0, (int) here.x);
       rc.broadcast(1, (int) here.y);
+      /*
       if (DEBUG) {
         System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
       }
+      */
       //System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
 
     } catch (Exception e) {
