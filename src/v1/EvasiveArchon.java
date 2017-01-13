@@ -32,13 +32,13 @@ public strictfp class EvasiveArchon extends Globals {
       for (RobotInfo ri : nearbyRobots) {
         if (ri.type.canAttack()) {
           Direction enemyAngle = here.directionTo(ri.location);
-          /*
+  /*
           if (DEBUG) {
             System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
           }
           */
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-            float angleDelta = Math.abs(RobotPlayer.degreesBetween(enemyAngle, angleDirections[angleIndex]));
+            float angleDelta = Math.abs(enemyAngle.degreesBetween(angleDirections[angleIndex]));
             if (angleDelta > 70) {
               continue;
             }
@@ -76,20 +76,15 @@ public strictfp class EvasiveArchon extends Globals {
           System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
         }
         */
-        for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-          float angleDelta = Math.abs(RobotPlayer.degreesBetween(treeAngle, angleDirections[angleIndex]));
-          if (angleDelta > 60) {
-            continue;
+        int nearestAngle = (int) treeAngle.getAngleDegrees() / 30;
+        for (int angleIndexOffset = 0; angleIndexOffset < 3; ++angleIndexOffset) {
+          float weightOffset = (70 * (60 - angleIndexOffset * 30));
+          //int startBytecodes = Clock.getBytecodeNum();
+          directionWeights[Math.floorMod(nearestAngle + angleIndexOffset, 12)] -= weightOffset;
+          if (angleIndexOffset != 0) {
+            directionWeights[Math.floorMod(nearestAngle - angleIndexOffset, 12)] -= weightOffset;
           }
-          float weightOffset = (70 * (60 - angleDelta));
-          directionWeights[angleIndex] -= weightOffset;
-          /*
-          if (DEBUG) {
-            System.out.println("Weight for angle " + angleDirections[angleIndex].getAngleDegrees()
-                + ":" + weightOffset);
-            System.out.println("Degrees between: " + angleDelta);
-          }
-          */
+          //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
         }
       }
       BulletInfo[] nearbyBullets = rc.senseNearbyBullets(BULLET_DETECT_RADIUS);
@@ -103,6 +98,7 @@ public strictfp class EvasiveArchon extends Globals {
         if (DEBUG) {
           System.out.println("Bullet direction: " + propagationDirection);
         }
+        boolean couldCollide = false;
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
           // Calculate bullet relations to this robot
           Direction directionToRobot = bulletLocation.directionTo(moveLocations[angleIndex]);
@@ -111,7 +107,7 @@ public strictfp class EvasiveArchon extends Globals {
           if (Math.abs(theta) > Math.PI / 2) {
             continue;
           }
-          ++numBulletsAnalyzed;
+          couldCollide = true;
           // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
           // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
           // This corresponds to the smallest radius circle centered at our location that would intersect with the
@@ -127,46 +123,11 @@ public strictfp class EvasiveArchon extends Globals {
             }
           }
         }
+        if (couldCollide) {
+          ++numBulletsAnalyzed;
+        }
       }
       updateMapBoundaries();
-      /*
-      if (minX == UNKNOWN) {
-        float lookAhead = RobotType.ARCHON.sensorRadius;
-        MapLocation testLocation = here.add(angleDirections[6], lookAhead);
-        while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
-          minX = testLocation.x;
-          --lookAhead;
-          testLocation = here.add(angleDirections[6], lookAhead);
-        }
-      }
-      if (maxX == UNKNOWN) {
-        float lookAhead = RobotType.ARCHON.sensorRadius - 1;
-        MapLocation testLocation = here.add(angleDirections[0], lookAhead);
-        while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
-          maxX = testLocation.x;
-          --lookAhead;
-          testLocation = here.add(angleDirections[0], lookAhead);
-        }
-      }
-      if (minY == UNKNOWN) {
-        float lookAhead = RobotType.ARCHON.sensorRadius;
-        MapLocation testLocation = here.add(angleDirections[9], lookAhead);
-        while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
-          minY = testLocation.y;
-          --lookAhead;
-          testLocation = here.add(angleDirections[9], lookAhead);
-        }
-      }
-      if (maxY == UNKNOWN) {
-        float lookAhead = RobotType.ARCHON.sensorRadius - 1;
-        MapLocation testLocation = here.add(angleDirections[3], lookAhead);
-        while (lookAhead > 0 && !rc.onTheMap(testLocation)) {
-          maxY = testLocation.y;
-          --lookAhead;
-          testLocation = here.add(angleDirections[3], lookAhead);
-        }
-      }
-      */
       /*
       if (DEBUG) {
         System.out.println("minX: " + minX);
@@ -177,26 +138,30 @@ public strictfp class EvasiveArchon extends Globals {
       */
       // Avoid corners and edges
       if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
+        float weightOffset = 1200 * (EDGE_BIAS_RADIUS - (here.x - minX));
         for (int angleIndex = 4; angleIndex < 9; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (here.x - minX));
+          directionWeights[angleIndex] -= weightOffset;
         }
       }
       if (minY != UNKNOWN && here.y - minY < EDGE_BIAS_RADIUS) {
+        float weightOffset = 1200 * (EDGE_BIAS_RADIUS - (here.y - minY));
         for (int angleIndex = 7; angleIndex < 12; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (here.y - minY));
+          directionWeights[angleIndex] -= weightOffset;
         }
       }
       if (maxX != UNKNOWN && maxX - here.x < EDGE_BIAS_RADIUS) {
+        float weightOffset = 1200 * (EDGE_BIAS_RADIUS - (maxX - here.x));
         for (int angleIndex = 0; angleIndex < 3; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (maxX - here.x));
+          directionWeights[angleIndex] -= weightOffset;
         }
         for (int angleIndex = 10; angleIndex < 12; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (maxX - here.x));
+          directionWeights[angleIndex] -= weightOffset;
         }
       }
       if (maxY != UNKNOWN && maxY - here.y < EDGE_BIAS_RADIUS) {
+        float weightOffset = 1200 * (EDGE_BIAS_RADIUS - (maxY - here.y));
         for (int angleIndex = 1; angleIndex < 6; ++angleIndex) {
-          directionWeights[angleIndex] -= 1200 * (EDGE_BIAS_RADIUS - (maxY - here.y));
+          directionWeights[angleIndex] -= weightOffset;
         }
       }
       if (lastMoveAngleIndex >= 0) {
