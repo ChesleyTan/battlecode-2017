@@ -186,7 +186,7 @@ public class Scout extends Globals {
     }
     return true;
   }
-  
+
   private static boolean isLocationSafe(BulletInfo[] nearbyBullets, MapLocation loc) {
     for (BulletInfo bi : nearbyBullets) {
       if (RobotPlayer.willCollideWithTargetLocation(bi.location, bi.dir, loc, myType.bodyRadius)) {
@@ -195,7 +195,7 @@ public class Scout extends Globals {
     }
     return true;
   }
-  
+
   public static void engage(int target) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
     rc.broadcast(squad_channel + 1, targetRobot.ID);
@@ -223,28 +223,28 @@ public class Scout extends Globals {
         }
       }
       else {
+        boolean currentlyHasClearShot = clearShot(here, targetRobot.location);
         Direction rotated20 = direction.opposite().rotateLeftDegrees(20);
         MapLocation newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
-        boolean locIsSafe = true;
-        if (rc.canMove(newLoc)) {
-          if (clearShot(newLoc, targetRobot.location) && isLocationSafe(nearbyBullets, newLoc)) {
+        if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+          if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
             System.out.println("d");
             rc.move(newLoc);
           }
-          else {
-            shouldShoot = false;
+          else if (!currentlyHasClearShot) {
+            rc.move(newLoc);
           }
         }
         else {
           rotated20 = direction.opposite().rotateRightDegrees(20);
           newLoc = targetRobot.location.add(rotated20, KEEPAWAY_RADIUS);
-          if (rc.canMove(newLoc)) {
-            if (clearShot(newLoc, targetRobot.location) && isLocationSafe(nearbyBullets, newLoc)) {
+          if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+            if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
               System.out.println("e");
               rc.move(newLoc);
             }
-            else {
-              shouldShoot = false;
+            else if (!currentlyHasClearShot) {
+              rc.move(newLoc);
             }
           }
         }
