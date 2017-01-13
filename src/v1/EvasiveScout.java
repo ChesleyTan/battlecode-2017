@@ -8,6 +8,7 @@ public class EvasiveScout extends Globals {
   static final int EDGE_BIAS_RADIUS = 10;
   static final int BULLET_DETECT_RADIUS = 10;
   static final int LUMBERJACK_DETECT_RADIUS = 6;
+  static final float EVASION_STRIDE_RADIUS = 1f;
   private static MapLocation[] moveLocations = new MapLocation[12];
 
   static void init() {
@@ -25,7 +26,7 @@ public class EvasiveScout extends Globals {
         System.out.println(here);
       }
       for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-        moveLocations[angleIndex] = here.add(angleDirections[angleIndex]);
+        moveLocations[angleIndex] = here.add(angleDirections[angleIndex], EVASION_STRIDE_RADIUS);
       }
       float[] directionWeights = new float[12];
 
@@ -46,6 +47,10 @@ public class EvasiveScout extends Globals {
             }
             if (ri.type == RobotType.LUMBERJACK) {
               float weightOffset = (100 * (70 - angleDelta));
+              directionWeights[angleIndex] -= weightOffset;
+            }
+            else if (ri.type == RobotType.SOLDIER) {
+              float weightOffset = (70 * (70 - angleDelta));
               directionWeights[angleIndex] -= weightOffset;
             }
             /*
@@ -182,7 +187,7 @@ public class EvasiveScout extends Globals {
           if (DEBUG) {
             System.out.println("Trying to move in direction: " + angleDirections[moveAngleIndex]);
           }
-          moved = RobotPlayer.tryMove(angleDirections[moveAngleIndex], 5, 3);
+          moved = RobotPlayer.tryMoveDist(angleDirections[moveAngleIndex], EVASION_STRIDE_RADIUS, 5, 3);
           if (DEBUG) {
             rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255, 0);
             rc.setIndicatorLine(here.add(angleDirections[moveAngleIndex], 1),
