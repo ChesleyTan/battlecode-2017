@@ -153,8 +153,8 @@ public class Lumberjack extends Globals{
   
   public static RobotInfo priority(RobotInfo[] enemies){
     RobotInfo result = null;
+    int currvalue = 0;
     for (RobotInfo r : enemies){
-      int currvalue = 0;
       int value = 0;
       switch(r.getType()){
       case GARDENER:
@@ -174,6 +174,7 @@ public class Lumberjack extends Globals{
         break;
       }
       if( value > currvalue){
+        currvalue = value;
         result = r;
       }
     }
@@ -211,7 +212,6 @@ public class Lumberjack extends Globals{
         }
         else{
           RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
-          TreeInfo[] trees = rc.senseNearbyTrees();
           if(enemies.length != 0){
             target = priority(enemies);
             chase();
