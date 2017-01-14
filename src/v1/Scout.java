@@ -1,6 +1,9 @@
 package v1;
 
 import battlecode.common.*;
+import utils.Globals;
+
+import utils.TargetingUtils;
 
 public class Scout extends Globals {
 
@@ -116,7 +119,7 @@ public class Scout extends Globals {
             rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
             rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
             MapLocation center = enemy.location;
-            if (rc.canFireSingleShot() && clearShot(here, enemy.location)) {
+            if (rc.canFireSingleShot() && TargetingUtils.clearShot(here, enemy.location)) {
               rc.fireSingleShot(here.directionTo(center));
             }
             current_mode = ATTACK;
@@ -146,7 +149,7 @@ public class Scout extends Globals {
         rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
         rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
         MapLocation center = enemy.location;
-        if (rc.canFireSingleShot() && clearShot(here, center)) {
+        if (rc.canFireSingleShot() && TargetingUtils.clearShot(here, center)) {
           rc.fireSingleShot(here.directionTo(center));
           rc.setIndicatorDot(center, 255, 0, 0);
         }
@@ -158,26 +161,6 @@ public class Scout extends Globals {
   /*
    * Returns True if I have a clear shot at the person, false otherwise;
    */
-  public static boolean clearShot(MapLocation shooterLoc, MapLocation target) {
-    Direction targetDir = shooterLoc.directionTo(target);
-    float distanceTarget = shooterLoc.distanceTo(target);
-    RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, us);
-    MapLocation outerEdge = shooterLoc.add(targetDir, RobotType.SCOUT.bodyRadius + 0.1f);
-    for (RobotInfo r : friendlies) {
-      if (RobotPlayer.willCollideWithTargetLocation(outerEdge, targetDir, r.location,
-          r.getRadius())) {
-        return false;
-      }
-    }
-    TreeInfo[] trees = rc.senseNearbyTrees(distanceTarget);
-    for (TreeInfo t : trees) {
-      if (RobotPlayer.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
-          t.getRadius())) {
-        return false;
-      }
-    }
-    return true;
-  }
 
   private static boolean noBulletsAtLocation(BulletInfo[] nearbyBullets, MapLocation loc) {
     for (BulletInfo bi : nearbyBullets) {
@@ -228,11 +211,11 @@ public class Scout extends Globals {
         if (targetRobot.type == RobotType.GARDENER) {
           shootingDist = GARDENER_KEEPAWAY_RADIUS;
         }
-        boolean currentlyHasClearShot = clearShot(here, targetRobot.location);
+        boolean currentlyHasClearShot = TargetingUtils.clearShot(here, targetRobot.location);
         Direction rotated20 = direction.opposite().rotateLeftDegrees(20);
         MapLocation newLoc = targetRobot.location.add(rotated20, shootingDist);
         if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-          if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
+          if (currentlyHasClearShot && TargetingUtils.clearShot(newLoc, targetRobot.location)) {
             //System.out.println("d");
             rc.move(newLoc);
           }
@@ -244,7 +227,7 @@ public class Scout extends Globals {
           rotated20 = direction.opposite().rotateRightDegrees(20);
           newLoc = targetRobot.location.add(rotated20, shootingDist);
           if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-            if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
+            if (currentlyHasClearShot && TargetingUtils.clearShot(newLoc, targetRobot.location)) {
               //System.out.println("e");
               rc.move(newLoc);
             }
@@ -257,7 +240,7 @@ public class Scout extends Globals {
     }
     Globals.update();
     direction = here.directionTo(targetRobot.location);
-    if (shouldShoot && rc.canFireSingleShot() && clearShot(here, targetRobot.location)) {
+    if (shouldShoot && rc.canFireSingleShot() && TargetingUtils.clearShot(here, targetRobot.location)) {
       //System.out.println("CLEARSHOT!");
       rc.fireSingleShot(direction);
       /*

@@ -3,27 +3,41 @@ package utils;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 
-import java.util.Map;
-
-import static v1.Globals.rc;
+import static utils.Globals.rc;
 
 /**
  * Class that enables bots to easily read and write to the broadcast array.
  */
 public class BroadcastUtils {
 
-  public static final int DIRECTIVE_START = 0;
+  public static final int DIRECTIVE_START_CHANNEL = 0;
   /** Number of maximum directives active */
   public static final int DIRECTIVE_NUM = 8;
 
-  private static boolean isValid = false;
+  public static final int MAP_X_BOUNDS_CHANNEL = 900;
+  public static final int MAP_Y_BOUNDS_CHANNEL = 901;
+
+  public static final int SQUAD_START_CHANNEL = 500;
+
+
+  private static int hashID(int id) {
+    //IDs start at 10000 and go in 4096 size blocks.
+    //256 as modulus base because unlikely that collisions will occur with 256 possibilities.
+    return MathUtils.clamp(0,255,  (id-10000)%256  );
+  }
+
+  /*public static int[] getSquadMemberHashes(int squadID) {
+
+  }*/
+
+  private static boolean areDirectivesValid = false;
   private static Directive[] directiveCache = new Directive[DIRECTIVE_NUM];
 
   /**
    * Invalidates the Region Directive cache. Should be called at the start of each turn.
    */
-  public static void invalidate() {
-    isValid = false;
+  public static void invalidateDirectives() {
+    areDirectivesValid = false;
   }
 
   public static void addRegionDirective(int directive, int priority, MapLocation center, float radius)
@@ -51,7 +65,7 @@ public class BroadcastUtils {
     packedDirective |= (radius&0b111111) <<3; //set next 6 bits to be radius (64 numbers)
     //this leaves the 3 LSB to allow for decay counter. They will start at 0, and can go up to 7 inclusive
     //if they are told to decay but are already at the maximum age (7), the directive gets set to null
-    rc.broadcast(DIRECTIVE_START + priority, packedDirective);
+    rc.broadcast(DIRECTIVE_START_CHANNEL + priority, packedDirective);
     directiveCache[priority] = new Directive(directive, x, y, radius, 0);
   }
 
@@ -62,9 +76,9 @@ public class BroadcastUtils {
    * Intelligently caches directives. Only reads broadcast when caches are invalid.
    */
   public static Directive[] getRegionDirectives(int xCoordinate, int yCoordinate) throws GameActionException {
-    if (!isValid) {
+    if (!areDirectivesValid) {
       for (int i=0; i<DIRECTIVE_NUM; i++) {
-        int packedDirective = rc.readBroadcast(DIRECTIVE_START + i);
+        int packedDirective = rc.readBroadcast(DIRECTIVE_START_CHANNEL + i);
         int age = (packedDirective  &                              0b111);
         int radius=(packedDirective &                        0b111111000) >>> 3;
         int y = (packedDirective    &              0b1111111111000000000) >>> 9;
@@ -73,7 +87,7 @@ public class BroadcastUtils {
         Directive d = new Directive(type, x, y, radius, age);
         directiveCache[i] = d;
       }
-      isValid = true;
+      areDirectivesValid = true;
     }
 
     Directive[] results = new Directive[DIRECTIVE_NUM];

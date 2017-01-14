@@ -1,10 +1,10 @@
 package v1;
 
 import battlecode.common.*;
-import java.util.*;
+import utils.Globals;
 
 
-public class Lumberjack extends Globals{
+public class Lumberjack extends Globals {
   
   private static Direction mydir;
   private static RobotInfo target;

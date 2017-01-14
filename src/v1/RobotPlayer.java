@@ -1,6 +1,7 @@
 package v1;
 
 import battlecode.common.*;
+import utils.Globals;
 
 public class RobotPlayer extends Globals {
 
@@ -132,7 +133,7 @@ public class RobotPlayer extends Globals {
     return (perpendicularDist <= myType.bodyRadius);
   }
 
-  static boolean willCollideWithTargetLocation(MapLocation bulletLocation,
+  public static boolean willCollideWithTargetLocation(MapLocation bulletLocation,
       Direction propagationDirection, MapLocation TargetLocation, float bodyRadius) {
 
     // Calculate bullet relations to this robot

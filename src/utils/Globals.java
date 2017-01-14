@@ -1,4 +1,4 @@
-package v1;
+package utils;
 
 import battlecode.common.*;
 
@@ -20,10 +20,8 @@ public class Globals {
   public static final int DEFENSE_START_CHANNEL = 250;
   public static final int ATTACK_START_CHANNEL = 500;
   public static final int TARGET_CHANNEL = 451;
-  public static final int MAP_X_BOUNDS_CHANNEL = 900;
-  public static final int MAP_Y_BOUNDS_CHANNEL = 901;
   public static Direction NORTH, SOUTH, EAST, WEST;
-  public static final int UNKNOWN = -1;
+  public static final int UNKNOWN = Integer.MIN_VALUE;
   public static int minX = UNKNOWN;
   public static int maxX = UNKNOWN;
   public static int minY = UNKNOWN;
@@ -49,7 +47,7 @@ public class Globals {
 
   public static void updateMapBoundaries() throws GameActionException {
     if (minX == UNKNOWN) {
-      int xBounds = rc.readBroadcast(MAP_X_BOUNDS_CHANNEL);
+      int xBounds = rc.readBroadcast(BroadcastUtils.MAP_X_BOUNDS_CHANNEL);
       boolean isSet = (xBounds & (0xF0000000)) == 0xF0000000;
       if (isSet) {
         minX = (xBounds & (0x00000FFF));
@@ -64,12 +62,12 @@ public class Globals {
         }
         if (minX != UNKNOWN) {
           int x = (minX & (0x00000FFF));
-          rc.broadcast(MAP_X_BOUNDS_CHANNEL, xBounds | 0xF0000000 | x);
+          rc.broadcast(BroadcastUtils.MAP_X_BOUNDS_CHANNEL, xBounds | 0xF0000000 | x);
         }
       }
     }
     if (maxX == UNKNOWN) {
-      int xBounds = rc.readBroadcast(MAP_X_BOUNDS_CHANNEL);
+      int xBounds = rc.readBroadcast(BroadcastUtils.MAP_X_BOUNDS_CHANNEL);
       boolean isSet = (xBounds & (0x0F000000)) == 0x0F000000;
       if (isSet) {
         maxX = (xBounds & (0x00FFF000)) >> 12;
@@ -84,12 +82,12 @@ public class Globals {
         }
         if (maxX != UNKNOWN) {
           int x = (maxX & (0x00000FFF)) << 12;
-          rc.broadcast(MAP_X_BOUNDS_CHANNEL, xBounds | 0x0F000000 | x);
+          rc.broadcast(BroadcastUtils.MAP_X_BOUNDS_CHANNEL, xBounds | 0x0F000000 | x);
         }
       }
     }
     if (minY == UNKNOWN) {
-      int yBounds = rc.readBroadcast(MAP_Y_BOUNDS_CHANNEL);
+      int yBounds = rc.readBroadcast(BroadcastUtils.MAP_Y_BOUNDS_CHANNEL);
       boolean isSet = (yBounds & (0xF0000000)) == 0xF0000000;
       if (isSet) {
         minY = (yBounds & (0x00000FFF));
@@ -104,12 +102,12 @@ public class Globals {
         }
         if (minY != UNKNOWN) {
           int y = (minY & (0x00000FFF));
-          rc.broadcast(MAP_Y_BOUNDS_CHANNEL, yBounds | 0xF0000000 | y);
+          rc.broadcast(BroadcastUtils.MAP_Y_BOUNDS_CHANNEL, yBounds | 0xF0000000 | y);
         }
       }
     }
     if (maxY == UNKNOWN) {
-      int yBounds = rc.readBroadcast(MAP_Y_BOUNDS_CHANNEL);
+      int yBounds = rc.readBroadcast(BroadcastUtils.MAP_Y_BOUNDS_CHANNEL);
       boolean isSet = (yBounds & (0x0F000000)) == 0x0F000000;
       if (isSet) {
         maxY = (yBounds & (0x00FFF000)) >> 12;
@@ -124,7 +122,7 @@ public class Globals {
         }
         if (maxY != UNKNOWN) {
           int y = (maxY & (0x00000FFF)) << 12;
-          rc.broadcast(MAP_Y_BOUNDS_CHANNEL, yBounds | 0x0F000000 | y);
+          rc.broadcast(BroadcastUtils.MAP_Y_BOUNDS_CHANNEL, yBounds | 0x0F000000 | y);
         }
       }
     }

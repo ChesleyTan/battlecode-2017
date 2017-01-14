@@ -1,13 +1,38 @@
 package utils;
 
-import battlecode.common.MapLocation;
+import battlecode.common.*;
+import v1.RobotPlayer;
+
+import static utils.Globals.rc;
 
 /**
- import battlecode.common.MapLocation;
-
- * Created by Ryan on 1/11/2017.
+ * Targeting utilities to be used throughout the codebase.
  */
 public class TargetingUtils {
+
+  /**
+   * Determines if the shooter can shoot the target location without hitting friendlies or trees.
+   */
+  public static boolean clearShot(MapLocation shooterLoc, MapLocation target) {
+    Direction targetDir = shooterLoc.directionTo(target);
+    float distanceTarget = shooterLoc.distanceTo(target);
+    MapLocation outerEdge = shooterLoc.add(targetDir, RobotType.SCOUT.bodyRadius + 0.1f);
+    RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
+    for (RobotInfo r : friendlies) {
+      if (RobotPlayer.willCollideWithTargetLocation(outerEdge, targetDir, r.location,
+        r.getRadius())) {
+        return false;
+      }
+    }
+    TreeInfo[] trees = rc.senseNearbyTrees(distanceTarget);
+    for (TreeInfo t : trees) {
+      if (RobotPlayer.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
+        t.getRadius())) {
+        return false;
+      }
+    }
+    return true;
+  }
 
   public static MapLocation getLinearTargetPoint(MData target, MapLocation shooter, double bulletSpeed) {
     //LINEAR TARGETING ALGORITHM//////

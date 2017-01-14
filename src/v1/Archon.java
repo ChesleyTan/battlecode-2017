@@ -1,6 +1,7 @@
 package v1;
 
 import battlecode.common.*;
+import utils.Globals;
 
 public class Archon extends Globals {
 

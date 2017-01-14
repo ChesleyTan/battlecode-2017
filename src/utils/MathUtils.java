@@ -11,6 +11,39 @@ import battlecode.common.MapLocation;
 public class MathUtils {
 
   /**
+   * Clamps an input to lie in the range of two values
+   * @param min The minimum value x can be (inclusive)
+   * @param max The maximum value x can be (inclusive)
+   * @param x The value to clamp
+   * @return The clamped value
+   */
+  public static int clamp(int min, int max, int x) {
+    return (x<min) ? min : (x>max) ?  max : x;
+  }
+
+  /**
+   * Clamps an input to lie in the range of two values
+   * @param min The minimum value x can be (inclusive)
+   * @param max The maximum value x can be (inclusive)
+   * @param x The value to clamp
+   * @return The clamped value
+   */
+  public static double clamp(double min, double max, double x) {
+    return (x<min) ? min : (x>max) ?  max : x;
+  }
+
+  /**
+   * Clamps an input to lie in the range of two values
+   * @param min The minimum value x can be (inclusive)
+   * @param max The maximum value x can be (inclusive)
+   * @param x The value to clamp
+   * @return The clamped value
+   */
+  public static float clamp(float min, float max, float x) {
+    return (x<min) ? min : (x>max) ?  max : x;
+  }
+
+  /**
    * Checks if a number is within a given range. The range is inclusive.
    */
   public static boolean isInRange(double min, double max, double x) {
