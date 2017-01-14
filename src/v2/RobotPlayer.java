@@ -4,7 +4,7 @@ import battlecode.common.*;
 import utils.Globals;
 import finalVersion.Archon;
 import finalVersion.Scout;
-
+import finalVersion.Lumberjack;
 public class RobotPlayer extends Globals {
 
   public static void run(RobotController rc) throws GameActionException {
