@@ -10,6 +10,7 @@ public class Gardener extends Globals {
   private static boolean plant = false;
   private static int spawnRound;
   private static Direction startDirection = null;
+  private static boolean hasReportedDeath = false;
 
   /*
    * Checks that there is enough space around the unit to begin planting
@@ -173,8 +174,9 @@ public class Gardener extends Globals {
               calledForBackup = true;
             }
           }
-          else if (myHP < 3 && attacker != null) {
+          else if (!hasReportedDeath && myHP < 3 && attacker != null) {
             int gardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
+            hasReportedDeath = true;
             rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners - 1);
             //rc.disintegrate();
           }
