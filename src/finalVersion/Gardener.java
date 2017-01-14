@@ -98,7 +98,7 @@ public class Gardener extends Globals {
       startDirection = RobotUtils.randomDirection();
       int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
       if (scoutCount == 0) {
-        while (scoutCount < 3) {
+        while (scoutCount < 3 && rc.getRoundNum() < 100) {
           checkspace();
           spawnScout();
           rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
