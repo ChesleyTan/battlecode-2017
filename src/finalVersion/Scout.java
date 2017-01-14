@@ -371,7 +371,7 @@ public class Scout extends Globals {
                 System.out.println("Moving towards target");
                 rc.move(targetDirection);
               }
-              else if (!rc.onTheMap(here.add(targetDirection, RobotType.SCOUT.strideRadius))) {
+              else if (!rc.onTheMap(here.add(targetDirection, RobotType.SCOUT.strideRadius + RobotType.SCOUT.bodyRadius))) {
                 // Change direction when hitting border,
                 // Note: should not happen when chasing a newly found target
                 targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
@@ -382,7 +382,7 @@ public class Scout extends Globals {
               }
               else {
                 System.out.println("Can't move towards targetDirection: " + targetDirection);
-                RobotUtils.tryMove(targetDirection, 10, 3);
+                RobotUtils.tryMove(targetDirection, 20, 6);
               }
             }
             // If mode changed, yield before beginning attack logic
