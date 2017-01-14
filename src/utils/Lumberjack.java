@@ -1,9 +1,9 @@
-package v2;
+package utils;
 
 import battlecode.common.*;
 import java.util.*;
 import utils.Globals;
-
+import utils.RobotUtils;
 public class Lumberjack extends Globals{
   
   private static Direction mydir;
@@ -77,7 +77,7 @@ public class Lumberjack extends Globals{
       rc.setIndicatorDot(here.add(principledirect), 0, 255, 0);
       if (!isInRangeOfFriendlies){
         if (here.distanceTo(target.location) - RobotType.LUMBERJACK.bodyRadius - target.getRadius() > 1){
-          boolean canMove = RobotPlayer.tryMove(principledirect, 15, 3);
+          boolean canMove = RobotUtils.tryMove(principledirect, 15, 3);
           if (!canMove){
             target = null;
           }
@@ -150,7 +150,7 @@ public class Lumberjack extends Globals{
       float distanceBetween = here.distanceTo(targetTree.location);
       if(distanceBetween - RobotType.LUMBERJACK.bodyRadius - targetTree.getRadius() > RobotType.LUMBERJACK.strideRadius){
         Direction towardsTree = here.directionTo(targetTree.location);
-        boolean moved = RobotPlayer.tryMove(towardsTree, 15, 3);
+        boolean moved = RobotUtils.tryMove(towardsTree, 15, 3);
         if (!moved){
           targetTree = null;
         }

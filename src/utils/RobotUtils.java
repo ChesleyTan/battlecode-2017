@@ -1,44 +1,24 @@
-package v2;
+package utils;
 
-import battlecode.common.*;
-import utils.Globals;
-import finalVersion.*;
+import battlecode.common.BulletInfo;
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotInfo;
+import battlecode.common.Team;
 
-public class RobotPlayer extends Globals {
-
-  public static void run(RobotController rc) throws GameActionException {
-    Globals.init(rc);
-    switch (rc.getType()) {
-      case ARCHON:
-        Archon.loop();
-        break;
-      case GARDENER:
-        Gardener.loop();
-        break;
-      case SCOUT:
-        Scout.loop();
-        break;
-      case LUMBERJACK:
-        Lumberjack.loop();
-        break;
-      case SOLDIER:
-        runSoldier();
-        break;
-      case TANK:
-        //Run Tank
-        break;
-    }
-  }
-
+public class RobotUtils extends Globals{
+  
   /**
    * Returns a random Direction
    * @return a random Direction
    */
-  static Direction randomDirection() {
+  public static Direction randomDirection() {
     return new Direction((float) Math.random() * 2 * (float) Math.PI);
   }
 
-  static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
+  public static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
       throws GameActionException {
 
     // First, try intended direction
@@ -70,7 +50,7 @@ public class RobotPlayer extends Globals {
     return false;
   }
 
-  static boolean tryMoveDist(Direction dir, float distance, float degreeOffset, int checksPerSide)
+  public static boolean tryMoveDist(Direction dir, float distance, float degreeOffset, int checksPerSide)
       throws GameActionException {
 
     // First, try intended direction
@@ -137,7 +117,7 @@ public class RobotPlayer extends Globals {
     return (perpendicularDist <= myType.bodyRadius);
   }
 
-  static boolean willCollideWithTargetLocation(MapLocation bulletLocation,
+  public static boolean willCollideWithTargetLocation(MapLocation bulletLocation,
       Direction propagationDirection, MapLocation TargetLocation, float bodyRadius) {
 
     // Calculate bullet relations to this robot
@@ -146,7 +126,7 @@ public class RobotPlayer extends Globals {
     float distToRobot = bulletLocation.distanceTo(TargetLocation);
 
     // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
-    if (distToRobot > myType.bodyRadius && Math.abs(theta) > Math.PI / 2) {
+    if (distToRobot > bodyRadius && Math.abs(theta) > Math.PI / 2) {
       return false;
     }
     
@@ -204,7 +184,6 @@ public class RobotPlayer extends Globals {
             System.out.println("Soldier Exception");
             e.printStackTrace();
         }
+      }
     }
-}
-
 }
