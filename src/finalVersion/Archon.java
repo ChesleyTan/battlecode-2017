@@ -2,13 +2,14 @@ package finalVersion;
 
 import battlecode.common.*;
 import utils.Globals;
+import utils.RobotUtils;
 
 public class Archon extends Globals {
 
   static int ArchonCount = rc.getInitialArchonLocations(us).length;
 
   private static void trySpawnGardener(int producedGardeners) throws GameActionException{
-    Direction attempt = new Direction(rand.nextFloat() * 2 * (float)Math.PI);
+    Direction attempt = RobotUtils.randomDirection();
     while (!rc.canHireGardener(attempt)){
       attempt.rotateLeftDegrees(10);
     }
@@ -21,12 +22,7 @@ public class Archon extends Globals {
     EvasiveArchon.init();
     int producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
     if (producedGardeners == 0) {
-      Direction randomDir = new Direction((float)(rand.nextFloat() * 2 * Math.PI));
-      while(!rc.canHireGardener(randomDir)) {
-        randomDir = randomDir.rotateLeftDegrees(10);
-      }
-      rc.hireGardener(randomDir);
-      rc.broadcast(PRODUCED_GARDENERS_CHANNEL, 1);
+      trySpawnGardener(producedGardeners);
     }
     
     while (true) {
@@ -37,7 +33,7 @@ public class Archon extends Globals {
         continue;
       }
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
-      if (producedGardeners < 3 * ArchonCount) {
+      if (producedGardeners < 3 * ArchonCount + 1 * (int)(rc.getTeamBullets() / 640)) {
         trySpawnGardener(producedGardeners);
       }
       EvasiveArchon.move();
