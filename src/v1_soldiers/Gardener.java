@@ -1,14 +1,15 @@
-package v1;
+package v1_soldiers;
 
 import battlecode.common.*;
-import utils.Globals;
 
 public class Gardener extends Globals {
 
+  private static int numTreesBuilt = 0;
+  private static Direction lastDir = null;
   private static float detectRadius = 3f;
+  private static boolean initialSetup = false;
   private static boolean plant = false;
   private static int spawnRound;
-  private static Direction startDirection = null;
 
   /*
    * Checks that there is enough space around the unit to begin planting
@@ -67,16 +68,17 @@ public class Gardener extends Globals {
   
   private static void spawnScout() throws GameActionException{
     Direction randomDir = new Direction(rand.nextFloat() * 2 * (float)(Math.PI));
-    while (!rc.canBuildRobot(RobotType.SCOUT, randomDir)){
+    while (!rc.canBuildRobot(RobotType.SOLDIER, randomDir)){
       randomDir = randomDir.rotateLeftDegrees(10);
     }
-    rc.buildRobot(RobotType.SCOUT, randomDir);
+    rc.buildRobot(RobotType.SOLDIER, randomDir);
   }
   
   private static Direction[] possibleTrees() throws GameActionException{
     Direction[] freeSpaces = new Direction[6];
     int index = 0;
     int rotateAmt = 0;
+    Direction startDirection = NORTH;
     while (rotateAmt < 6){
       MapLocation treeDest = here.add(startDirection, RobotType.GARDENER.bodyRadius + GameConstants.BULLET_TREE_RADIUS);
       if (!rc.isCircleOccupiedExceptByThisRobot(treeDest, GameConstants.BULLET_TREE_RADIUS)){
@@ -93,7 +95,6 @@ public class Gardener extends Globals {
 
     // Initial setup moves to a clear spot and spawns 3 scouts
     try {
-      startDirection = RobotPlayer.randomDirection();
       int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
       if (scoutCount == 0) {
         while(scoutCount < 3){
@@ -126,8 +127,8 @@ public class Gardener extends Globals {
           int division_factor = (int)(154/(rc.getTreeCount() + 1));
           if (rc.getRoundNum() % division_factor == 0
               && freeSpaces[0] != null
-              && rc.canBuildRobot(RobotType.SCOUT, freeSpaces[0])) {
-            rc.buildRobot(RobotType.SCOUT, freeSpaces[0]);
+              && rc.canBuildRobot(RobotType.SOLDIER, freeSpaces[0])) {
+            rc.buildRobot(RobotType.SOLDIER, freeSpaces[0]);
           }
         }
         TreeInfo[] nearbyTrees = rc.senseNearbyTrees(2, us);
