@@ -19,6 +19,7 @@ public class Globals {
   public static final int EARLY_SCOUTS_CHANNEL = 5;
   public static final int DEFENSE_START_CHANNEL = 250;
   public static final int ATTACK_START_CHANNEL = 500;
+  public static final int ATTACK_END_CHANNEL = 600;
   public static final int TARGET_CHANNEL = 451;
   public static Direction NORTH, SOUTH, EAST, WEST;
   public static final int UNKNOWN = Integer.MIN_VALUE;

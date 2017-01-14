@@ -1,4 +1,4 @@
-package finalVersion;
+package v2_scouts;
 
 import battlecode.common.*;
 import utils.RobotUtils;
