@@ -2,6 +2,7 @@ package v2;
 
 import battlecode.common.*;
 import utils.Globals;
+import utils.RobotUtils;
 
 public class Gardener extends Globals {
 
@@ -93,7 +94,7 @@ public class Gardener extends Globals {
 
     // Initial setup moves to a clear spot and spawns 3 scouts
     try {
-      startDirection = RobotPlayer.randomDirection();
+      startDirection = RobotUtils.randomDirection();
       /*int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
       if (scoutCount == 0) {
         while(scoutCount < 3){

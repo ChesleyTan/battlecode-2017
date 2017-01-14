@@ -18,77 +18,78 @@ public class Scout extends Globals {
   private static Direction targetDirection = null;
   private static int squad_channel;
   private static int attackTarget;
+  private static boolean hasReportedDeath = false;
 
-  public static void dodge(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots)
-      throws GameActionException {
-    boolean willHit = false;
-    MapLocation[] startLocs = new MapLocation[nearbyBullets.length];
-    MapLocation[] endLocs = new MapLocation[nearbyBullets.length];
-    int index = 0;
-    for (BulletInfo b : nearbyBullets) {
-      MapLocation finalLoc = b.location.add(b.dir, b.speed);
-      startLocs[index] = b.location;
-      endLocs[index] = finalLoc;
-      index++;
-      /*
-      float dist = (float)(Math.sqrt(Math.pow(here.x - finalLoc.x, 2) + Math.pow(here.y - finalLoc.y, 2)));
-      if(dist < RobotType.SCOUT.bodyRadius){
-        willHit = true;
-      }*/
-      if (RobotUtils.willCollideWithMe(b)) {
-        willHit = true;
-      }
-    }
-    float sumX = 0;
-    float sumY = 0;
-    if (willHit) {
-      for (int i = 0; i < index; i++) {
-        float x0 = startLocs[i].x;
-        float y0 = startLocs[i].y;
-        float x1 = endLocs[i].x;
-        float y1 = endLocs[i].y;
-        float a = x1 - x0;
-        float b = y0 - y1;
-        float c = x0 * y1 - y0 * x1;
-        float distance = (float) (Math.abs(a * here.x + b * here.y + c)
-            / Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)));
-        float x2 = (float) ((b * (b * here.x - a * here.y) - a * c)
-            / (Math.pow(a, 2) + Math.pow(b, 2)));
-        float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
-            / (Math.pow(a, 2) + Math.pow(b, 2)));
-        Direction away = here.directionTo(new MapLocation(x2, y2)).opposite();
-        float weighted = (RobotType.SCOUT.bulletSightRadius - distance)
-            / RobotType.SCOUT.bulletSightRadius * RobotType.SCOUT.strideRadius;
-        sumX += away.getDeltaX(weighted);
-        sumY += away.getDeltaY(weighted);
-      }
-    }
-    for (RobotInfo r : nearbyRobots) {
-      if (r.getType() == RobotType.LUMBERJACK) {
-        Direction their_direction = here.directionTo(r.location).opposite();
-        float their_distance = (RobotType.SCOUT.sensorRadius - here.distanceTo(r.location))
-            / RobotType.SCOUT.sensorRadius * RobotType.SCOUT.strideRadius;
-        sumX += their_direction.getDeltaX(their_distance);
-        sumY += their_direction.getDeltaY(their_distance);
-        index++;
-      }
-    }
-    float finaldist = (float) Math.sqrt(Math.pow(sumX, 2) + Math.pow(sumY, 2));
-    if (finaldist <= RobotType.SCOUT.strideRadius) {
-      MapLocation destination = new MapLocation(here.x + sumX, here.y + sumY);
-      if (rc.canMove(destination) && !rc.hasMoved()) {
-        //System.out.println("a");
-        rc.move(destination);
-      }
-    }
-    else {
-      Direction finalDir = new Direction(sumX, sumY);
-      if (rc.canMove(finalDir) && !rc.hasMoved()) {
-        //System.out.println("b");
-        rc.move(finalDir);
-      }
-    }
-  }
+  //public static void dodge(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots)
+  //    throws GameActionException {
+  //  boolean willHit = false;
+  //  MapLocation[] startLocs = new MapLocation[nearbyBullets.length];
+  //  MapLocation[] endLocs = new MapLocation[nearbyBullets.length];
+  //  int index = 0;
+  //  for (BulletInfo b : nearbyBullets) {
+  //    MapLocation finalLoc = b.location.add(b.dir, b.speed);
+  //    startLocs[index] = b.location;
+  //    endLocs[index] = finalLoc;
+  //    index++;
+  //    /*
+  //    float dist = (float)(Math.sqrt(Math.pow(here.x - finalLoc.x, 2) + Math.pow(here.y - finalLoc.y, 2)));
+  //    if(dist < RobotType.SCOUT.bodyRadius){
+  //      willHit = true;
+  //    }*/
+  //    if (RobotUtils.willCollideWithMe(b)) {
+  //      willHit = true;
+  //    }
+  //  }
+  //  float sumX = 0;
+  //  float sumY = 0;
+  //  if (willHit) {
+  //    for (int i = 0; i < index; i++) {
+  //      float x0 = startLocs[i].x;
+  //      float y0 = startLocs[i].y;
+  //      float x1 = endLocs[i].x;
+  //      float y1 = endLocs[i].y;
+  //      float a = x1 - x0;
+  //      float b = y0 - y1;
+  //      float c = x0 * y1 - y0 * x1;
+  //      float distance = (float) (Math.abs(a * here.x + b * here.y + c)
+  //          / Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)));
+  //      float x2 = (float) ((b * (b * here.x - a * here.y) - a * c)
+  //          / (Math.pow(a, 2) + Math.pow(b, 2)));
+  //      float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
+  //          / (Math.pow(a, 2) + Math.pow(b, 2)));
+  //      Direction away = here.directionTo(new MapLocation(x2, y2)).opposite();
+  //      float weighted = (RobotType.SCOUT.bulletSightRadius - distance)
+  //          / RobotType.SCOUT.bulletSightRadius * RobotType.SCOUT.strideRadius;
+  //      sumX += away.getDeltaX(weighted);
+  //      sumY += away.getDeltaY(weighted);
+  //    }
+  //  }
+  //  for (RobotInfo r : nearbyRobots) {
+  //    if (r.getType() == RobotType.LUMBERJACK) {
+  //      Direction their_direction = here.directionTo(r.location).opposite();
+  //      float their_distance = (RobotType.SCOUT.sensorRadius - here.distanceTo(r.location))
+  //          / RobotType.SCOUT.sensorRadius * RobotType.SCOUT.strideRadius;
+  //      sumX += their_direction.getDeltaX(their_distance);
+  //      sumY += their_direction.getDeltaY(their_distance);
+  //      index++;
+  //    }
+  //  }
+  //  float finaldist = (float) Math.sqrt(Math.pow(sumX, 2) + Math.pow(sumY, 2));
+  //  if (finaldist <= RobotType.SCOUT.strideRadius) {
+  //    MapLocation destination = new MapLocation(here.x + sumX, here.y + sumY);
+  //    if (rc.canMove(destination) && !rc.hasMoved()) {
+  //      //System.out.println("a");
+  //      rc.move(destination);
+  //    }
+  //  }
+  //  else {
+  //    Direction finalDir = new Direction(sumX, sumY);
+  //    if (rc.canMove(finalDir) && !rc.hasMoved()) {
+  //      //System.out.println("b");
+  //      rc.move(finalDir);
+  //    }
+  //  }
+  //}
 
   public static void findSquad() throws GameActionException {
     int i = ATTACK_START_CHANNEL;
@@ -106,46 +107,47 @@ public class Scout extends Globals {
   }
 
   public static void alert() throws GameActionException {
+    if (current_mode != ROAM) {
+      return;
+    }
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
-    if ((nearbyBullets != null && nearbyBullets.length != 0)
-        || (nearbyRobots != null && nearbyRobots.length != 0)) {
+    if (nearbyBullets.length != 0 || nearbyRobots.length != 0) {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
     }
-    if (nearbyRobots == null || nearbyRobots.length == 0) {
+    if (nearbyRobots.length == 0) {
       return;
     }
     else {
-      RobotInfo[] nearbyFriendlies = rc.senseNearbyRobots(-1, us);
-      boolean friendlyGardener = false;
-      for (RobotInfo ri : nearbyFriendlies) {
-        if (ri.type == RobotType.GARDENER) {
-          friendlyGardener = true;
-          break;
-        }
-      }
       if (rc.getRoundNum() < 200) {
+        RobotInfo[] nearbyFriendlies = rc.senseNearbyRobots(-1, us);
+        boolean friendlyGardener = false;
+        for (RobotInfo ri : nearbyFriendlies) {
+          if (ri.type == RobotType.GARDENER) {
+            friendlyGardener = true;
+            break;
+          }
+        }
         for (RobotInfo enemy : nearbyRobots) {
-          // TODO also prioritize defending our gardeners
+          // Prioritize killing enemy gardeners or defending our own gardeners
+          // TODO also defend against soldiers and lumberjacks?
+          // TODO is this necessary, because we have gardeners defense calls?
           if ((enemy.type == RobotType.SCOUT && friendlyGardener) || enemy.type == RobotType.GARDENER) {
             rc.broadcast(squad_channel + 1, enemy.ID);
             rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
             rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
-            MapLocation center = enemy.location;
+            targetDirection = here.directionTo(enemy.location);
             if (rc.canFireSingleShot() && clearShot(here, enemy.location)) {
-              rc.fireSingleShot(here.directionTo(center));
+              rc.fireSingleShot(targetDirection);
             }
             current_mode = ATTACK;
             break;
-          }
-          else {
-            return;
           }
         }
       }
       else {
         RobotInfo enemy = null;
-        // Preferred targets
+        // Preferred targets: Enemy gardeners if round < 1000
         if (rc.getRoundNum() < 1000) {
           for (RobotInfo ri : nearbyRobots) {
             if (ri.type == RobotType.GARDENER) {
@@ -157,16 +159,17 @@ public class Scout extends Globals {
         if (enemy == null) {
           enemy = nearbyRobots[0];
         }
+        // Avoid wasting time/bullets attacking archons below round 1000
         if (enemy.type == RobotType.ARCHON && rc.getRoundNum() < 1000) {
           return;
         }
         rc.broadcast(squad_channel + 1, enemy.ID);
         rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
         rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
-        MapLocation center = enemy.location;
-        if (rc.canFireSingleShot() && clearShot(here, center)) {
-          rc.fireSingleShot(here.directionTo(center));
-          rc.setIndicatorDot(center, 255, 0, 0);
+        targetDirection = here.directionTo(enemy.location);
+        if (rc.canFireSingleShot() && clearShot(here, enemy.location)) {
+          rc.fireSingleShot(targetDirection);
+          rc.setIndicatorDot(enemy.location, 255, 0, 0);
         }
         current_mode = ATTACK;
       }
@@ -195,10 +198,10 @@ public class Scout extends Globals {
     return true;
   }
 
-  public static RobotInfo engage(int target, boolean forceReEngage) throws GameActionException {
+  public static RobotInfo engage(int target, boolean priorityTarget) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
     int broadcastTarget = rc.readBroadcast(squad_channel + 1);
-    if (!forceReEngage) {
+    if (!priorityTarget) {
       if (broadcastTarget == target) {
         rc.broadcast(squad_channel + 2, (int) targetRobot.location.x);
         rc.broadcast(squad_channel + 3, (int) targetRobot.location.y);
@@ -326,7 +329,7 @@ public class Scout extends Globals {
       // Later scouts move in random directions
       else {
         findSquad();
-        targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
+        targetDirection = RobotUtils.randomDirection();
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -335,10 +338,12 @@ public class Scout extends Globals {
       try {
         Globals.update();
         if (current_mode == ROAM) {
+          System.out.println("Roaming");
           //rc.setIndicatorDot(here, 0, 0, 255);
           // Look for target in broadcast
           int target = rc.readBroadcast(squad_channel + 1);
           if (target != 0) {
+            System.out.println("Found target in broadcast");
             current_mode = ATTACK;
             int xLoc = rc.readBroadcast(squad_channel + 2);
             int yLoc = rc.readBroadcast(squad_channel + 3);
@@ -355,69 +360,75 @@ public class Scout extends Globals {
             }
           }
           else {
+            System.out.println("Searching for target");
             alert();
             if (!rc.hasMoved()) {
+              System.out.println("Has not moved");
+              // Move towards target in a straight line
+              // TODO better pathfinding
               if (rc.canMove(targetDirection)) {
                 //System.out.println("g");
+                System.out.println("Moving towards target");
                 rc.move(targetDirection);
               }
-              else if (!rc.onTheMap(here.add(targetDirection, RobotType.SCOUT.strideRadius))
-                  || rc.senseNearbyRobots(2.5f, us) != null) {
-                targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
+              else if (!rc.onTheMap(here.add(targetDirection, RobotType.SCOUT.strideRadius))) {
+                // Change direction when hitting border,
+                // Note: should not happen when chasing a newly found target
+                targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
+                System.out.println("Turning randomly " +  targetDirection);
                 if (rc.canMove(targetDirection)) {
                   rc.move(targetDirection);
                 }
-                /*
-                Direction newDir = targetDirection.rotateRightDegrees(10);
-                while (!rc.canMove(newDir)) {
-                  newDir = newDir.rotateRightDegrees(10);
-                }
-                targetDirection = newDir;
-                //System.out.println("h");
-                rc.move(targetDirection);
-                */
-                //System.out.println(direction.getAngleDegrees());
               }
+              else {
+                System.out.println("Can't move towards targetDirection: " + targetDirection);
+                RobotUtils.tryMove(targetDirection, 10, 3);
+              }
+            }
+            // If mode changed, yield before beginning attack logic
+            if (current_mode == ATTACK) {
+              System.out.println("Changed from ROAM to ATTACK");
+              Clock.yield();
             }
           }
         }
         if (current_mode == ATTACK) {
+          System.out.println("ATTACK");
           // Currently on attack mode
-          //rc.setIndicatorDot(here, 0, 255, 0);
           int target = rc.readBroadcast(squad_channel + 1);
+          // Read assigned target from broadcast
           attackTarget = target;
           if (rc.canSenseRobot(target)) {
+            // Engage target if it is in range
             // TODO fix disengagement
-            boolean forceReEngage = false;
-            while (rc.canSenseRobot(target) && (forceReEngage || attackTarget == target)) {
+            // Allow re-engagement on priority targets
+            // TODO unroll loop and re-position death tracking
+            boolean priorityTarget = false;
+            while (rc.canSenseRobot(target) && (priorityTarget || attackTarget == target)) {
+              System.out.println("Can sense target");
               Globals.update();
-              RobotInfo targetRobot = engage(target, forceReEngage);
+              RobotInfo targetRobot = engage(target, priorityTarget);
               if ((targetRobot != null && targetRobot.type != RobotType.GARDENER) || targetRobot == null) {
                 RobotInfo[] nearbyRobots = rc.senseNearbyRobots(6, them);
                 for (RobotInfo ri : nearbyRobots) {
                   if (ri.type == RobotType.GARDENER) {
                     target = ri.ID;
-                    forceReEngage = true;
+                    priorityTarget = true;
                     break;
                   }
                 }
               }
               Clock.yield();
             }
-            if (!forceReEngage && attackTarget == target) {
-              rc.broadcast(squad_channel + 1, 0);
-              current_mode = ROAM;
-              targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
-              if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-                //System.out.println("i");
-                rc.move(targetDirection);
+            // Target is assumed to be killed, so update broadcast target
+            if (!priorityTarget && attackTarget == target) {
+              System.out.println("Target killed");
+              int broadcastTarget = rc.readBroadcast(squad_channel + 1);
+              if (broadcastTarget == target) {
+                rc.broadcast(squad_channel + 1, 0);
               }
-            }
-            else {
-              int targetX = rc.readBroadcast(squad_channel + 2);
-              int targetY = rc.readBroadcast(squad_channel + 3);
-              MapLocation targetLoc = new MapLocation(targetX, targetY);
-              targetDirection = here.directionTo(targetLoc);
+              current_mode = ROAM;
+              targetDirection = RobotUtils.randomDirection();
               if (!rc.hasMoved() && rc.canMove(targetDirection)) {
                 //System.out.println("i");
                 rc.move(targetDirection);
@@ -425,8 +436,11 @@ public class Scout extends Globals {
             }
           }
           else {
-            // Find target
+            System.out.println("Cannot sense target");
+            // We are out of range of our target,
+            // so try to move in known direction of target to find target
             if (rc.readBroadcast(squad_channel + 1) != 0) {
+              System.out.println("Moving towards target");
               int xLoc = rc.readBroadcast(squad_channel + 2);
               int yLoc = rc.readBroadcast(squad_channel + 3);
               targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
@@ -435,9 +449,11 @@ public class Scout extends Globals {
                 rc.move(targetDirection);
               }
             }
+            // Disengage if no target
             else {
+              System.out.println("Disengaging: no boradcast target");
               current_mode = ROAM;
-              targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
+              targetDirection = RobotUtils.randomDirection();
               if (!rc.hasMoved() && rc.canMove(targetDirection)) {
                 //System.out.println("k");
                 rc.move(targetDirection);
@@ -446,8 +462,9 @@ public class Scout extends Globals {
             }
           }
         }
-        if (rc.getHealth() < 3f) {
+        if (!hasReportedDeath && rc.getHealth() < 3f) {
           int squad_count = rc.readBroadcast(squad_channel);
+          hasReportedDeath = true;
           rc.broadcast(squad_channel, squad_count - 1);
         }
         Clock.yield();
