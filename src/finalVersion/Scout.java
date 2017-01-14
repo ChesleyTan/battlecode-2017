@@ -17,6 +17,7 @@ public class Scout extends Globals {
   private static Direction[] GARDENER_PENETRATION_ANGLES = new Direction[6];
   private static Direction targetDirection = null;
   private static int squad_channel;
+  private static boolean has_reported_death = false;
 
   public static void dodge(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots)
       throws GameActionException {
@@ -393,9 +394,10 @@ public class Scout extends Globals {
             }
           }
         }
-        if (rc.getHealth() < 3f) {
+        if (rc.getHealth() < 3f && !has_reported_death) {
           int squad_count = rc.readBroadcast(squad_channel);
           rc.broadcast(squad_channel, squad_count - 1);
+          has_reported_death = true;
         }
         Clock.yield();
       } catch (Exception e) {

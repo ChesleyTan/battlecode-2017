@@ -1,9 +1,9 @@
-package utils;
+package finalVersion;
 
 import battlecode.common.*;
-import java.util.*;
-import utils.Globals;
 import utils.RobotUtils;
+import utils.Globals;
+
 public class Lumberjack extends Globals{
   
   private static Direction mydir;
