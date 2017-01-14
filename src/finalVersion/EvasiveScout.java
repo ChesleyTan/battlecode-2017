@@ -10,7 +10,7 @@ public class EvasiveScout extends Globals {
   static final int EDGE_BIAS_RADIUS = 10;
   static final int BULLET_DETECT_RADIUS = 10;
   static final int ENEMY_DETECT_RADIUS = 6;
-  static final float EVASION_STRIDE_RADIUS = 1f;
+  static final float EVASION_STRIDE_RADIUS = 1.5f;
   private static MapLocation[] moveLocations = new MapLocation[12];
 
   static void init() {
@@ -50,14 +50,21 @@ public class EvasiveScout extends Globals {
             if (angleDelta > 70) {
               continue;
             }
+            float distBetween = moveLocations[angleIndex].distanceTo(here);
             if (ri.type == RobotType.LUMBERJACK) {
-              float weightOffset = (150 * (70 - angleDelta));
+              float weightOffset = (150 * (70 - angleDelta)) + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
               directionWeights[angleIndex] -= weightOffset;
             }
             else if (ri.type == RobotType.SOLDIER) {
-              float weightOffset = (150 * (70 - angleDelta));
+              float weightOffset = (150 * (70 - angleDelta)) + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
               directionWeights[angleIndex] -= weightOffset;
             }
+            /*
+            else if (ri.type == RobotType.SCOUT) {
+              float weightOffset = (50 * (70 - angleDelta)) + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+              directionWeights[angleIndex] -= weightOffset;
+            }
+            */
             /*
             if (DEBUG) {
               System.out.println("Weight for angle "
@@ -104,7 +111,7 @@ public class EvasiveScout extends Globals {
           boolean willCollide = (perpendicularDist <= myType.bodyRadius);
           if (willCollide) {
             directionWeights[angleIndex] -= (15000
-                + 1000 * (myType.strideRadius + BULLET_DETECT_RADIUS - distToRobot));
+                + 1000 * (EVASION_STRIDE_RADIUS + BULLET_DETECT_RADIUS - distToRobot));
             /*
             if (DEBUG) {
               System.out.println("Angle " + (angleIndex * 30) + " is unsafe.");

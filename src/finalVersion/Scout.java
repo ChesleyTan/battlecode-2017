@@ -17,6 +17,7 @@ public class Scout extends Globals {
   private static Direction[] GARDENER_PENETRATION_ANGLES = new Direction[6];
   private static Direction targetDirection = null;
   private static int squad_channel;
+  private static int attackTarget;
 
   public static void dodge(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots)
       throws GameActionException {
@@ -91,7 +92,7 @@ public class Scout extends Globals {
 
   public static void findSquad() throws GameActionException {
     int i = ATTACK_START_CHANNEL;
-    while (i < 500) {
+    while (i < ATTACK_END_CHANNEL) {
       int squad_count = rc.readBroadcast(i);
       //System.out.println(squad_count);
       if (squad_count < 10) {
@@ -115,10 +116,18 @@ public class Scout extends Globals {
       return;
     }
     else {
-      if (rc.getRoundNum() < 100) {
+      RobotInfo[] nearbyFriendlies = rc.senseNearbyRobots(-1, us);
+      boolean friendlyGardener = false;
+      for (RobotInfo ri : nearbyFriendlies) {
+        if (ri.type == RobotType.GARDENER) {
+          friendlyGardener = true;
+          break;
+        }
+      }
+      if (rc.getRoundNum() < 200) {
         for (RobotInfo enemy : nearbyRobots) {
           // TODO also prioritize defending our gardeners
-          if (enemy.getType() == RobotType.GARDENER) {
+          if ((enemy.type == RobotType.SCOUT && friendlyGardener) || enemy.type == RobotType.GARDENER) {
             rc.broadcast(squad_channel + 1, enemy.ID);
             rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
             rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
@@ -147,6 +156,9 @@ public class Scout extends Globals {
         }
         if (enemy == null) {
           enemy = nearbyRobots[0];
+        }
+        if (enemy.type == RobotType.ARCHON && rc.getRoundNum() < 1000) {
+          return;
         }
         rc.broadcast(squad_channel + 1, enemy.ID);
         rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
@@ -183,11 +195,27 @@ public class Scout extends Globals {
     return true;
   }
 
-  public static void engage(int target) throws GameActionException {
+  public static RobotInfo engage(int target, boolean forceReEngage) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
-    rc.broadcast(squad_channel + 1, targetRobot.ID);
-    rc.broadcast(squad_channel + 2, (int) targetRobot.location.x);
-    rc.broadcast(squad_channel + 3, (int) targetRobot.location.y);
+    int broadcastTarget = rc.readBroadcast(squad_channel + 1);
+    if (!forceReEngage) {
+      if (broadcastTarget == target) {
+        rc.broadcast(squad_channel + 2, (int) targetRobot.location.x);
+        rc.broadcast(squad_channel + 3, (int) targetRobot.location.y);
+      }
+      else {
+        // Handle external target change
+        target = broadcastTarget;
+        targetRobot = rc.senseRobot(target);
+        attackTarget = broadcastTarget;
+      }
+    }
+    /*
+    System.out.println(squad_channel);
+    System.out.println(forceReEngage);
+    System.out.println("Targeting " + target);
+    System.out.println("Broadcast target " + broadcastTarget);
+    */
     Direction direction = here.directionTo(targetRobot.location);
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.ENEMY_DETECT_RADIUS, them);
@@ -275,6 +303,7 @@ public class Scout extends Globals {
             (us == Team.B ? 255 : 0));
       }
     }
+    return targetRobot;
   }
 
   public static void loop() {
@@ -287,14 +316,14 @@ public class Scout extends Globals {
       GARDENER_PENETRATION_ANGLES[4] = new Direction((float) Math.toRadians(240));
       GARDENER_PENETRATION_ANGLES[5] = new Direction((float) Math.toRadians(300));
       EvasiveScout.init();
-      // Early scouts should target the archon
+      // Early scouts should move towards the archon
       if (rc.getRoundNum() < 100) {
-        squad_channel = 100;
+        findSquad();
         MapLocation[] enemies = rc.getInitialArchonLocations(them);
         MapLocation first = enemies[0];
         targetDirection = here.directionTo(first);
       }
-      // Later scouts divide into squads
+      // Later scouts move in random directions
       else {
         findSquad();
         targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
@@ -356,19 +385,43 @@ public class Scout extends Globals {
           // Currently on attack mode
           //rc.setIndicatorDot(here, 0, 255, 0);
           int target = rc.readBroadcast(squad_channel + 1);
+          attackTarget = target;
           if (rc.canSenseRobot(target)) {
             // TODO fix disengagement
-            while (rc.canSenseRobot(target)) {
+            boolean forceReEngage = false;
+            while (rc.canSenseRobot(target) && (forceReEngage || attackTarget == target)) {
               Globals.update();
-              engage(target);
+              RobotInfo targetRobot = engage(target, forceReEngage);
+              if ((targetRobot != null && targetRobot.type != RobotType.GARDENER) || targetRobot == null) {
+                RobotInfo[] nearbyRobots = rc.senseNearbyRobots(6, them);
+                for (RobotInfo ri : nearbyRobots) {
+                  if (ri.type == RobotType.GARDENER) {
+                    target = ri.ID;
+                    forceReEngage = true;
+                    break;
+                  }
+                }
+              }
               Clock.yield();
             }
-            rc.broadcast(squad_channel + 1, 0);
-            current_mode = ROAM;
-            targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
-            if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-              //System.out.println("i");
-              rc.move(targetDirection);
+            if (!forceReEngage && attackTarget == target) {
+              rc.broadcast(squad_channel + 1, 0);
+              current_mode = ROAM;
+              targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
+              if (!rc.hasMoved() && rc.canMove(targetDirection)) {
+                //System.out.println("i");
+                rc.move(targetDirection);
+              }
+            }
+            else {
+              int targetX = rc.readBroadcast(squad_channel + 2);
+              int targetY = rc.readBroadcast(squad_channel + 3);
+              MapLocation targetLoc = new MapLocation(targetX, targetY);
+              targetDirection = here.directionTo(targetLoc);
+              if (!rc.hasMoved() && rc.canMove(targetDirection)) {
+                //System.out.println("i");
+                rc.move(targetDirection);
+              }
             }
           }
           else {
