@@ -226,8 +226,6 @@ public class Scout extends Globals {
       }
       else {
         if (targetRobot.type == RobotType.GARDENER) {
-          System.out.println("Targeting gardener");
-          //System.out.println("No clear shot from " + here + " to " + targetRobot.location);
           MapLocation optimalLoc = null;
           for (int i = 0; i < GARDENER_PENETRATION_ANGLES.length; ++i) {
             MapLocation newLoc = targetRobot.location.add(GARDENER_PENETRATION_ANGLES[i],
@@ -237,19 +235,18 @@ public class Scout extends Globals {
             System.out.println(rc.canMove(newLoc));
             System.out.println(clearShot(newLoc, targetRobot.location));
             */
-            if (rc.canMove(newLoc) && clearShot(newLoc, targetRobot.location)) {
-              if (optimalLoc == null) {
-                optimalLoc = newLoc;
-              }
-              else if (here.distanceTo(optimalLoc) > here.distanceTo(newLoc)) {
-                optimalLoc = newLoc;
-              }
+            float optimalDist = 9999f;
+            float newDist = here.distanceTo(newLoc);
+            if (rc.canMove(newLoc) && newDist < optimalDist
+                && clearShot(newLoc, targetRobot.location)) {
+              optimalLoc = newLoc;
+              optimalDist = newDist;
             }
           }
           if (optimalLoc != null) {
             rc.move(optimalLoc);
-            Globals.update();
             if (DEBUG) {
+              Globals.update();
               rc.setIndicatorDot(here, 255, 0, 0);
             }
           }
@@ -286,9 +283,9 @@ public class Scout extends Globals {
     Globals.update();
     direction = here.directionTo(targetRobot.location);
     if (shouldShoot && rc.canFireSingleShot() && clearShot(here, targetRobot.location)) {
-      System.out.println("CLEARSHOT!");
       rc.fireSingleShot(direction);
       if (DEBUG) {
+        System.out.println("CLEARSHOT!");
         rc.setIndicatorDot(targetRobot.location, (us == Team.A) ? 255 : 0, 0,
             (us == Team.B ? 255 : 0));
       }
