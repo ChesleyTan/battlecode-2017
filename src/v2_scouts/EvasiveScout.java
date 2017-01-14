@@ -36,7 +36,7 @@ public class EvasiveScout extends Globals {
 
       boolean unsafeFromUnit = false;
       for (RobotInfo ri : nearbyRobots) {
-        if (ri.type.canAttack()) {
+        if (ri.type.canAttack() && (ri.type == RobotType.LUMBERJACK || ri.type == RobotType.SOLDIER)) {
           unsafeFromUnit = true;
           Direction enemyAngle = here.directionTo(ri.location);
           /*
@@ -50,7 +50,7 @@ public class EvasiveScout extends Globals {
             if (angleDelta > 70) {
               continue;
             }
-            float distBetween = moveLocations[angleIndex].distanceTo(here);
+            float distBetween = moveLocations[angleIndex].distanceTo(ri.location);
             if (ri.type == RobotType.LUMBERJACK) {
               float weightOffset = (150 * (70 - angleDelta)) + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
               directionWeights[angleIndex] -= weightOffset;
@@ -75,7 +75,6 @@ public class EvasiveScout extends Globals {
           }
         }
       }
-      // TODO don't move if it guarantees you will be hit by a bullet?
       boolean unsafeFromBullet = false;
       int numBulletsAnalyzed = 0;
       for (int i = 0; i < nearbyBullets.length && numBulletsAnalyzed < 5; ++i) {
@@ -99,7 +98,7 @@ public class EvasiveScout extends Globals {
           // Make sure we don't collide into our own bullets!
           float distToRobot = bulletLocation.distanceTo(moveLocations[angleIndex]);
           // If theta > 90 degrees, then the bullet is traveling away from us and we can continue
-          if (Math.abs(theta) > Math.PI / 2 && distToRobot > myType.bodyRadius) {
+          if (distToRobot > myType.bodyRadius && Math.abs(theta) > Math.PI / 2) {
             continue;
           }
           couldCollide = true;
@@ -168,20 +167,6 @@ public class EvasiveScout extends Globals {
         }
       }
       */
-      // TODO avoid corners using messaging
-      /*
-      // Generate a random direction
-      Direction dir = RobotPlayer.randomDirection();
-      
-      // Randomly attempt to build a gardener in this direction
-      if (rc.canHireGardener(dir)) {
-          rc.hireGardener(dir);
-      }
-      */
-
-      // Increase preference for last direction moved,
-      // helps prevent getting trapped in an oscillation
-
       if (unsafeFromUnit || unsafeFromBullet) {
         int moveAngleIndex = 0;
         int attempts = 0;
