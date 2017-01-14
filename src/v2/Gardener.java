@@ -1,8 +1,7 @@
-package finalVersion;
+package v2;
 
 import battlecode.common.*;
 import utils.Globals;
-import utils.RobotUtils;
 
 public class Gardener extends Globals {
 
@@ -68,10 +67,10 @@ public class Gardener extends Globals {
   
   private static void spawnScout() throws GameActionException{
     Direction randomDir = new Direction(rand.nextFloat() * 2 * (float)(Math.PI));
-    while (!rc.canBuildRobot(RobotType.SCOUT, randomDir)){
+    while (!rc.canBuildRobot(RobotType.LUMBERJACK, randomDir)){
       randomDir = randomDir.rotateLeftDegrees(10);
     }
-    rc.buildRobot(RobotType.SCOUT, randomDir);
+    rc.buildRobot(RobotType.LUMBERJACK, randomDir);
   }
   
   private static Direction[] possibleTrees() throws GameActionException{
@@ -94,8 +93,8 @@ public class Gardener extends Globals {
 
     // Initial setup moves to a clear spot and spawns 3 scouts
     try {
-      startDirection = RobotUtils.randomDirection();
-      int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+      startDirection = RobotPlayer.randomDirection();
+      /*int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
       if (scoutCount == 0) {
         while(scoutCount < 3){
           checkspace();
@@ -105,7 +104,7 @@ public class Gardener extends Globals {
           scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
           continue;
         }
-      }
+      }*/
       spawnRound = rc.getRoundNum();
       // Loop: Build trees and water them, and occasionally build scouts
       while (true) {

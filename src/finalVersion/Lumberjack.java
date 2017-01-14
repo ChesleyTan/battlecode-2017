@@ -2,6 +2,7 @@ package finalVersion;
 
 import battlecode.common.*;
 import utils.RobotUtils;
+import java.util.*;
 import utils.Globals;
 
 public class Lumberjack extends Globals{
@@ -77,7 +78,7 @@ public class Lumberjack extends Globals{
       rc.setIndicatorDot(here.add(principledirect), 0, 255, 0);
       if (!isInRangeOfFriendlies){
         if (here.distanceTo(target.location) - RobotType.LUMBERJACK.bodyRadius - target.getRadius() > 1){
-          boolean canMove = RobotUtils.tryMove(principledirect, 15, 3);
+          boolean canMove = RobotUtils.tryMove(principledirect, 15, 6);
           if (!canMove){
             target = null;
           }

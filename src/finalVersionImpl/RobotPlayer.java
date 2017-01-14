@@ -1,9 +1,8 @@
-package v2;
+package finalVersionImpl;
 
 import battlecode.common.*;
+import finalVersion.*;
 import utils.Globals;
-import finalVersion.Archon;
-import finalVersion.Scout;
 
 public class RobotPlayer extends Globals {
 
@@ -138,7 +137,7 @@ public class RobotPlayer extends Globals {
     return (perpendicularDist <= myType.bodyRadius);
   }
 
-  static boolean willCollideWithTargetLocation(MapLocation bulletLocation,
+  public static boolean willCollideWithTargetLocation(MapLocation bulletLocation,
       Direction propagationDirection, MapLocation TargetLocation, float bodyRadius) {
 
     // Calculate bullet relations to this robot
@@ -147,7 +146,7 @@ public class RobotPlayer extends Globals {
     float distToRobot = bulletLocation.distanceTo(TargetLocation);
 
     // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
-    if (distToRobot > myType.bodyRadius && Math.abs(theta) > Math.PI / 2) {
+    if (distToRobot > bodyRadius && Math.abs(theta) > Math.PI / 2) {
       return false;
     }
     
