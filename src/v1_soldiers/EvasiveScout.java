@@ -1,4 +1,4 @@
-package v1;
+package v1_soldiers;
 
 import battlecode.common.*;
 
@@ -7,7 +7,7 @@ public class EvasiveScout extends Globals {
   static Direction[] angleDirections = new Direction[12];
   static final int EDGE_BIAS_RADIUS = 10;
   static final int BULLET_DETECT_RADIUS = 10;
-  static final int ENEMY_DETECT_RADIUS = 6;
+  static final int LUMBERJACK_DETECT_RADIUS = 6;
   static final float EVASION_STRIDE_RADIUS = 1f;
   private static MapLocation[] moveLocations = new MapLocation[12];
 
@@ -43,7 +43,6 @@ public class EvasiveScout extends Globals {
           }
           */
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-            // TODO add weight for other units or optimize this loop
             float angleDelta = Math.abs(enemyAngle.degreesBetween(angleDirections[angleIndex]));
             if (angleDelta > 70) {
               continue;

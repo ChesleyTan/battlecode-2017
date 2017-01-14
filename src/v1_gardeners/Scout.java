@@ -1,4 +1,4 @@
-package v1;
+package v1_gardeners;
 
 import battlecode.common.*;
 
@@ -8,8 +8,7 @@ public class Scout extends Globals {
   private final static int ATTACK = 1;
   private static int current_mode = ROAM;
   private static final float KEEPAWAY_RADIUS = 3f;
-  private static final float GARDENER_KEEPAWAY_RADIUS = 2.01f;
-  private static Direction[] GARDENER_PENETRATION_ANGLES = new Direction[6];
+  private static final float GARDENER_KEEPAWAY_RADIUS = 1.5f;
   private static Direction targetDirection = null;
   private static int squad_channel;
 
@@ -86,10 +85,10 @@ public class Scout extends Globals {
 
   public static void findSquad() throws GameActionException {
     int i = ATTACK_START_CHANNEL;
-    while (i < 500) {
+    while (i < 900) {
       int squad_count = rc.readBroadcast(i);
       //System.out.println(squad_count);
-      if (squad_count < 10) {
+      if (squad_count < 5) {
         squad_channel = i;
         rc.broadcast(i, squad_count + 1);
         return;
@@ -101,7 +100,7 @@ public class Scout extends Globals {
 
   public static void alert() throws GameActionException {
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
-    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(KEEPAWAY_RADIUS, them);
     if ((nearbyBullets != null && nearbyBullets.length != 0)
         || (nearbyRobots != null && nearbyRobots.length != 0)) {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
@@ -110,10 +109,9 @@ public class Scout extends Globals {
       return;
     }
     else {
-      if (rc.getRoundNum() < 100) {
+      if (rc.getRoundNum() < 200) {
         for (RobotInfo enemy : nearbyRobots) {
-          // TODO also prioritize defending our gardeners
-          if (enemy.getType() == RobotType.GARDENER) {
+          if (enemy.getType() != RobotType.ARCHON) {
             rc.broadcast(squad_channel + 1, enemy.ID);
             rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
             rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
@@ -130,19 +128,20 @@ public class Scout extends Globals {
         }
       }
       else {
+        /*
         RobotInfo enemy = null;
         // Preferred targets
-        if (rc.getRoundNum() < 1000) {
-          for (RobotInfo ri : nearbyRobots) {
-            if (ri.type == RobotType.GARDENER) {
-              enemy = ri;
-              break;
-            }
+        for (RobotInfo ri : nearbyRobots) {
+          if (ri.type == RobotType.GARDENER) {
+            enemy = ri;
+            break;
           }
         }
         if (enemy == null) {
           enemy = nearbyRobots[0];
         }
+        */
+        RobotInfo enemy = nearbyRobots[0];
         rc.broadcast(squad_channel + 1, enemy.ID);
         rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
         rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
@@ -205,7 +204,7 @@ public class Scout extends Globals {
     rc.broadcast(squad_channel + 3, (int) targetRobot.location.y);
     Direction direction = here.directionTo(targetRobot.location);
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
-    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.ENEMY_DETECT_RADIUS, them);
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.LUMBERJACK_DETECT_RADIUS, them);
     if (!rc.hasMoved() && ((nearbyBullets != null && nearbyBullets.length != 0)
         || (nearbyRobots != null && nearbyRobots.length != 0))) {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
@@ -225,59 +224,32 @@ public class Scout extends Globals {
         }
       }
       else {
+        float shootingDist = KEEPAWAY_RADIUS;
         if (targetRobot.type == RobotType.GARDENER) {
-          System.out.println("Targeting gardener");
-          //System.out.println("No clear shot from " + here + " to " + targetRobot.location);
-          MapLocation optimalLoc = null;
-          for (int i = 0; i < GARDENER_PENETRATION_ANGLES.length; ++i) {
-            MapLocation newLoc = targetRobot.location.add(GARDENER_PENETRATION_ANGLES[i],
-                GARDENER_KEEPAWAY_RADIUS);
-            // TODO optimize
-            /*
-            System.out.println(rc.canMove(newLoc));
-            System.out.println(clearShot(newLoc, targetRobot.location));
-            */
-            if (rc.canMove(newLoc) && clearShot(newLoc, targetRobot.location)) {
-              if (optimalLoc == null) {
-                optimalLoc = newLoc;
-              }
-              else if (here.distanceTo(optimalLoc) > here.distanceTo(newLoc)) {
-                optimalLoc = newLoc;
-              }
-            }
+          shootingDist = GARDENER_KEEPAWAY_RADIUS;
+        }
+        boolean currentlyHasClearShot = clearShot(here, targetRobot.location);
+        Direction rotated20 = direction.opposite().rotateLeftDegrees(20);
+        MapLocation newLoc = targetRobot.location.add(rotated20, shootingDist);
+        if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+          if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
+            //System.out.println("d");
+            rc.move(newLoc);
           }
-          if (optimalLoc != null) {
-            rc.move(optimalLoc);
-            Globals.update();
-            if (DEBUG) {
-              rc.setIndicatorDot(here, 255, 0, 0);
-            }
+          else if (!currentlyHasClearShot) {
+            rc.move(newLoc);
           }
         }
         else {
-          boolean currentlyHasClearShot = clearShot(here, targetRobot.location);
-          Direction rotated30 = direction.opposite().rotateLeftDegrees(30);
-          MapLocation newLoc = targetRobot.location.add(rotated30, KEEPAWAY_RADIUS);
+          rotated20 = direction.opposite().rotateRightDegrees(20);
+          newLoc = targetRobot.location.add(rotated20, shootingDist);
           if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
             if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
-              //System.out.println("d");
+              //System.out.println("e");
               rc.move(newLoc);
             }
             else if (!currentlyHasClearShot) {
               rc.move(newLoc);
-            }
-          }
-          else {
-            rotated30 = direction.opposite().rotateRightDegrees(30);
-            newLoc = targetRobot.location.add(rotated30, KEEPAWAY_RADIUS);
-            if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-              if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
-                //System.out.println("e");
-                rc.move(newLoc);
-              }
-              else if (!currentlyHasClearShot) {
-                rc.move(newLoc);
-              }
             }
           }
         }
@@ -286,139 +258,24 @@ public class Scout extends Globals {
     Globals.update();
     direction = here.directionTo(targetRobot.location);
     if (shouldShoot && rc.canFireSingleShot() && clearShot(here, targetRobot.location)) {
-      System.out.println("CLEARSHOT!");
+      //System.out.println("CLEARSHOT!");
       rc.fireSingleShot(direction);
-      if (DEBUG) {
-        rc.setIndicatorDot(targetRobot.location, (us == Team.A) ? 255 : 0, 0,
-            (us == Team.B ? 255 : 0));
+      /*
+      for (BulletInfo bi : rc.senseNearbyBullets()) {
+        System.out.println(bi.location);
       }
+      */
     }
+    rc.setIndicatorDot(targetRobot.location, (us == Team.A) ? 255 : 0, 0, (us == Team.B ? 255 : 0));
   }
 
   public static void loop() {
     try {
       Globals.update();
-      GARDENER_PENETRATION_ANGLES[0] = new Direction((float) Math.toRadians(0));
-      GARDENER_PENETRATION_ANGLES[1] = new Direction((float) Math.toRadians(60));
-      GARDENER_PENETRATION_ANGLES[2] = new Direction((float) Math.toRadians(120));
-      GARDENER_PENETRATION_ANGLES[3] = new Direction((float) Math.toRadians(180));
-      GARDENER_PENETRATION_ANGLES[4] = new Direction((float) Math.toRadians(240));
-      GARDENER_PENETRATION_ANGLES[5] = new Direction((float) Math.toRadians(300));
-      EvasiveScout.init();
-      // Early scouts should target the archon
-      if (rc.getRoundNum() < 100) {
-        squad_channel = 100;
-        MapLocation[] enemies = rc.getInitialArchonLocations(them);
-        MapLocation first = enemies[0];
-        targetDirection = here.directionTo(first);
-      }
-      // Later scouts divide into squads
-      else {
-        findSquad();
-        targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
-      }
     } catch (Exception e) {
       e.printStackTrace();
     }
     while (true) {
-      try {
-        Globals.update();
-        if (current_mode == ROAM) {
-          //rc.setIndicatorDot(here, 0, 0, 255);
-          // Look for target in broadcast
-          int target = rc.readBroadcast(squad_channel + 1);
-          if (target != 0) {
-            current_mode = ATTACK;
-            int xLoc = rc.readBroadcast(squad_channel + 2);
-            int yLoc = rc.readBroadcast(squad_channel + 3);
-            targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
-            BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
-            RobotInfo[] nearbyRobots = rc.senseNearbyRobots(KEEPAWAY_RADIUS, them);
-            if (nearbyBullets != null && nearbyBullets.length != 0
-                || nearbyRobots != null && nearbyRobots.length != 0) {
-              EvasiveScout.move(nearbyBullets, nearbyRobots);
-            }
-            else if (rc.canMove(targetDirection)) {
-              //System.out.println("f");
-              rc.move(targetDirection);
-            }
-          }
-          else {
-            alert();
-            if (!rc.hasMoved()) {
-              if (rc.canMove(targetDirection)) {
-                //System.out.println("g");
-                rc.move(targetDirection);
-              }
-              else if (!rc.onTheMap(here.add(targetDirection, RobotType.SCOUT.strideRadius))
-                  || rc.senseNearbyRobots(2.5f, us) != null) {
-                targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
-                if (rc.canMove(targetDirection)) {
-                  rc.move(targetDirection);
-                }
-                /*
-                Direction newDir = targetDirection.rotateRightDegrees(10);
-                while (!rc.canMove(newDir)) {
-                  newDir = newDir.rotateRightDegrees(10);
-                }
-                targetDirection = newDir;
-                //System.out.println("h");
-                rc.move(targetDirection);
-                */
-                //System.out.println(direction.getAngleDegrees());
-              }
-            }
-          }
-        }
-        if (current_mode == ATTACK) {
-          // Currently on attack mode
-          //rc.setIndicatorDot(here, 0, 255, 0);
-          int target = rc.readBroadcast(squad_channel + 1);
-          if (rc.canSenseRobot(target)) {
-            // TODO fix disengagement
-            while (rc.canSenseRobot(target)) {
-              Globals.update();
-              engage(target);
-              Clock.yield();
-            }
-            rc.broadcast(squad_channel + 1, 0);
-            current_mode = ROAM;
-            targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
-            if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-              //System.out.println("i");
-              rc.move(targetDirection);
-            }
-          }
-          else {
-            // Find target
-            if (rc.readBroadcast(squad_channel + 1) != 0) {
-              int xLoc = rc.readBroadcast(squad_channel + 2);
-              int yLoc = rc.readBroadcast(squad_channel + 3);
-              targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
-              if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-                //System.out.println("j");
-                rc.move(targetDirection);
-              }
-            }
-            else {
-              current_mode = ROAM;
-              targetDirection = new Direction((float) (Math.random() * 2 * Math.PI));
-              if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-                //System.out.println("k");
-                rc.move(targetDirection);
-              }
-              //System.out.println(direction.getAngleDegrees());
-            }
-          }
-        }
-        if (rc.getHealth() < 3f) {
-          int squad_count = rc.readBroadcast(squad_channel);
-          rc.broadcast(squad_channel, squad_count - 1);
-        }
-        Clock.yield();
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
     }
   }
 }

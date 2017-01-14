@@ -1,4 +1,4 @@
-package v1;
+package v1_gardeners;
 
 import battlecode.common.*;
 
@@ -141,7 +141,7 @@ public class RobotPlayer extends Globals {
     float distToRobot = bulletLocation.distanceTo(TargetLocation);
 
     // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
-    if (distToRobot > bodyRadius && Math.abs(theta) > Math.PI / 2) {
+    if (distToRobot > myType.bodyRadius && Math.abs(theta) > Math.PI / 2) {
       return false;
     }
     
@@ -183,9 +183,12 @@ public class RobotPlayer extends Globals {
             // If there are some...
             if (robots.length > 0) {
                 // And we have enough bullets, and haven't attacked yet this turn...
-                if (rc.canFireSingleShot()) {
+                if (robots.length == 1 && rc.canFireSingleShot()) {
                     // ...Then fire a bullet in the direction of the enemy.
                     rc.fireSingleShot(rc.getLocation().directionTo(robots[0].location));
+                }
+                else if (robots.length > 1 && rc.canFireTriadShot()) {
+                    rc.fireTriadShot(rc.getLocation().directionTo(robots[0].location));
                 }
             }
 
