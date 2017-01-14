@@ -3,9 +3,7 @@ package dummybot;
 import battlecode.common.*;
 import utils.MData;
 import utils.TargetingUtils;
-import v1.Globals;
-
-import javax.swing.*;
+import utils.Globals;
 
 /**
  * Dummy RobotPlayer that should be used for simple testing purposes only

@@ -1,11 +1,13 @@
-package v1;
+package v1_gardeners;
 
 import battlecode.common.*;
-import utils.Globals;
 
 public class Gardener extends Globals {
 
+  private static int numTreesBuilt = 0;
+  private static Direction lastDir = null;
   private static float detectRadius = 3f;
+  private static boolean initialSetup = false;
   private static boolean plant = false;
   private static int spawnRound;
   private static Direction startDirection = null;
@@ -149,7 +151,7 @@ public class Gardener extends Globals {
         }
         if (rc.getTeamBullets() > 1000){
           float donateAmt = ((int)(rc.getTeamBullets() / 10) * 10) - 640;
-          rc.donate(donateAmt);
+          //rc.donate(donateAmt);
         }
         Clock.yield();
       }

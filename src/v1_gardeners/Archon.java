@@ -1,7 +1,6 @@
-package v1;
+package v1_gardeners;
 
 import battlecode.common.*;
-import utils.Globals;
 
 public class Archon extends Globals {
 
@@ -20,7 +19,7 @@ public class Archon extends Globals {
     }
     while (true) {
       int producedScouts = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-      if (producedScouts < 3 && rc.getRoundNum() < 55) {
+      if (producedScouts < 3) {
         EvasiveArchon.move();
         Clock.yield();
         continue;
