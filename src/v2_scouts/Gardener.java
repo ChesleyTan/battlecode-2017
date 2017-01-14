@@ -154,7 +154,7 @@ public class Gardener extends Globals {
         // Call for defensive backup
         if (attacker != null) {
           float myHP = rc.getHealth();
-          if (myHP > 15) {
+          if (myHP > 50) {
             rc.setIndicatorDot(here, 255, 0, 0);
             boolean calledForBackup = false;
             for (int channel = ATTACK_START_CHANNEL; channel < ATTACK_END_CHANNEL; channel += 4) {
