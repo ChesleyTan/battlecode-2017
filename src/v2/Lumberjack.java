@@ -1,4 +1,4 @@
-package v1;
+package v2;
 
 import battlecode.common.*;
 import java.util.*;
@@ -37,30 +37,43 @@ public class Lumberjack extends Globals{
     //Note: this assumes all nearby robots chasing the enemy are lumberjacks
     if (rc.canSenseRobot(target.ID)){
       target = rc.senseRobot(target.ID);
-      RobotInfo[] attackingLumbers = rc.senseNearbyRobots(target.location, 2f, us);
-      Direction toMe90 = target.location.directionTo(here).rotateRightDegrees(90);
+      RobotInfo[] attackingLumbers = rc.senseNearbyRobots(target.location, 4f, us);
+      Direction toMe = target.location.directionTo(here);
       boolean isInRangeOfFriendlies = false;
       int rotateAmt = 0;
-      MapLocation closestPoint = target.location.add(toMe90, target.getRadius() + 1.1f);
+      MapLocation closestPoint = target.location.add(toMe, target.getRadius() + 1.1f);
       for (RobotInfo r : attackingLumbers){
-        if (r.location.isWithinDistance(closestPoint, 2)){
+        if (r.location.isWithinDistance(closestPoint, 3)){
           isInRangeOfFriendlies = true;
           break;
         }
       }
-      while(isInRangeOfFriendlies && rotateAmt < 18){
-        toMe90 = toMe90.rotateLeftDegrees(10);
-        rotateAmt ++;
-        closestPoint = target.location.add(toMe90, target.getRadius() + 1.1f);
+      while(isInRangeOfFriendlies && rotateAmt < 9){
+        Direction newDir = toMe.rotateLeftDegrees(10 * (rotateAmt + 1));
+        closestPoint = target.location.add(newDir, target.getRadius() + 1.1f);
         isInRangeOfFriendlies = false;
         for (RobotInfo r : attackingLumbers){
-          if (r.location.isWithinDistance(closestPoint, 2)){
+          if (r.location.isWithinDistance(closestPoint, 3)){
             isInRangeOfFriendlies = true;
             break;
           }
         }
+        if (!isInRangeOfFriendlies)
+          break;
+        else{
+          newDir = toMe.rotateRightDegrees(10* (rotateAmt + 1));
+          closestPoint = target.location.add(newDir, target.getRadius() + 1.1f);
+          isInRangeOfFriendlies = false;
+          for (RobotInfo r : attackingLumbers){
+            if (r.location.isWithinDistance(closestPoint, 3)){
+              isInRangeOfFriendlies = true;
+              break;
+            }
+          }
+        }
+        rotateAmt ++;
       }
-      Direction principledirect = toMe90.opposite();
+      Direction principledirect = toMe.opposite();
       rc.setIndicatorDot(here.add(principledirect), 0, 255, 0);
       if (!isInRangeOfFriendlies){
         if (here.distanceTo(target.location) - RobotType.LUMBERJACK.bodyRadius - target.getRadius() > 1){
@@ -74,29 +87,7 @@ public class Lumberjack extends Globals{
     else{
       target = null;
     }
-    /*
-    if (rc.canMove(principledirect) && !isInRangeOfFriendlies){
-      rc.move(principledirect);
-    }
-    else{
-      rotateAmt = 1;
-      while(rotateAmt < 9){
-        int offset = rotateAmt * 10;
-        if (rc.canMove(principledirect.rotateLeftDegrees(offset))){
-          rc.move(principledirect.rotateLeftDegrees(offset));
-          break;
-        }
-        else if (rc.canMove(principledirect.rotateRightDegrees(offset))){
-          rc.move(principledirect.rotateRightDegrees(offset));
-          break;
-        }
-        rotateAmt ++;
-      }
-      if (!rc.hasMoved()){
-        target = null;
-      }
-        
-    }*/
+    
     
   }
   public static void chase() throws GameActionException{
