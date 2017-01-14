@@ -15,10 +15,12 @@ public class Lumberjack extends Globals{
     TreeInfo[] first = rc.senseNearbyTrees(-1, them);
     TreeInfo[] second = rc.senseNearbyTrees(-1, Team.NEUTRAL);
     TreeInfo[] both = new TreeInfo[first.length+second.length];
-    for(int i=0;i<first.length;i++)
+    for(int i=0;i<first.length;i++){
         both[i] = first[i];
-    for(int i=0;i<second.length;i++)
+    }
+    for(int i=0;i<second.length;i++){
         both[first.length + i] = second[i];
+    }
     return both;
 }
 

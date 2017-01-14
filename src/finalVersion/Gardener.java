@@ -10,6 +10,8 @@ public class Gardener extends Globals {
   private static boolean plant = false;
   private static int spawnRound;
   private static Direction startDirection = null;
+  private static boolean production_gardener = false;
+  private static boolean has_broadcasted_death = false;
 
   /*
    * Checks that there is enough space around the unit to begin planting
@@ -66,12 +68,18 @@ public class Gardener extends Globals {
     }
   }
 
-  private static void spawnScout() throws GameActionException {
-    Direction randomDir = new Direction(rand.nextFloat() * 2 * (float) (Math.PI));
-    while (!rc.canBuildRobot(RobotType.SCOUT, randomDir)) {
+  private static boolean spawnRobot(RobotType t) throws GameActionException{
+    Direction randomDir = new Direction(rand.nextFloat() * 2 * (float)(Math.PI));
+    int attempts = 0;
+    while (!rc.canBuildRobot(t, randomDir) && attempts < 36){
       randomDir = randomDir.rotateLeftDegrees(10);
+      attempts ++;
     }
-    rc.buildRobot(RobotType.SCOUT, randomDir);
+    if (rc.canBuildRobot(t, randomDir)){
+      rc.buildRobot(t, randomDir);
+      return true;
+    }
+    return false;
   }
 
   private static Direction[] possibleTrees() throws GameActionException {
@@ -97,11 +105,16 @@ public class Gardener extends Globals {
     try {
       startDirection = RobotUtils.randomDirection();
       int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+      int producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
+      if (rc.getTeamBullets() > 640 && producedGardeners >= 3){
+        production_gardener = true;
+      }
       if (scoutCount == 0) {
         while (scoutCount < 3 && rc.getRoundNum() < 100) {
           checkspace();
-          spawnScout();
-          rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
+          if (spawnRobot(RobotType.SCOUT)){
+            rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
+          }
           Clock.yield();
           scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
           continue;
@@ -111,6 +124,12 @@ public class Gardener extends Globals {
       // Loop: Build trees and water them, and occasionally build scouts
       while (true) {
         Globals.update();
+        if (production_gardener){
+          checkspace();
+          spawnRobot(RobotType.SCOUT);
+          Clock.yield();
+          continue;
+        }
         if (rc.getRoundNum() - spawnRound < 30) {
           if (!rc.onTheMap(here, detectRadius)
               || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant) {
@@ -173,9 +192,10 @@ public class Gardener extends Globals {
               calledForBackup = true;
             }
           }
-          else if (myHP < 3 && attacker != null) {
+          else if (myHP < 3 && attacker != null && !has_broadcasted_death) {
             int gardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
             rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners - 1);
+            has_broadcasted_death = true;
             //rc.disintegrate();
           }
         }

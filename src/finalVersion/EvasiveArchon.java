@@ -12,13 +12,13 @@ public strictfp class EvasiveArchon extends Globals {
   static final int BULLET_DETECT_RADIUS = 7;
   private static MapLocation[] moveLocations = new MapLocation[12];
 
-  static void init() {
+  public static void init() {
     for (int angle = 0; angle < 12; ++angle) {
       angleDirections[angle] = new Direction((float) (angle * Math.PI / 6));
     }
   }
 
-  static void move() {
+  public static void move() {
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
