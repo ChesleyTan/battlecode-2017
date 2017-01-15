@@ -7,8 +7,8 @@ import utils.Globals;
 public class EvasiveScout extends Globals {
   // Change to RobotType enums
   static Direction[] angleDirections = new Direction[12];
-  static final int EDGE_BIAS_RADIUS = 10;
-  static final int BULLET_DETECT_RADIUS = 10;
+  static final int EDGE_BIAS_RADIUS = 8;
+  static final int BULLET_DETECT_RADIUS = 6;
   static final int ENEMY_DETECT_RADIUS = 6;
   static final float EVASION_STRIDE_RADIUS = 1.5f;
   private static MapLocation[] moveLocations = new MapLocation[12];
@@ -20,6 +20,7 @@ public class EvasiveScout extends Globals {
   }
 
   static void move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots) {
+    // TODO account for trees
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
@@ -36,7 +37,8 @@ public class EvasiveScout extends Globals {
 
       boolean unsafeFromUnit = false;
       for (RobotInfo ri : nearbyRobots) {
-        if (ri.type.canAttack() && (ri.type == RobotType.LUMBERJACK || ri.type == RobotType.SOLDIER)) {
+        if (ri.type.canAttack()
+            && (ri.type == RobotType.LUMBERJACK || ri.type == RobotType.SOLDIER)) {
           unsafeFromUnit = true;
           Direction enemyAngle = here.directionTo(ri.location);
           /*
@@ -52,11 +54,13 @@ public class EvasiveScout extends Globals {
             }
             float distBetween = moveLocations[angleIndex].distanceTo(ri.location);
             if (ri.type == RobotType.LUMBERJACK) {
-              float weightOffset = (150 * (70 - angleDelta)) + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+              float weightOffset = (150 * (70 - angleDelta))
+                  + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
               directionWeights[angleIndex] -= weightOffset;
             }
             else if (ri.type == RobotType.SOLDIER) {
-              float weightOffset = (150 * (70 - angleDelta)) + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+              float weightOffset = (150 * (70 - angleDelta))
+                  + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
               directionWeights[angleIndex] -= weightOffset;
             }
             /*
@@ -76,8 +80,10 @@ public class EvasiveScout extends Globals {
         }
       }
       boolean unsafeFromBullet = false;
-      int numBulletsAnalyzed = 0;
-      for (int i = 0; i < nearbyBullets.length && numBulletsAnalyzed < 5; ++i) {
+      for (int i = 0; i < nearbyBullets.length; ++i) {
+        if (Clock.getBytecodesLeft() < 2000) {
+          break;
+        }
         BulletInfo bi = nearbyBullets[i];
         if (!unsafeFromBullet && RobotUtils.willCollideWithMe(bi)) {
           unsafeFromBullet = true;
@@ -90,24 +96,30 @@ public class EvasiveScout extends Globals {
           System.out.println("Bullet direction: " + propagationDirection);
         }
         */
-        boolean couldCollide = false;
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
           // Calculate bullet relations to this robot
-          Direction directionToRobot = bulletLocation.directionTo(moveLocations[angleIndex]);
-          float theta = propagationDirection.radiansBetween(directionToRobot);
-          // Make sure we don't collide into our own bullets!
+          boolean willCollide = false;
           float distToRobot = bulletLocation.distanceTo(moveLocations[angleIndex]);
-          // If theta > 90 degrees, then the bullet is traveling away from us and we can continue
-          if (distToRobot > myType.bodyRadius && Math.abs(theta) > Math.PI / 2) {
-            continue;
+          if (distToRobot < myType.bodyRadius) {
+            willCollide = true;
           }
-          couldCollide = true;
-          // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
-          // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
-          // This corresponds to the smallest radius circle centered at our location that would intersect with the
-          // line that is the path of the bullet.
-          float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta));
-          boolean willCollide = (perpendicularDist <= myType.bodyRadius);
+          else {
+            int startBytecodes = Clock.getBytecodeNum();
+            Direction directionToRobot = bulletLocation.directionTo(moveLocations[angleIndex]);
+            float theta = propagationDirection.radiansBetween(directionToRobot);
+            // Make sure we don't collide into our own bullets!
+            // If theta > 90 degrees, then the bullet is traveling away from us and we can continue
+            if (Math.abs(theta) > Math.PI / 2) {
+              continue;
+            }
+            // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
+            // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
+            // This corresponds to the smallest radius circle centered at our location that would intersect with the
+            // line that is the path of the bullet.
+            float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta));
+            willCollide = (perpendicularDist <= myType.bodyRadius);
+            System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
+          }
           if (willCollide) {
             directionWeights[angleIndex] -= (15000
                 + 1000 * (EVASION_STRIDE_RADIUS + BULLET_DETECT_RADIUS - distToRobot));
@@ -117,9 +129,6 @@ public class EvasiveScout extends Globals {
             }
             */
           }
-        }
-        if (couldCollide) {
-          ++numBulletsAnalyzed;
         }
       }
       updateMapBoundaries();
@@ -131,34 +140,6 @@ public class EvasiveScout extends Globals {
         System.out.println("maxY: " + maxY);
       }
       */
-      // Avoid corners and edges
-      if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
-        float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (here.x - minX));
-        for (int angleIndex = 4; angleIndex < 9; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
-      }
-      if (minY != UNKNOWN && here.y - minY < EDGE_BIAS_RADIUS) {
-        float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (here.y - minY));
-        for (int angleIndex = 7; angleIndex < 12; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
-      }
-      if (maxX != UNKNOWN && maxX - here.x < EDGE_BIAS_RADIUS) {
-        float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (maxX - here.x));
-        for (int angleIndex = 0; angleIndex < 3; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
-        for (int angleIndex = 10; angleIndex < 12; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
-      }
-      if (maxY != UNKNOWN && maxY - here.y < EDGE_BIAS_RADIUS) {
-        float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (maxY - here.y));
-        for (int angleIndex = 1; angleIndex < 6; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
-      }
       /*
       if (DEBUG) {
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
@@ -168,6 +149,34 @@ public class EvasiveScout extends Globals {
       }
       */
       if (unsafeFromUnit || unsafeFromBullet) {
+        // Avoid corners and edges
+        if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
+          float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (here.x - minX));
+          for (int angleIndex = 4; angleIndex < 9; ++angleIndex) {
+            directionWeights[angleIndex] -= weightOffset;
+          }
+        }
+        if (minY != UNKNOWN && here.y - minY < EDGE_BIAS_RADIUS) {
+          float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (here.y - minY));
+          for (int angleIndex = 7; angleIndex < 12; ++angleIndex) {
+            directionWeights[angleIndex] -= weightOffset;
+          }
+        }
+        if (maxX != UNKNOWN && maxX - here.x < EDGE_BIAS_RADIUS) {
+          float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (maxX - here.x));
+          for (int angleIndex = 0; angleIndex < 3; ++angleIndex) {
+            directionWeights[angleIndex] -= weightOffset;
+          }
+          for (int angleIndex = 10; angleIndex < 12; ++angleIndex) {
+            directionWeights[angleIndex] -= weightOffset;
+          }
+        }
+        if (maxY != UNKNOWN && maxY - here.y < EDGE_BIAS_RADIUS) {
+          float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (maxY - here.y));
+          for (int angleIndex = 1; angleIndex < 6; ++angleIndex) {
+            directionWeights[angleIndex] -= weightOffset;
+          }
+        }
         int moveAngleIndex = 0;
         int attempts = 0;
         boolean moved = false;
@@ -190,7 +199,8 @@ public class EvasiveScout extends Globals {
             System.out.println("Trying to move in direction: " + angleDirections[moveAngleIndex]);
           }
           */
-          moved = RobotUtils.tryMoveDist(angleDirections[moveAngleIndex], EVASION_STRIDE_RADIUS, 5, 3);
+          moved = RobotUtils.tryMoveDist(angleDirections[moveAngleIndex], EVASION_STRIDE_RADIUS, 5,
+              3);
           /*
           if (DEBUG) {
             rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255, 0);
