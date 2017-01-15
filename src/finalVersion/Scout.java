@@ -548,6 +548,7 @@ public class Scout extends Globals {
           hasReportedDeath = true;
           rc.broadcast(squad_channel, squad_count - 1);
         }
+        RobotUtils.donateEverythingAtTheEnd();
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

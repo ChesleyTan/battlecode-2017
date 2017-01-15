@@ -18,7 +18,7 @@ public class RobotUtils extends Globals{
     return new Direction(rand.nextFloat() * 2 * (float) Math.PI);
   }
   
-  public static void donateEverything() throws GameActionException{
+  public static void donateEverythingAtTheEnd() throws GameActionException{
     if (rc.getRoundNum() == rc.getRoundLimit() - 1){
       rc.donate(rc.getTeamBullets());
     }

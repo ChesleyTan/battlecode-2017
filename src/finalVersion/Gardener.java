@@ -204,10 +204,7 @@ public class Gardener extends Globals {
             //rc.disintegrate();
           }
         }
-        if (rc.getTeamBullets() > 1000) {
-          float donateAmt = ((int) (rc.getTeamBullets() / 10) * 10) - 640;
-          rc.donate(donateAmt);
-        }
+        RobotUtils.donateEverythingAtTheEnd();
         Clock.yield();
       }
     } catch (Exception e) {

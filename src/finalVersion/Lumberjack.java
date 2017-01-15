@@ -21,32 +21,64 @@ public class Lumberjack extends Globals{
         both[first.length + i] = second[i];
     }
     return both;
-}
+  }
+  
+  public static RobotInfo[] siftForLumbers(RobotInfo[] sample){
+    RobotInfo[] result = {};
+    int index = 0;
+    for (RobotInfo r: sample){
+      if(r.getType() == RobotType.LUMBERJACK){
+        RobotInfo[] current = result;
+        result = new RobotInfo[index + 1];
+        for (int i = 0; i < current.length; i++){
+          result[i] = current[i];
+        }
+        result[index] = r;
+        index++;
+      }
+    }
+    return result;
+  }
 
   public static void roam() throws GameActionException{
-    RobotUtils.tryMove(mydir, 10, 9);
+    if (rc.canMove(mydir)){
+      rc.move(mydir);
+    }
+    else{
+      while(!rc.canMove(mydir)){
+        mydir = RobotUtils.randomDirection();
+      }
+      if (rc.canMove(mydir)){
+        rc.move(mydir);
+      }
+    }
   }
   
   public static void checkNearbyLumbersAndMove() throws GameActionException{
     //Note: this assumes all nearby robots chasing the enemy are lumberjacks
     if (rc.canSenseRobot(target.ID)){
       target = rc.senseRobot(target.ID);
-      RobotInfo[] attackingLumbers = rc.senseNearbyRobots(target.location, 4f, us);
+      RobotInfo[] attackingLumbers = siftForLumbers(rc.senseNearbyRobots(target.location, 4f, us));
       Direction toMe = target.location.directionTo(here);
       boolean isInRangeOfFriendlies = false;
       int rotateAmt = 0;
       MapLocation closestPoint = target.location.add(toMe, target.getRadius() + 1.1f);
       for (RobotInfo r : attackingLumbers){
+        System.out.println(r.ID);
+        System.out.println(r.location.distanceTo(closestPoint));
         if (r.location.isWithinDistance(closestPoint, 3)){
           isInRangeOfFriendlies = true;
           break;
         }
       }
-      while(isInRangeOfFriendlies && rotateAmt < 9){
+      // Code to make them more aggressive but also towards each other
+      /*while(isInRangeOfFriendlies && rotateAmt < 9){
         Direction newDir = toMe.rotateLeftDegrees(10 * (rotateAmt + 1));
         closestPoint = target.location.add(newDir, target.getRadius() + 1.1f);
         isInRangeOfFriendlies = false;
         for (RobotInfo r : attackingLumbers){
+          System.out.println(r.ID);
+          System.out.println(r.location.distanceTo(closestPoint));
           if (r.location.isWithinDistance(closestPoint, 3)){
             isInRangeOfFriendlies = true;
             break;
@@ -66,16 +98,25 @@ public class Lumberjack extends Globals{
           }
         }
         rotateAmt ++;
-      }
+      }*/
       Direction principledirect = toMe.opposite();
       rc.setIndicatorDot(here.add(principledirect), 0, 255, 0);
       if (!isInRangeOfFriendlies){
-        if (here.distanceTo(target.location) - RobotType.LUMBERJACK.bodyRadius - target.getRadius() > 1){
+        if (here.distanceTo(target.location) - RobotType.LUMBERJACK.bodyRadius - target.getRadius() > 3){
           boolean canMove = RobotUtils.tryMove(principledirect, 15, 6);
           if (!canMove){
             target = null;
           }
         }
+        else{
+          if (rc.canMove(principledirect)){
+            rc.move(principledirect);
+          }
+        }
+      }
+      else{
+        RobotUtils.tryMove(toMe, 15, 6);
+        target = null;
       }
     }
     else{
@@ -214,14 +255,9 @@ public class Lumberjack extends Globals{
     try{
       mydir = new Direction((float)(rand.nextFloat() * 2 * Math.PI));
       while(true){
-        if (target != null)
-          System.out.println(target.ID);
-        if (targetTree != null)
-          System.out.println(targetTree.ID);
         Globals.update();
         // Consider targets that are behind trees
         if (target != null || targetTree != null){
-          // reachable should not automatically switch targets
           if (target != null){
             TreeInfo closerTree = reachable(target);
             if (closerTree == null){
@@ -276,6 +312,7 @@ public class Lumberjack extends Globals{
             }
           }
         }
+        RobotUtils.donateEverythingAtTheEnd();
         Clock.yield();
       }
     }catch(GameActionException e){

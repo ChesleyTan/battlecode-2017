@@ -54,6 +54,7 @@ public class Archon extends Globals {
           rc.donate(donationAmount);
         }*/
         //System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
+        RobotUtils.donateEverythingAtTheEnd();
         Clock.yield();
       }catch (Exception e){
       e.printStackTrace();
