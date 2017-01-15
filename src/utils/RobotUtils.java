@@ -17,7 +17,12 @@ public class RobotUtils extends Globals{
   public static Direction randomDirection() {
     return new Direction(rand.nextFloat() * 2 * (float) Math.PI);
   }
-
+  
+  public static void donateEverything() throws GameActionException{
+    if (rc.getRoundNum() == rc.getRoundLimit() - 1){
+      rc.donate(rc.getTeamBullets());
+    }
+  }
   public static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
       throws GameActionException {
 

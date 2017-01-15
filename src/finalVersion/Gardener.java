@@ -106,8 +106,11 @@ public class Gardener extends Globals {
       startDirection = RobotUtils.randomDirection();
       int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
       int producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
-      if (rc.getTeamBullets() > 640 && producedGardeners >= 3){
+      int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
+      int requiredProductionGardeners = rc.readBroadcast(PRODUCTION_GARDENERS_CHANNEL);
+      if (productionGardeners < requiredProductionGardeners){
         production_gardener = true;
+        rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, productionGardeners + 1);
       }
       if (scoutCount == 0) {
         while (scoutCount < 3 && rc.getRoundNum() < 100) {
