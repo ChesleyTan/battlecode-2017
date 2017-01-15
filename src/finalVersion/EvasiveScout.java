@@ -130,7 +130,8 @@ public class EvasiveScout extends Globals {
           }
           if (willCollide) {
             directionWeights[angleIndex] -= (15000
-                + 1000 * (EVASION_STRIDE_RADIUS + BULLET_DETECT_RADIUS - distToRobot));
+                + 1000 * (EVASION_STRIDE_RADIUS + BULLET_DETECT_RADIUS - distToRobot)
+                + 1000 * (bi.damage * bi.damage));
             /*
             if (DEBUG) {
               System.out.println("Angle " + (angleIndex * 30) + " is unsafe.");
