@@ -12,7 +12,7 @@ public class Scout extends Globals {
   private final static int ATTACK = 1;
   private static int current_mode = ROAM;
   private static final float KEEPAWAY_RADIUS = 3f;
-  private static final float GARDENER_KEEPAWAY_RADIUS = 2.01f;
+  private static final float GARDENER_KEEPAWAY_RADIUS = 2.00001f;
   private static Direction[] GARDENER_PENETRATION_ANGLES = new Direction[6];
   private static Direction targetDirection = null;
   private static int squad_channel;
@@ -191,7 +191,8 @@ public class Scout extends Globals {
     return true;
   }
 
-  private static boolean tryMoveIfSafe(Direction dir, BulletInfo[] nearbyBullets, float degreeOffset, int checksPerSide) throws GameActionException {
+  private static boolean tryMoveIfSafe(Direction dir, BulletInfo[] nearbyBullets,
+      float degreeOffset, int checksPerSide) throws GameActionException {
     // First, try intended direction
     MapLocation newLoc = here.add(dir, myType.strideRadius);
     if (rc.canMove(dir) && isLocationSafe(nearbyBullets, newLoc)) {
@@ -273,20 +274,31 @@ public class Scout extends Globals {
       else {
         if (targetRobot.type == RobotType.GARDENER) {
           MapLocation optimalLoc = null;
-          for (int i = 0; i < GARDENER_PENETRATION_ANGLES.length; ++i) {
-            MapLocation newLoc = targetRobot.location.add(GARDENER_PENETRATION_ANGLES[i],
-                GARDENER_KEEPAWAY_RADIUS);
-            // TODO optimize
-            /*
-            System.out.println(rc.canMove(newLoc));
-            System.out.println(clearShot(newLoc, targetRobot.location));
-            */
-            float optimalDist = 9999f;
-            float newDist = here.distanceTo(newLoc);
-            if (rc.canMove(newLoc) && newDist < optimalDist
-                && clearShot(newLoc, targetRobot.location)) {
-              optimalLoc = newLoc;
-              optimalDist = newDist;
+          float optimalDist = 9999f;
+          TreeInfo[] nearbyTrees = rc.senseNearbyTrees(targetRobot.location, 2.2f, them);
+          for (TreeInfo ti : nearbyTrees) {
+            if (rc.canMove(ti.location)) {
+              float newDist = here.distanceTo(ti.location);
+              if (newDist < optimalDist) {
+                optimalLoc = ti.location;
+                optimalDist = newDist;
+              }
+            }
+          }
+          if (optimalLoc == null) {
+            for (int i = 0; i < GARDENER_PENETRATION_ANGLES.length; ++i) {
+              MapLocation newLoc = targetRobot.location.add(GARDENER_PENETRATION_ANGLES[i],
+                  GARDENER_KEEPAWAY_RADIUS);
+              // TODO optimize
+              /*
+              System.out.println(rc.canMove(newLoc));
+              System.out.println(clearShot(newLoc, targetRobot.location));
+              */
+              float newDist = here.distanceTo(newLoc);
+              if (rc.canMove(newLoc) && newDist < optimalDist) {
+                optimalLoc = newLoc;
+                optimalDist = newDist;
+              }
             }
           }
           if (optimalLoc != null) {
@@ -298,28 +310,51 @@ public class Scout extends Globals {
           }
         }
         else {
-          boolean currentlyHasClearShot = clearShot(here, targetRobot.location);
-          Direction rotated30 = direction.opposite().rotateLeftDegrees(30);
-          MapLocation newLoc = targetRobot.location.add(rotated30, KEEPAWAY_RADIUS);
-          if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-            if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
-              //System.out.println("d");
-              rc.move(newLoc);
-            }
-            else if (!currentlyHasClearShot) {
-              rc.move(newLoc);
+          MapLocation optimalLoc = null;
+          float optimalDist = 9999f;
+          if (targetRobot.type != RobotType.LUMBERJACK) {
+            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(-1);
+            for (TreeInfo ti : nearbyTrees) {
+              if (!ti.team.isPlayer() && ti.radius > 1f) {
+                continue;
+              }
+              if (rc.canMove(ti.location) && ti.location.distanceTo(targetRobot.location) < 8f
+                  && clearShot(ti.location, targetRobot.location)) {
+                float newDist = here.distanceTo(ti.location);
+                if (newDist < optimalDist) {
+                  optimalLoc = ti.location;
+                  optimalDist = newDist;
+                }
+              }
             }
           }
+          if (optimalLoc != null) {
+            rc.move(optimalLoc);
+          }
           else {
-            rotated30 = direction.opposite().rotateRightDegrees(30);
-            newLoc = targetRobot.location.add(rotated30, KEEPAWAY_RADIUS);
+            boolean currentlyHasClearShot = clearShot(here, targetRobot.location);
+            Direction rotated30 = direction.opposite().rotateLeftDegrees(30);
+            MapLocation newLoc = targetRobot.location.add(rotated30, KEEPAWAY_RADIUS);
             if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
               if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
-                //System.out.println("e");
+                //System.out.println("d");
                 rc.move(newLoc);
               }
               else if (!currentlyHasClearShot) {
                 rc.move(newLoc);
+              }
+            }
+            else {
+              rotated30 = direction.opposite().rotateRightDegrees(30);
+              newLoc = targetRobot.location.add(rotated30, KEEPAWAY_RADIUS);
+              if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+                if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
+                  //System.out.println("e");
+                  rc.move(newLoc);
+                }
+                else if (!currentlyHasClearShot) {
+                  rc.move(newLoc);
+                }
               }
             }
           }
@@ -466,23 +501,33 @@ public class Scout extends Globals {
                 }
                 current_mode = ROAM;
                 targetDirection = RobotUtils.randomDirection();
+                /*
                 if (!rc.hasMoved() && rc.canMove(targetDirection)) {
                   //System.out.println("i");
                   rc.move(targetDirection);
                 }
+                */
               }
               else if (priorityTarget) {
                 priorityTarget = false;
               }
             }
-            if (rc.readBroadcast(squad_channel + 1) != 0) {
+            int broadcastTarget = rc.readBroadcast(squad_channel + 1);
+            if (broadcastTarget != 0) {
               System.out.println("Moving towards target");
               int xLoc = rc.readBroadcast(squad_channel + 2);
               int yLoc = rc.readBroadcast(squad_channel + 3);
-              targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
-              if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-                //System.out.println("j");
-                rc.move(targetDirection);
+              MapLocation targetLoc = new MapLocation(xLoc, yLoc);
+              float distToTarget = here.distanceTo(targetLoc);
+              if (distToTarget < RobotType.ARCHON.sensorRadius && !rc.canSenseRobot(broadcastTarget)) {
+                rc.broadcast(squad_channel + 1, 0);
+              }
+              else {
+                targetDirection = here.directionTo(targetLoc);
+                if (!rc.hasMoved() && rc.canMove(targetDirection)) {
+                  //System.out.println("j");
+                  rc.move(targetDirection);
+                }
               }
             }
             // Disengage if no target

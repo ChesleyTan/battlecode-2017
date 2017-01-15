@@ -68,14 +68,14 @@ public class Gardener extends Globals {
     }
   }
 
-  private static boolean spawnRobot(RobotType t) throws GameActionException{
-    Direction randomDir = new Direction(rand.nextFloat() * 2 * (float)(Math.PI));
+  private static boolean spawnRobot(RobotType t) throws GameActionException {
+    Direction randomDir = new Direction(rand.nextFloat() * 2 * (float) (Math.PI));
     int attempts = 0;
-    while (!rc.canBuildRobot(t, randomDir) && attempts < 36){
+    while (!rc.canBuildRobot(t, randomDir) && attempts < 36) {
       randomDir = randomDir.rotateLeftDegrees(10);
-      attempts ++;
+      attempts++;
     }
-    if (rc.canBuildRobot(t, randomDir)){
+    if (rc.canBuildRobot(t, randomDir)) {
       rc.buildRobot(t, randomDir);
       return true;
     }
@@ -104,65 +104,62 @@ public class Gardener extends Globals {
     // Initial setup moves to a clear spot and spawns 3 scouts
     try {
       startDirection = RobotUtils.randomDirection();
-      int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
       int producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
       int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
       int requiredProductionGardeners = rc.readBroadcast(PRODUCTION_GARDENERS_CHANNEL);
-      if (productionGardeners < requiredProductionGardeners){
+      if (productionGardeners < requiredProductionGardeners) {
         production_gardener = true;
         rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, productionGardeners + 1);
-      }
-      if (scoutCount == 0) {
-        while (scoutCount < 3 && rc.getRoundNum() < 100) {
-          checkspace();
-          if (spawnRobot(RobotType.SCOUT)){
-            rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
-          }
-          Clock.yield();
-          scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-          continue;
-        }
       }
       spawnRound = rc.getRoundNum();
       // Loop: Build trees and water them, and occasionally build scouts
       while (true) {
         Globals.update();
-        if (production_gardener){
+        int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+        if (rc.getRoundNum() < 100 && scoutCount < 3) {
           checkspace();
-          spawnRobot(RobotType.SCOUT);
-          Clock.yield();
-          continue;
+          if (spawnRobot(RobotType.SCOUT)) {
+            rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
+          }
         }
-        if (rc.getRoundNum() - spawnRound < 30) {
-          if (!rc.onTheMap(here, detectRadius)
-              || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant) {
+        else {
+          if (production_gardener) {
             checkspace();
+            spawnRobot(RobotType.SCOUT);
             Clock.yield();
             continue;
           }
-        }
-        Direction[] freeSpaces = possibleTrees();
-        if (freeSpaces[1] != null && rc.canPlantTree(freeSpaces[1])) {
-          rc.plantTree(freeSpaces[1]);
-          plant = true;
-        }
-        else {
-          int division_factor = (int) (154 / (rc.getTreeCount() + 1));
-          if (rc.getRoundNum() % division_factor == 0 && freeSpaces[0] != null
-              && rc.canBuildRobot(RobotType.SCOUT, freeSpaces[0])) {
-            rc.buildRobot(RobotType.SCOUT, freeSpaces[0]);
-          }
-        }
-        TreeInfo[] nearbyTrees = rc.senseNearbyTrees(2, us);
-        if (nearbyTrees != null && nearbyTrees.length != 0) {
-          TreeInfo minWaterable = nearbyTrees[0];
-          for (TreeInfo x : nearbyTrees) {
-            if (rc.canWater(x.ID) && x.health < minWaterable.health) {
-              minWaterable = x;
+          if (rc.getRoundNum() - spawnRound < 30) {
+            if (!rc.onTheMap(here, detectRadius)
+                || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant) {
+              checkspace();
+              Clock.yield();
+              continue;
             }
           }
-          if (rc.canWater(minWaterable.ID)) {
-            rc.water(minWaterable.ID);
+          Direction[] freeSpaces = possibleTrees();
+          if (freeSpaces[1] != null && rc.canPlantTree(freeSpaces[1])) {
+            rc.plantTree(freeSpaces[1]);
+            plant = true;
+          }
+          else {
+            int division_factor = (int) (154 / (rc.getTreeCount() + 1));
+            if (rc.getRoundNum() % division_factor == 0 && freeSpaces[0] != null
+                && rc.canBuildRobot(RobotType.SCOUT, freeSpaces[0])) {
+              rc.buildRobot(RobotType.SCOUT, freeSpaces[0]);
+            }
+          }
+          TreeInfo[] nearbyTrees = rc.senseNearbyTrees(2, us);
+          if (nearbyTrees != null && nearbyTrees.length != 0) {
+            TreeInfo minWaterable = nearbyTrees[0];
+            for (TreeInfo x : nearbyTrees) {
+              if (rc.canWater(x.ID) && x.health < minWaterable.health) {
+                minWaterable = x;
+              }
+            }
+            if (rc.canWater(minWaterable.ID)) {
+              rc.water(minWaterable.ID);
+            }
           }
         }
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(5, them);
@@ -176,7 +173,7 @@ public class Gardener extends Globals {
         // Call for defensive backup
         if (attacker != null) {
           float myHP = rc.getHealth();
-          if (myHP > 50) {
+          if (myHP > RobotType.GARDENER.maxHealth / 2) {
             rc.setIndicatorDot(here, 255, 0, 0);
             boolean calledForBackup = false;
             for (int channel = ATTACK_START_CHANNEL; channel < ATTACK_END_CHANNEL; channel += 4) {
