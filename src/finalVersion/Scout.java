@@ -91,6 +91,18 @@ public class Scout extends Globals {
   //    }
   //  }
   //}
+  public static boolean isPerchedInTree() {
+    TreeInfo[] nearbyTrees = rc.senseNearbyTrees(0.1f);
+    for (TreeInfo ti : nearbyTrees) {
+      if (ti.team.isPlayer()) {
+        return true;
+      }
+      else if (ti.radius <= 1f) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   public static void findSquad() throws GameActionException {
     int i = ATTACK_START_CHANNEL;
@@ -113,7 +125,7 @@ public class Scout extends Globals {
     }
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
-    if (nearbyBullets.length != 0 || nearbyRobots.length != 0) {
+    if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree()) {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
     }
     if (nearbyRobots.length == 0) {
@@ -259,8 +271,7 @@ public class Scout extends Globals {
     Direction direction = here.directionTo(targetRobot.location);
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.ENEMY_DETECT_RADIUS, them);
-    if (!rc.hasMoved() && ((nearbyBullets != null && nearbyBullets.length != 0)
-        || (nearbyRobots != null && nearbyRobots.length != 0))) {
+    if (!rc.hasMoved() && (nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree()) {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
     }
     //System.out.println(target);
@@ -415,8 +426,7 @@ public class Scout extends Globals {
             targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
             BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(KEEPAWAY_RADIUS, them);
-            if (nearbyBullets != null && nearbyBullets.length != 0
-                || nearbyRobots != null && nearbyRobots.length != 0) {
+            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree()) {
               EvasiveScout.move(nearbyBullets, nearbyRobots);
             }
             else if (rc.canMove(targetDirection)) {
