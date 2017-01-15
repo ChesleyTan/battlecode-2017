@@ -25,7 +25,7 @@ public class Gardener extends Globals {
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
     for (RobotInfo r : nearbyRobots) {
       Direction their_direction = here.directionTo(r.location).opposite();
-      float their_distance = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location))
+      float their_distance = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius())
           / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
       sumX += their_direction.getDeltaX(their_distance);
       sumY += their_direction.getDeltaY(their_distance);
@@ -35,23 +35,24 @@ public class Gardener extends Globals {
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
     for (TreeInfo t : nearbyTrees) {
       Direction their_direction = t.location.directionTo(here);
-      float their_distance = (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location))
+      float their_distance = (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius())
           / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
       sumX += their_direction.getDeltaX(their_distance);
       sumY += their_direction.getDeltaY(their_distance);
     }
 
     // Opposing forces created by Edge of Map
-    if (!rc.onTheMap(new MapLocation(here.x - 1, here.y))) {
+    float radius = RobotType.GARDENER.bodyRadius;
+    if (!rc.onTheMap(new MapLocation(here.x - 2 - radius, here.y))) {
       sumX += RobotType.GARDENER.strideRadius;
     }
-    if (!rc.onTheMap(new MapLocation(here.x + 1, here.y))) {
+    if (!rc.onTheMap(new MapLocation(here.x + 2 + radius, here.y))) {
       sumX -= RobotType.GARDENER.strideRadius;
     }
-    if (!rc.onTheMap(new MapLocation(here.x, here.y - 1))) {
+    if (!rc.onTheMap(new MapLocation(here.x, here.y - 2 - radius))) {
       sumY += RobotType.GARDENER.strideRadius;
     }
-    if (!rc.onTheMap(new MapLocation(here.x, here.y + 1))) {
+    if (!rc.onTheMap(new MapLocation(here.x, here.y + 2 + radius))) {
       sumY -= RobotType.GARDENER.strideRadius;
     }
     float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
