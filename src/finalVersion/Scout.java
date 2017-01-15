@@ -4,7 +4,6 @@ import battlecode.common.*;
 import utils.Globals;
 import utils.RobotUtils;
 
-
 import static utils.TargetingUtils.clearShot;
 
 public class Scout extends Globals {
@@ -19,6 +18,8 @@ public class Scout extends Globals {
   private static int squad_channel;
   private static int attackTarget;
   private static boolean hasReportedDeath = false;
+  private static boolean priorityTarget = false;
+  private static boolean engagingTarget = false;
 
   //public static void dodge(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots)
   //    throws GameActionException {
@@ -132,7 +133,8 @@ public class Scout extends Globals {
           // Prioritize killing enemy gardeners or defending our own gardeners
           // TODO also defend against soldiers and lumberjacks?
           // TODO is this necessary, because we have gardeners defense calls?
-          if ((enemy.type == RobotType.SCOUT && friendlyGardener) || enemy.type == RobotType.GARDENER) {
+          if ((enemy.type == RobotType.SCOUT && friendlyGardener)
+              || enemy.type == RobotType.GARDENER) {
             rc.broadcast(squad_channel + 1, enemy.ID);
             rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
             rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
@@ -189,6 +191,40 @@ public class Scout extends Globals {
     return true;
   }
 
+  private static boolean tryMoveIfSafe(Direction dir, BulletInfo[] nearbyBullets, float degreeOffset, int checksPerSide) throws GameActionException {
+    // First, try intended direction
+    MapLocation newLoc = here.add(dir, myType.strideRadius);
+    if (rc.canMove(dir) && isLocationSafe(nearbyBullets, newLoc)) {
+      rc.move(dir);
+      return true;
+    }
+
+    // Now try a bunch of similar angles
+    boolean moved = false;
+    int currentCheck = 1;
+
+    while (currentCheck <= checksPerSide) {
+      // Try the offset of the left side
+      float offset = degreeOffset * currentCheck;
+      newLoc = here.add(dir.rotateLeftDegrees(offset), myType.strideRadius);
+      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+        rc.move(newLoc);
+        return true;
+      }
+      newLoc = here.add(dir.rotateRightDegrees(offset), myType.strideRadius);
+      // Try the offset on the right side
+      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+        rc.move(newLoc);
+        return true;
+      }
+      // No move performed, try slightly further
+      currentCheck++;
+    }
+
+    // A move never happened, so return false.
+    return false;
+  }
+
   private static boolean isLocationSafe(BulletInfo[] nearbyBullets, MapLocation loc) {
     for (BulletInfo bi : nearbyBullets) {
       if (RobotUtils.willCollideWithTargetLocation(bi.location, bi.dir, loc, myType.bodyRadius)) {
@@ -232,13 +268,7 @@ public class Scout extends Globals {
       float absolute_dist = (float) here.distanceTo(targetRobot.location);
       if (absolute_dist > KEEPAWAY_RADIUS + RobotType.SCOUT.strideRadius) {
         shouldShoot = false;
-        MapLocation newLoc = here.add(direction);
-        if (rc.canMove(newLoc)) {
-          if (isLocationSafe(nearbyBullets, newLoc)) {
-            //System.out.println("c");
-            rc.move(newLoc);
-          }
-        }
+        tryMoveIfSafe(direction, nearbyBullets, 15, 3);
       }
       else {
         if (targetRobot.type == RobotType.GARDENER) {
@@ -336,8 +366,8 @@ public class Scout extends Globals {
     }
     while (true) {
       try {
-        Globals.update();
         if (current_mode == ROAM) {
+          Globals.update();
           System.out.println("Roaming");
           //rc.setIndicatorDot(here, 0, 0, 255);
           // Look for target in broadcast
@@ -371,11 +401,13 @@ public class Scout extends Globals {
                 System.out.println("Moving towards target");
                 rc.move(targetDirection);
               }
-              else if (!rc.onTheMap(here.add(targetDirection, RobotType.SCOUT.strideRadius + RobotType.SCOUT.bodyRadius))) {
+              else if (!rc.onTheMap(here.add(targetDirection,
+                  RobotType.SCOUT.strideRadius + RobotType.SCOUT.bodyRadius))) {
                 // Change direction when hitting border,
                 // Note: should not happen when chasing a newly found target
-                targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
-                System.out.println("Turning randomly " +  targetDirection);
+                targetDirection = targetDirection
+                    .rotateRightRads((float) (rand.nextFloat() * Math.PI));
+                System.out.println("Turning randomly " + targetDirection);
                 if (rc.canMove(targetDirection)) {
                   rc.move(targetDirection);
                 }
@@ -393,6 +425,7 @@ public class Scout extends Globals {
           }
         }
         if (current_mode == ATTACK) {
+          Globals.update();
           System.out.println("ATTACK");
           // Currently on attack mode
           int target = rc.readBroadcast(squad_channel + 1);
@@ -400,38 +433,21 @@ public class Scout extends Globals {
           attackTarget = target;
           if (rc.canSenseRobot(target)) {
             // Engage target if it is in range
+            System.out.println("Can sense target");
+            engagingTarget = true;
             // TODO fix disengagement
             // Allow re-engagement on priority targets
             // TODO unroll loop and re-position death tracking
-            boolean priorityTarget = false;
-            while (rc.canSenseRobot(target) && (priorityTarget || attackTarget == target)) {
-              System.out.println("Can sense target");
-              Globals.update();
-              RobotInfo targetRobot = engage(target, priorityTarget);
-              if ((targetRobot != null && targetRobot.type != RobotType.GARDENER) || targetRobot == null) {
-                RobotInfo[] nearbyRobots = rc.senseNearbyRobots(6, them);
-                for (RobotInfo ri : nearbyRobots) {
-                  if (ri.type == RobotType.GARDENER) {
-                    target = ri.ID;
-                    priorityTarget = true;
-                    break;
-                  }
+            RobotInfo targetRobot = engage(target, priorityTarget);
+            if ((targetRobot != null && targetRobot.type != RobotType.GARDENER)
+                || targetRobot == null) {
+              RobotInfo[] nearbyRobots = rc.senseNearbyRobots(6, them);
+              for (RobotInfo ri : nearbyRobots) {
+                if (ri.type == RobotType.GARDENER) {
+                  target = ri.ID;
+                  priorityTarget = true;
+                  break;
                 }
-              }
-              Clock.yield();
-            }
-            // Target is assumed to be killed, so update broadcast target
-            if (!priorityTarget && attackTarget == target) {
-              System.out.println("Target killed");
-              int broadcastTarget = rc.readBroadcast(squad_channel + 1);
-              if (broadcastTarget == target) {
-                rc.broadcast(squad_channel + 1, 0);
-              }
-              current_mode = ROAM;
-              targetDirection = RobotUtils.randomDirection();
-              if (!rc.hasMoved() && rc.canMove(targetDirection)) {
-                //System.out.println("i");
-                rc.move(targetDirection);
               }
             }
           }
@@ -439,6 +455,26 @@ public class Scout extends Globals {
             System.out.println("Cannot sense target");
             // We are out of range of our target,
             // so try to move in known direction of target to find target
+            if (engagingTarget) {
+              engagingTarget = false;
+              // Target is assumed to be killed, so update broadcast target
+              if (!priorityTarget && attackTarget == target) {
+                System.out.println("Target killed");
+                int broadcastTarget = rc.readBroadcast(squad_channel + 1);
+                if (broadcastTarget == target) {
+                  rc.broadcast(squad_channel + 1, 0);
+                }
+                current_mode = ROAM;
+                targetDirection = RobotUtils.randomDirection();
+                if (!rc.hasMoved() && rc.canMove(targetDirection)) {
+                  //System.out.println("i");
+                  rc.move(targetDirection);
+                }
+              }
+              else if (priorityTarget) {
+                priorityTarget = false;
+              }
+            }
             if (rc.readBroadcast(squad_channel + 1) != 0) {
               System.out.println("Moving towards target");
               int xLoc = rc.readBroadcast(squad_channel + 2);
