@@ -211,14 +211,18 @@ public class Scout extends Globals {
   private static boolean tryMoveIfSafe(Direction dir, BulletInfo[] nearbyBullets,
       float degreeOffset, int checksPerSide) throws GameActionException {
     // First, try intended direction
+    System.out.println("Called tryMove");
     MapLocation newLoc = here.add(dir, myType.strideRadius);
-    if (rc.canMove(dir) && isLocationSafe(nearbyBullets, newLoc)) {
-      rc.move(dir);
+    if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+      System.out.println("tryMove: " + newLoc);
+      rc.move(newLoc);
       return true;
+    }
+    else if (Clock.getBytecodesLeft() < 2000) {
+      return false;
     }
 
     // Now try a bunch of similar angles
-    boolean moved = false;
     int currentCheck = 1;
 
     while (currentCheck <= checksPerSide) {
@@ -227,13 +231,21 @@ public class Scout extends Globals {
       newLoc = here.add(dir.rotateLeftDegrees(offset), myType.strideRadius);
       if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
         rc.move(newLoc);
+        System.out.println("tryMove: " + newLoc);
         return true;
+      }
+      else if (Clock.getBytecodesLeft() < 2000) {
+        return false;
       }
       newLoc = here.add(dir.rotateRightDegrees(offset), myType.strideRadius);
       // Try the offset on the right side
       if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
         rc.move(newLoc);
+        System.out.println("tryMove: " + newLoc);
         return true;
+      }
+      else if (Clock.getBytecodesLeft() < 2000) {
+        return false;
       }
       // No move performed, try slightly further
       currentCheck++;
@@ -252,7 +264,7 @@ public class Scout extends Globals {
     return true;
   }
 
-  public static RobotInfo engage(int target, boolean priorityTarget) throws GameActionException {
+  private static RobotInfo engage(int target, boolean priorityTarget) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
     if (!priorityTarget) {
       int broadcastTarget = rc.readBroadcast(squad_channel + 1);
@@ -318,7 +330,16 @@ public class Scout extends Globals {
             }
           }
           if (optimalLoc != null) {
-            rc.move(optimalLoc);
+            if (optimalDist > RobotType.SCOUT.strideRadius) {
+              Direction optimalDir = here.directionTo(optimalLoc);
+              MapLocation scaledLoc = here.add(optimalDir, RobotType.SCOUT.strideRadius);
+              if (rc.canMove(scaledLoc) && isLocationSafe(nearbyBullets, scaledLoc)) {
+                rc.move(scaledLoc);
+              }
+            }
+            else if (isLocationSafe(nearbyBullets, optimalLoc)) {
+              rc.move(optimalLoc);
+            }
             if (DEBUG) {
               Globals.update();
               rc.setIndicatorDot(here, 255, 0, 0);
@@ -345,7 +366,20 @@ public class Scout extends Globals {
             }
           }
           if (optimalLoc != null) {
-            rc.move(optimalLoc);
+            if (optimalDist > RobotType.SCOUT.strideRadius) {
+              Direction optimalDir = here.directionTo(optimalLoc);
+              MapLocation scaledLoc = here.add(optimalDir, RobotType.SCOUT.strideRadius);
+              if (rc.canMove(scaledLoc) && isLocationSafe(nearbyBullets, scaledLoc)) {
+                rc.move(scaledLoc);
+              }
+            }
+            else if (isLocationSafe(nearbyBullets, optimalLoc)) {
+              rc.move(optimalLoc);
+            }
+            if (DEBUG) {
+              Globals.update();
+              rc.setIndicatorDot(here, 255, 0, 0);
+            }
           }
           else {
             boolean currentlyHasClearShot = clearShot(here, targetRobot.location);
@@ -446,26 +480,17 @@ public class Scout extends Globals {
               System.out.println("Has not moved");
               // Move towards target in a straight line
               // TODO better pathfinding
-              if (rc.canMove(targetDirection)) {
-                //System.out.println("g");
-                System.out.println("Moving towards target");
-                rc.move(targetDirection);
-              }
-              else if (!rc.onTheMap(here.add(targetDirection,
+              if (!rc.onTheMap(here.add(targetDirection,
                   RobotType.SCOUT.strideRadius + RobotType.SCOUT.bodyRadius))) {
                 // Change direction when hitting border,
                 // Note: should not happen when chasing a newly found target
                 targetDirection = targetDirection
                     .rotateRightRads((float) (rand.nextFloat() * Math.PI));
                 System.out.println("Turning randomly " + targetDirection);
-                if (rc.canMove(targetDirection)) {
-                  rc.move(targetDirection);
-                }
               }
-              else {
-                System.out.println("Can't move towards targetDirection: " + targetDirection);
-                RobotUtils.tryMove(targetDirection, 20, 6);
-              }
+              BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
+              System.out.println("Moving towards target");
+              tryMoveIfSafe(targetDirection, nearbyBullets, 15, 3);
             }
             // If mode changed, yield before beginning attack logic
             if (current_mode == ATTACK) {
@@ -474,7 +499,7 @@ public class Scout extends Globals {
             }
           }
         }
-        if (current_mode == ATTACK) {
+        else if (current_mode == ATTACK) {
           Globals.update();
           //int startBytecodes = Clock.getBytecodeNum();
           System.out.println("ATTACK");
@@ -508,7 +533,12 @@ public class Scout extends Globals {
             }
           }
           else {
-            System.out.println("Cannot sense target");
+            BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
+            RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
+            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree()) {
+              EvasiveScout.move(nearbyBullets, nearbyRobots);
+            }
+            System.out.println("Cannot sense target: " + target);
             // We are out of range of our target,
             // so try to move in known direction of target to find target
             if (engagingTarget) {
@@ -535,19 +565,30 @@ public class Scout extends Globals {
               }
             }
             if (target != -1) {
-              System.out.println("Moving towards target");
               int xLoc = rc.readBroadcast(squad_channel + 2);
               int yLoc = rc.readBroadcast(squad_channel + 3);
               MapLocation targetLoc = new MapLocation(xLoc, yLoc);
+              System.out.println("Moving towards target: " + targetLoc);
               float distToTarget = here.distanceTo(targetLoc);
               if (distToTarget < RobotType.ARCHON.sensorRadius && !rc.canSenseRobot(target)) {
+                System.out.println("Could not find target at last known location");
                 rc.broadcast(squad_channel + 1, -1);
               }
               else {
                 targetDirection = here.directionTo(targetLoc);
-                if (!rc.hasMoved() && rc.canMove(targetDirection)) {
+                if (!rc.hasMoved()) {
                   //System.out.println("j");
-                  rc.move(targetDirection);
+                  tryMoveIfSafe(targetDirection, nearbyBullets, 15, 3);
+                }
+                else {
+                  // We had to evade, so we couldn't move towards the target
+                  if (nearbyRobots.length != 0) {
+                    MapLocation obstacleLocation = nearbyRobots[0].location;
+                    targetDirection = here.directionTo(obstacleLocation);
+                    if (rc.canFireSingleShot() && clearShot(here, obstacleLocation)) {
+                      rc.fireSingleShot(targetDirection);
+                    }
+                  }
                 }
               }
             }

@@ -1,7 +1,6 @@
 package utils;
 
 import battlecode.common.*;
-import v1.RobotPlayer;
 
 import static utils.Globals.rc;
 
@@ -19,14 +18,14 @@ public class TargetingUtils {
     MapLocation outerEdge = shooterLoc.add(targetDir, RobotType.SCOUT.bodyRadius + 0.1f);
     RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
     for (RobotInfo r : friendlies) {
-      if (RobotPlayer.willCollideWithTargetLocation(outerEdge, targetDir, r.location,
+      if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, r.location,
         r.getRadius())) {
         return false;
       }
     }
     TreeInfo[] trees = rc.senseNearbyTrees(distanceTarget);
     for (TreeInfo t : trees) {
-      if (RobotPlayer.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
+      if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
         t.getRadius())) {
         return false;
       }
