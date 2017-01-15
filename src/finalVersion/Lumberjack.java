@@ -2,7 +2,6 @@ package finalVersion;
 
 import battlecode.common.*;
 import utils.RobotUtils;
-import java.util.*;
 import utils.Globals;
 
 public class Lumberjack extends Globals{
@@ -25,15 +24,7 @@ public class Lumberjack extends Globals{
 }
 
   public static void roam() throws GameActionException{
-    if(rc.canMove(mydir)){
-      rc.move(mydir);
-    }
-    else{
-      while(!rc.canMove(mydir)){
-        mydir = mydir.rotateLeftDegrees(10);
-      }
-      rc.move(mydir);
-    }
+    RobotUtils.tryMove(mydir, 10, 9);
   }
   
   public static void checkNearbyLumbersAndMove() throws GameActionException{
