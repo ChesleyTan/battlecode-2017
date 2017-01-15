@@ -11,7 +11,7 @@ public class Scout extends Globals {
   private final static int ROAM = 0;
   private final static int ATTACK = 1;
   private static int current_mode = ROAM;
-  private static final float KEEPAWAY_RADIUS = 6f;
+  private static final float KEEPAWAY_RADIUS = EvasiveScout.ENEMY_DETECT_RADIUS;
   private static final float GARDENER_KEEPAWAY_RADIUS = 2.00001f;
   private static Direction[] GARDENER_PENETRATION_ANGLES = new Direction[6];
   private static Direction targetDirection = null;
@@ -254,8 +254,8 @@ public class Scout extends Globals {
 
   public static RobotInfo engage(int target, boolean priorityTarget) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
-    int broadcastTarget = rc.readBroadcast(squad_channel + 1);
     if (!priorityTarget) {
+      int broadcastTarget = rc.readBroadcast(squad_channel + 1);
       if (broadcastTarget == target) {
         rc.broadcast(squad_channel + 2, (int) targetRobot.location.x);
         rc.broadcast(squad_channel + 3, (int) targetRobot.location.y);
@@ -301,7 +301,7 @@ public class Scout extends Globals {
               }
             }
           }
-          if (optimalLoc == null) {
+          if (optimalLoc == null && absolute_dist > GARDENER_KEEPAWAY_RADIUS) {
             for (int i = 0; i < GARDENER_PENETRATION_ANGLES.length; ++i) {
               MapLocation newLoc = targetRobot.location.add(GARDENER_PENETRATION_ANGLES[i],
                   GARDENER_KEEPAWAY_RADIUS);
@@ -476,6 +476,7 @@ public class Scout extends Globals {
         }
         if (current_mode == ATTACK) {
           Globals.update();
+          //int startBytecodes = Clock.getBytecodeNum();
           System.out.println("ATTACK");
           // Currently on attack mode
           int target = rc.readBroadcast(squad_channel + 1);
@@ -564,6 +565,7 @@ public class Scout extends Globals {
               //System.out.println(direction.getAngleDegrees());
             }
           }
+          //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
         }
         if (!hasReportedDeath && rc.getHealth() < 3f) {
           int squad_count = rc.readBroadcast(squad_channel);
