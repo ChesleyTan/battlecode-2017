@@ -150,8 +150,8 @@ public class Gardener extends Globals {
         else {
           int division_factor = (int) (154 / (rc.getTreeCount() + 1));
           if (rc.getRoundNum() % division_factor == 0 && freeSpaces[0] != null
-              && rc.canBuildRobot(RobotType.SCOUT, freeSpaces[0])) {
-            rc.buildRobot(RobotType.SCOUT, freeSpaces[0]);
+              && rc.canBuildRobot(RobotType.LUMBERJACK, freeSpaces[0])) {
+            rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
           }
         }
         TreeInfo[] nearbyTrees = rc.senseNearbyTrees(2, us);
@@ -200,6 +200,10 @@ public class Gardener extends Globals {
             int gardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
             hasReportedDeath = true;
             rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners - 1);
+            if(production_gardener){
+              int numProductionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
+              rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, numProductionGardeners - 1);
+            }
             //rc.disintegrate();
           }
         }
