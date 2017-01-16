@@ -101,6 +101,7 @@ public class Lumberjack extends Globals{
       }*/
       Direction principledirect = toMe.opposite();
       rc.setIndicatorDot(here.add(principledirect), 0, 255, 0);
+      System.out.println(target.ID);
       if (!isInRangeOfFriendlies){
         if (here.distanceTo(target.location) - RobotType.LUMBERJACK.bodyRadius - target.getRadius() > 3){
           boolean canMove = RobotUtils.tryMove(principledirect, 15, 6);

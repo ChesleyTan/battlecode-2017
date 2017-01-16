@@ -22,7 +22,7 @@ public class Gardener extends Globals {
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
     for (RobotInfo r : nearbyRobots) {
       Direction their_direction = here.directionTo(r.location).opposite();
-      float their_distance = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location))
+      float their_distance = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + myType.bodyRadius + r.getRadius())
           / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
       sumX += their_direction.getDeltaX(their_distance);
       sumY += their_direction.getDeltaY(their_distance);
@@ -39,17 +39,27 @@ public class Gardener extends Globals {
     }
 
     // Opposing forces created by Edge of Map
-    if (!rc.onTheMap(new MapLocation(here.x - 1, here.y))) {
-      sumX += RobotType.GARDENER.strideRadius;
+    float sightRadius = RobotType.GARDENER.sensorRadius;
+    updateMapBoundaries();
+    if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
+      float distance = here.x - minX;
+      float weightedDistance = distance / sightRadius * myType.strideRadius;
+      sumX += weightedDistance;
     }
-    if (!rc.onTheMap(new MapLocation(here.x + 1, here.y))) {
-      sumX -= RobotType.GARDENER.strideRadius;
+    if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sightRadius, here.y))) {
+      float distance = maxX - here.x;
+      float weightedDistance = distance / sightRadius * myType.strideRadius;
+      sumX -= weightedDistance;
     }
-    if (!rc.onTheMap(new MapLocation(here.x, here.y - 1))) {
-      sumY += RobotType.GARDENER.strideRadius;
+    if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sightRadius))) {
+      float distance = here.y - minY;
+      float weightedDistance = distance / sightRadius * myType.strideRadius;
+      sumY += weightedDistance;
     }
-    if (!rc.onTheMap(new MapLocation(here.x, here.y + 1))) {
-      sumY -= RobotType.GARDENER.strideRadius;
+    if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sightRadius))) {
+      float distance = maxY - here.y;
+      float weightedDistance = distance / sightRadius * myType.strideRadius;
+      sumY -= weightedDistance;
     }
     float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
 
