@@ -1,15 +1,9 @@
 package utils;
 
-import battlecode.common.BulletInfo;
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotInfo;
-import battlecode.common.Team;
+import battlecode.common.*;
 
-public class RobotUtils extends Globals{
-  
+public class RobotUtils extends Globals {
+
   /**
    * Returns a random Direction
    * @return a random Direction
@@ -17,12 +11,25 @@ public class RobotUtils extends Globals{
   public static Direction randomDirection() {
     return new Direction(rand.nextFloat() * 2 * (float) Math.PI);
   }
-  
-  public static void donateEverythingAtTheEnd() throws GameActionException{
-    if (rc.getRoundNum() == rc.getRoundLimit() - 1){
+
+  public static void donateEverythingAtTheEnd() throws GameActionException {
+    if (rc.getRoundNum() == rc.getRoundLimit() - 1) {
       rc.donate(rc.getTeamBullets());
     }
   }
+
+  public static void shakeNearbyTrees() throws GameActionException {
+    if (Clock.getBytecodesLeft() > 500) {
+      TreeInfo[] nearbyTrees = rc.senseNearbyTrees(-1, Team.NEUTRAL);
+      for (TreeInfo ti : nearbyTrees) {
+        if (rc.canShake(ti.ID)) {
+          rc.shake(ti.ID);
+          break;
+        }
+      }
+    }
+  }
+
   public static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
       throws GameActionException {
 
@@ -55,8 +62,8 @@ public class RobotUtils extends Globals{
     return false;
   }
 
-  public static boolean tryMoveDist(Direction dir, float distance, float degreeOffset, int checksPerSide)
-      throws GameActionException {
+  public static boolean tryMoveDist(Direction dir, float distance, float degreeOffset,
+      int checksPerSide) throws GameActionException {
 
     // First, try intended direction
     if (rc.canMove(dir, distance)) {
@@ -112,7 +119,7 @@ public class RobotUtils extends Globals{
     if (distToRobot > myType.bodyRadius && Math.abs(theta) > Math.PI / 2) {
       return false;
     }
-    
+
     // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
     // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
     // This corresponds to the smallest radius circle centered at our location that would intersect with the
@@ -134,7 +141,7 @@ public class RobotUtils extends Globals{
     if (distToRobot > bodyRadius && Math.abs(theta) > Math.PI / 2) {
       return false;
     }
-    
+
     // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
     // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
     // This corresponds to the smallest radius circle centered at our location that would intersect with the

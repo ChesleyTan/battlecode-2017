@@ -313,10 +313,12 @@ public class Lumberjack extends Globals{
           }
         }
         RobotUtils.donateEverythingAtTheEnd();
+        RobotUtils.shakeNearbyTrees();
         Clock.yield();
       }
     }catch(GameActionException e){
       e.printStackTrace();
+      Clock.yield();
     }
   }
 }

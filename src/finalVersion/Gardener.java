@@ -205,10 +205,12 @@ public class Gardener extends Globals {
           }
         }
         RobotUtils.donateEverythingAtTheEnd();
+        RobotUtils.shakeNearbyTrees();
         Clock.yield();
       }
     } catch (Exception e) {
       e.printStackTrace();
+      Clock.yield();
     }
   }
 }

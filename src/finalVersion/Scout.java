@@ -167,7 +167,7 @@ public class Scout extends Globals {
       else {
         RobotInfo enemy = null;
         // Preferred targets: Enemy gardeners if round < 1000
-        if (rc.getRoundNum() < 1000) {
+        if (rc.getRoundNum() < 2000) {
           for (RobotInfo ri : nearbyRobots) {
             if (ri.type == RobotType.GARDENER) {
               enemy = ri;
@@ -373,7 +373,7 @@ public class Scout extends Globals {
                 rc.move(scaledLoc);
               }
             }
-            else if (isLocationSafe(nearbyBullets, optimalLoc)) {
+            else if (rc.canMove(optimalLoc) && isLocationSafe(nearbyBullets, optimalLoc)) {
               rc.move(optimalLoc);
             }
             if (DEBUG) {
@@ -614,9 +614,11 @@ public class Scout extends Globals {
           rc.broadcast(squad_channel, squad_count - 1);
         }
         RobotUtils.donateEverythingAtTheEnd();
+        RobotUtils.shakeNearbyTrees();
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();
+        Clock.yield();
       }
     }
   }

@@ -7,15 +7,18 @@ import static utils.Globals.rc;
 /**
  * Targeting utilities to be used throughout the codebase.
  */
-public class TargetingUtils {
+public class TargetingUtils extends Globals {
 
   /**
    * Determines if the shooter can shoot the target location without hitting friendlies or trees.
    */
   public static boolean clearShot(MapLocation shooterLoc, MapLocation target) {
+    if (shooterLoc.equals(target)) {
+      return false;
+    }
     Direction targetDir = shooterLoc.directionTo(target);
     float distanceTarget = shooterLoc.distanceTo(target);
-    MapLocation outerEdge = shooterLoc.add(targetDir, RobotType.SCOUT.bodyRadius + 0.1f);
+    MapLocation outerEdge = shooterLoc.add(targetDir, myType.bodyRadius + 0.1f);
     RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
     for (RobotInfo r : friendlies) {
       if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, r.location,
