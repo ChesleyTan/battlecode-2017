@@ -23,7 +23,7 @@ public strictfp class EvasiveArchon extends Globals {
       Globals.update();
       if (DEBUG) {
         System.out.println("========== Round: " + rc.getRoundNum() + "==========");
-        System.out.println(here);
+        //System.out.println(here);
       }
       for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
         moveLocations[angleIndex] = here.add(angleDirections[angleIndex]);
@@ -208,7 +208,7 @@ public strictfp class EvasiveArchon extends Globals {
           }
         }
         if (DEBUG) {
-          System.out.println("Trying to move in direction: " + angleDirections[moveAngleIndex]);
+          //System.out.println("Trying to move in direction: " + angleDirections[moveAngleIndex]);
         }
         moved = RobotPlayer.tryMove(angleDirections[moveAngleIndex], 5, 3);
         if (DEBUG) {
@@ -236,7 +236,7 @@ public strictfp class EvasiveArchon extends Globals {
       rc.broadcast(0, (int) here.x);
       rc.broadcast(1, (int) here.y);
       if (DEBUG) {
-        System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
+        //System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
       }
       //System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
 

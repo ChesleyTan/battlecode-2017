@@ -25,6 +25,9 @@ public class Gardener extends Globals {
       float y1 = endLocation.y;
       float a = x1 - x0;
       float b = y0 - y1;
+      if (a == 0 & b == 0){
+        a = 0.01f;
+      }
       float c = x0 * y1 - y0 * x1;
       float distance = (float) (Math.abs(a * here.x + b * here.y + c)
           / Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)));
@@ -43,11 +46,11 @@ public class Gardener extends Globals {
     
     for (RobotInfo r : robots) {
       Direction their_direction = here.directionTo(r.location).opposite();
-      System.out.println(r.ID);
+      //System.out.println(r.ID);
       float their_distance = (float) Math.pow((RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()), 2)
           / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
       rc.setIndicatorDot(here.add(their_direction,  their_distance), 255, 0, 0);
-      System.out.println(their_distance);
+      //System.out.println(their_distance);
       if (r.getTeam() == us){
         their_distance = their_distance / 2;
       }
@@ -64,7 +67,7 @@ public class Gardener extends Globals {
       sumY += their_direction.getDeltaY(their_distance);
     }
     
-    float sightRadius = RobotType.GARDENER.sensorRadius;
+    float sightRadius = RobotType.GARDENER.sensorRadius - 1;
     updateMapBoundaries();
     if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
       float distance = (here.x - minX) * (here.x - minX);
@@ -89,7 +92,7 @@ public class Gardener extends Globals {
     float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
 
     Direction finalDir = new Direction(sumX, sumY);
-    RobotUtils.tryMoveDist(finalDir, finaldist, 10, 3);
+    RobotUtils.tryMoveDist(finalDir, finaldist, 10, 6);
   }
   /*
    * Checks that there is enough space around the unit to begin planting
@@ -162,6 +165,41 @@ public class Gardener extends Globals {
       rc.move(finalDir);
     }
   }
+  
+  private static Direction scoutOppDir(){
+    RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
+    TreeInfo[] trees = rc.senseNearbyTrees(3, us);
+    for(RobotInfo r: enemies){
+      if (r.getType() != RobotType.SCOUT){
+        continue;
+      }
+      else{
+        for (TreeInfo t: trees){
+          if (r.getLocation().isWithinDistance(t.getLocation(), t.getRadius())){
+            return r.location.directionTo(here);
+          }
+        }
+      }
+    }
+    return null;
+  }
+  
+  private static boolean blockedByTree(BulletInfo i, TreeInfo[] trees){
+    Direction base = here.directionTo(i.location);
+    float baseDistance = here.distanceTo(i.location);
+    for (TreeInfo tree: trees){
+      if (i.location.distanceTo(tree.location) > baseDistance){
+        continue;
+      }
+      Direction t = here.directionTo(tree.location);
+      float radians = Math.abs(t.radiansBetween(base));
+      float dist = (float)Math.sin(radians);
+      if (dist < tree.getRadius()){
+        return true;
+      }
+    }
+    return false;
+  }
 
   private static boolean spawnRobot(RobotType t) throws GameActionException {
     Direction randomDir = new Direction(rand.nextFloat() * 2 * (float) (Math.PI));
@@ -226,24 +264,37 @@ public class Gardener extends Globals {
           spawnRobot(RobotType.SCOUT);
         }
         else{
-          BulletInfo[] bullets = rc.senseNearbyBullets();
-          if (rc.getRoundNum() - spawnRound < 30 || bullets.length != 0) {
-            boolean willGetHitByBullet = false;
-            for (BulletInfo i: bullets){
-              if (RobotUtils.willCollideWithMe(i)){
-                willGetHitByBullet = true;
-                break;
+          Direction d = scoutOppDir();
+          if (d != null){
+            System.out.println("scouts in trees, moving");
+            if (plant){
+              plant = false;
+            }
+            System.out.println(here.add(possibleTrees()[0]));
+            RobotUtils.tryMove(d, 10, 18);
+          }
+          else{
+            BulletInfo[] bullets = rc.senseNearbyBullets();
+            if (rc.getRoundNum() - spawnRound < 30 || bullets.length != 0) {
+              boolean willGetHitByBullet = false;
+              TreeInfo[] trees = rc.senseNearbyTrees();
+              for (BulletInfo i: bullets){
+                if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)){
+                  System.out.println("in danger");
+                  willGetHitByBullet = true;
+                  break;
+                }
               }
-            }
-            if (willGetHitByBullet){
-              RobotInfo[] robots = rc.senseNearbyRobots();
-              System.out.println("dodging");
-              dodge(bullets, robots);
-            }
-            else{
-              if (!rc.onTheMap(here, detectRadius)
-                || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant) {
-                  checkspace();
+              if (willGetHitByBullet){
+                RobotInfo[] robots = rc.senseNearbyRobots();
+                System.out.println("dodging");               
+                dodge(bullets, robots);
+              }
+              else{
+                if ((!rc.onTheMap(here, detectRadius)
+                  || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius)) && !plant) {
+                    checkspace();
+                }
               }
             }
           }
@@ -275,16 +326,6 @@ public class Gardener extends Globals {
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(5, them);
         RobotInfo attacker = null;
         for (RobotInfo ri : nearbyEnemies) {
-          if (ri.getType() == RobotType.SCOUT && here.distanceTo(ri.location) < 2){
-            if (plant == true){
-              plant = false;
-              Direction[] freeSpaces = possibleTrees();
-              Direction freeSpace = freeSpaces[0];
-              if (rc.canMove(here.add(freeSpace, myType.strideRadius))){
-                rc.move(freeSpace);
-              }
-            }
-          }
           if (ri.type.canAttack()) {
             attacker = ri;
             break;

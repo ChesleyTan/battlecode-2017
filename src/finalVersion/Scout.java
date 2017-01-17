@@ -459,7 +459,7 @@ public class Scout extends Globals {
           int target = rc.readBroadcast(squad_channel + 1);
           if (target != -1) {
             //System.out.println("Found target in broadcast");
-            //current_mode = ATTACK;
+            current_mode = ATTACK;
             int xLoc = rc.readBroadcast(squad_channel + 2);
             int yLoc = rc.readBroadcast(squad_channel + 3);
             targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
@@ -509,7 +509,7 @@ public class Scout extends Globals {
           attackTarget = target;
           if (rc.canSenseRobot(target)) {
             // Engage target if it is in range
-            System.out.println("Can sense target");
+            //System.out.println("Can sense target");
             engagingTarget = true;
             ++roundsEngaging;
             // TODO fix disengagement
@@ -546,7 +546,7 @@ public class Scout extends Globals {
               roundsEngaging = 0;
               // Target is assumed to be killed, so update broadcast target
               if (!priorityTarget && attackTarget == target) {
-                System.out.println("Target killed");
+                //System.out.println("Target killed");
                 int broadcastTarget = rc.readBroadcast(squad_channel + 1);
                 if (broadcastTarget == target) {
                   rc.broadcast(squad_channel + 1, -1);
@@ -594,7 +594,7 @@ public class Scout extends Globals {
             }
             // Disengage if no target
             else {
-              System.out.println("Disengaging: no boradcast target");
+              //System.out.println("Disengaging: no boradcast target");
               current_mode = ROAM;
               targetDirection = RobotUtils.randomDirection();
               /*
