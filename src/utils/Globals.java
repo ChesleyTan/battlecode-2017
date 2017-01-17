@@ -18,17 +18,17 @@ public class Globals {
   public static final int PRODUCED_GARDENERS_CHANNEL = 50;
   public static final int EARLY_SCOUTS_CHANNEL = 5;
   public static final int DEFENSE_START_CHANNEL = 250;
+  public static final int DEFENSE_END_CHANNEL = 350;
   public static final int ATTACK_START_CHANNEL = 500;
   public static final int ATTACK_END_CHANNEL = 600;
-  public static final int TARGET_CHANNEL = 451;
+  public static final int PRODUCTION_GARDENERS_CHANNEL = 101;
+  public static final int PRODUCED_PRODUCTION_GARDENERS_CHANNEL = 102;
   public static Direction NORTH, SOUTH, EAST, WEST;
   public static final int UNKNOWN = Integer.MIN_VALUE;
   public static int minX = UNKNOWN;
   public static int maxX = UNKNOWN;
   public static int minY = UNKNOWN;
   public static int maxY = UNKNOWN;
-  public static final int PRODUCTION_GARDENERS_CHANNEL = 101;
-  public static final int PRODUCED_PRODUCTION_GARDENERS_CHANNEL = 102;
   public static int penultimateRound = 0;
   public static int currentRoundNum = 0;
 

@@ -24,7 +24,7 @@ public class Gardener extends Globals {
       float y1 = endLocation.y;
       float a = x1 - x0;
       float b = y0 - y1;
-      if (a == 0 & b == 0){
+      if (a == 0 && b == 0){
         a = 0.01f;
       }
       float c = x0 * y1 - y0 * x1;
@@ -35,7 +35,7 @@ public class Gardener extends Globals {
             / (Math.pow(a, 2) + Math.pow(b, 2)));
         float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
             / (Math.pow(a, 2) + Math.pow(b, 2)));
-        Direction away = here.directionTo(new MapLocation(x2, y2)).opposite();
+        Direction away = new MapLocation(x2, y2).directionTo(here);
         float weighted = (float) Math.pow((RobotType.SCOUT.bulletSightRadius - distance), 2)
             / RobotType.SCOUT.bulletSightRadius * RobotType.SCOUT.strideRadius;
         sumX += away.getDeltaX(weighted);
@@ -44,11 +44,9 @@ public class Gardener extends Globals {
     }
 
     for (RobotInfo r : robots) {
-      Direction their_direction = here.directionTo(r.location).opposite();
-      System.out.println(r.ID);
-      float their_distance = (float) Math
-          .pow((RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()), 2)
-          / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
+      Direction their_direction = r.location.directionTo(here);
+      float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()) * (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius());
+      float their_distance = baseValue / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
       rc.setIndicatorDot(here.add(their_direction,  their_distance), 255, 0, 0);
       //System.out.println(their_distance);
       if (r.getTeam() == us){
@@ -58,36 +56,40 @@ public class Gardener extends Globals {
       sumY += their_direction.getDeltaY(their_distance);
     }
 
-    TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
-    for (TreeInfo t : nearbyTrees) {
-      Direction their_direction = t.location.directionTo(here);
-      float their_distance = (float) Math
-          .pow((RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius()), 2)
-          / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
-      sumX += their_direction.getDeltaX(their_distance);
-      sumY += their_direction.getDeltaY(their_distance);
-    }    
-    float sightRadius = RobotType.GARDENER.sensorRadius - 1;
-    updateMapBoundaries();
-    if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
-      float distance = (here.x - minX) * (here.x - minX);
-      float weightedDistance = distance / sightRadius * myType.strideRadius;
-      sumX += weightedDistance;
+    TreeInfo[] nearbyTrees = rc.senseNearbyTrees(GameConstants.NEUTRAL_TREE_MAX_RADIUS);
+    if(nearbyTrees.length <= 10){
+      for (TreeInfo t : nearbyTrees) {
+        Direction their_direction = t.location.directionTo(here);
+        float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius()) * (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius());
+        float their_distance = baseValue / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
+        sumX += their_direction.getDeltaX(their_distance);
+        sumY += their_direction.getDeltaY(their_distance);
+      }
     }
-    if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sightRadius, here.y))) {
-      float distance = (maxX - here.x) * (maxX - here.x);
-      float weightedDistance = distance / sightRadius * myType.strideRadius;
-      sumX -= weightedDistance;
-    }
-    if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sightRadius))) {
-      float distance = (here.y - minY) * (here.y - minY);
-      float weightedDistance = distance / sightRadius * myType.strideRadius;
-      sumY += weightedDistance;
-    }
-    if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sightRadius))) {
-      float distance = (maxY - here.y) * (maxY - here.y);
-      float weightedDistance = distance / sightRadius * myType.strideRadius;
-      sumY -= weightedDistance;
+    
+    if (!(Clock.getBytecodesLeft() < 2000)){
+      float sightRadius = RobotType.GARDENER.sensorRadius - 1;
+      updateMapBoundaries();
+      if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
+        float distance = (here.x - minX) * (here.x - minX);
+        float weightedDistance = distance / sightRadius * myType.strideRadius;
+        sumX += weightedDistance;
+      }
+      if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sightRadius, here.y))) {
+        float distance = (maxX - here.x) * (maxX - here.x);
+        float weightedDistance = distance / sightRadius * myType.strideRadius;
+        sumX -= weightedDistance;
+      }
+      if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sightRadius))) {
+        float distance = (here.y - minY) * (here.y - minY);
+        float weightedDistance = distance / sightRadius * myType.strideRadius;
+        sumY += weightedDistance;
+      }
+      if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sightRadius))) {
+        float distance = (maxY - here.y) * (maxY - here.y);
+        float weightedDistance = distance / sightRadius * myType.strideRadius;
+        sumY -= weightedDistance;
+      }
     }
     float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
 
