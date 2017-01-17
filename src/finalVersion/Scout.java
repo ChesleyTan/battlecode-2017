@@ -138,6 +138,8 @@ public class Scout extends Globals {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
     }
     if (nearbyRobots.length == 0) {
+      // TODO Use message broadcast location to try to find enemies
+      //rc.senseBroadcastingRobotLocations();
       return;
     }
     else {
@@ -451,15 +453,23 @@ public class Scout extends Globals {
       GARDENER_PENETRATION_ANGLES[5] = new Direction((float) Math.toRadians(300));
       EvasiveScout.init();
       // Early scouts should move towards the archon
+      findSquad();
       if (rc.getRoundNum() < 100) {
-        findSquad();
-        MapLocation[] enemies = rc.getInitialArchonLocations(them);
-        MapLocation first = enemies[0];
-        targetDirection = here.directionTo(first);
+        int numScouts = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+        if (numScouts <= 3) {
+          MapLocation[] enemies = rc.getInitialArchonLocations(them);
+          MapLocation targetArchonLoc;
+          if (numScouts <= enemies.length) {
+            targetArchonLoc = enemies[numScouts - 1];
+          }
+          else {
+            targetArchonLoc = enemies[0];
+          }
+          targetDirection = here.directionTo(targetArchonLoc);
+        }
       }
       // Later scouts move in random directions
-      else {
-        findSquad();
+      if (targetDirection == null) {
         targetDirection = RobotUtils.randomDirection();
       }
     } catch (Exception e) {
@@ -473,13 +483,13 @@ public class Scout extends Globals {
         }
         if (current_mode == ROAM) {
           Globals.update();
-          //System.out.println("Roaming");
+          System.out.println("Roaming");
           //rc.setIndicatorDot(here, 0, 0, 255);
           // Look for target in broadcast
           int target = rc.readBroadcast(squad_channel + 1);
           if (target != -1) {
-            //System.out.println("Found target in broadcast");
-            //current_mode = ATTACK;
+            System.out.println("Found target in broadcast: " + target);
+            current_mode = ATTACK;
             int xLoc = rc.readBroadcast(squad_channel + 2);
             int yLoc = rc.readBroadcast(squad_channel + 3);
             targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
@@ -495,10 +505,10 @@ public class Scout extends Globals {
             }
           }
           else {
-            //System.out.println("Searching for target");
+            System.out.println("Searching for target");
             alert();
             if (!rc.hasMoved()) {
-              //System.out.println("Has not moved");
+              System.out.println("Has not moved");
               // Move towards target in a straight line
               // TODO better pathfinding
               if (!rc.onTheMap(here.add(targetDirection,
@@ -510,12 +520,12 @@ public class Scout extends Globals {
                 //System.out.println("Turning randomly " + targetDirection);
               }
               BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
-              //System.out.println("Moving towards target");
+              System.out.println("Moving towards target");
               tryMoveIfSafe(targetDirection, nearbyBullets, 15, 3);
             }
             // If mode changed, yield before beginning attack logic
             if (current_mode == ATTACK) {
-              //System.out.println("Changed from ROAM to ATTACK");
+              System.out.println("Changed from ROAM to ATTACK");
               Clock.yield();
             }
           }
@@ -523,14 +533,14 @@ public class Scout extends Globals {
         else if (current_mode == ATTACK) {
           Globals.update();
           //int startBytecodes = Clock.getBytecodeNum();
-          //System.out.println("ATTACK");
+          System.out.println("ATTACK");
           // Currently on attack mode
           int target = rc.readBroadcast(squad_channel + 1);
           // Read assigned target from broadcast
           attackTarget = target;
           if (rc.canSenseRobot(target)) {
             // Engage target if it is in range
-            System.out.println("Can sense target");
+            System.out.println("Can sense target: " + target);
             engagingTarget = true;
             ++roundsEngaging;
             // TODO fix disengagement
@@ -559,7 +569,7 @@ public class Scout extends Globals {
             if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
               EvasiveScout.move(nearbyBullets, nearbyRobots);
             }
-            //System.out.println("Cannot sense target: " + target);
+            System.out.println("Cannot sense target: " + target);
             // We are out of range of our target,
             // so try to move in known direction of target to find target
             if (engagingTarget) {
@@ -589,10 +599,10 @@ public class Scout extends Globals {
               int xLoc = rc.readBroadcast(squad_channel + 2);
               int yLoc = rc.readBroadcast(squad_channel + 3);
               MapLocation targetLoc = new MapLocation(xLoc, yLoc);
-              //System.out.println("Moving towards target: " + targetLoc);
+              System.out.println("Moving towards target: " + targetLoc);
               float distToTarget = here.distanceTo(targetLoc);
               if (distToTarget < RobotType.ARCHON.sensorRadius && !rc.canSenseRobot(target)) {
-                //System.out.println("Could not find target at last known location");
+                System.out.println("Could not find target at last known location");
                 rc.broadcast(squad_channel + 1, -1);
               }
               else {
