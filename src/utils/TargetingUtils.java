@@ -12,12 +12,15 @@ public class TargetingUtils extends Globals {
   /**
    * Determines if the shooter can shoot the target location without hitting friendlies or trees.
    */
-  public static boolean clearShot(MapLocation shooterLoc, MapLocation target) {
+  public static boolean clearShot(MapLocation shooterLoc, RobotInfo target) {
     if (shooterLoc.equals(target)) {
       return false;
     }
-    Direction targetDir = shooterLoc.directionTo(target);
-    float distanceTarget = shooterLoc.distanceTo(target);
+    Direction targetDir = shooterLoc.directionTo(target.location);
+    if (targetDir == null) {
+      return false;
+    }
+    float distanceTarget = shooterLoc.distanceTo(target.location);
     MapLocation outerEdge = shooterLoc.add(targetDir, myType.bodyRadius + 0.1f);
     RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
     for (RobotInfo r : friendlies) {
@@ -27,10 +30,24 @@ public class TargetingUtils extends Globals {
       }
     }
     TreeInfo[] trees = rc.senseNearbyTrees(distanceTarget);
-    for (TreeInfo t : trees) {
-      if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
-        t.getRadius())) {
-        return false;
+    if (target.type == RobotType.SCOUT) {
+      for (TreeInfo t : trees) {
+        // TODO do we need an epsilon?
+        if (t.location.equals(target.location)) {
+          continue;
+        }
+        else if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
+          t.getRadius())) {
+          return false;
+        }
+      }
+    }
+    else {
+      for (TreeInfo t : trees) {
+        if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
+          t.getRadius())) {
+          return false;
+        }
       }
     }
     return true;

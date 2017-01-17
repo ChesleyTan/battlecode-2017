@@ -148,8 +148,6 @@ public class Gardener extends Globals {
       float weightedDistance = distance / sightRadius * myType.strideRadius;
       sumY -= weightedDistance;
     }
-    
-    float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
 
     Direction finalDir = new Direction(sumX, sumY);
     if (rc.canMove(finalDir) && !rc.hasMoved()) {

@@ -19,7 +19,7 @@ public class EvasiveScout extends Globals {
     }
   }
 
-  static void move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots) {
+  static boolean move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots) {
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
@@ -216,6 +216,7 @@ public class EvasiveScout extends Globals {
           */
           directionWeights[moveAngleIndex] -= 999999;
         } while (!moved && ++attempts <= 6);
+        return moved;
       }
       //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
       /*
@@ -229,5 +230,6 @@ public class EvasiveScout extends Globals {
       System.out.println("Scout Exception");
       e.printStackTrace();
     }
+    return false;
   }
 }

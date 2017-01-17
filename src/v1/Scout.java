@@ -121,7 +121,7 @@ public class Scout extends Globals {
             rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
             rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
             MapLocation center = enemy.location;
-            if (rc.canFireSingleShot() && clearShot(here, enemy.location)) {
+            if (rc.canFireSingleShot() && clearShot(here, enemy)) {
               rc.fireSingleShot(here.directionTo(center));
             }
             current_mode = ATTACK;
@@ -150,7 +150,7 @@ public class Scout extends Globals {
         rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
         rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
         MapLocation center = enemy.location;
-        if (rc.canFireSingleShot() && clearShot(here, center)) {
+        if (rc.canFireSingleShot() && clearShot(here, enemy)) {
           rc.fireSingleShot(here.directionTo(center));
           rc.setIndicatorDot(center, 255, 0, 0);
         }
@@ -221,7 +221,7 @@ public class Scout extends Globals {
             float optimalDist = 9999f;
             float newDist = here.distanceTo(newLoc);
             if (rc.canMove(newLoc) && newDist < optimalDist
-                && clearShot(newLoc, targetRobot.location)) {
+                && clearShot(newLoc, targetRobot)) {
               optimalLoc = newLoc;
               optimalDist = newDist;
             }
@@ -235,11 +235,11 @@ public class Scout extends Globals {
           }
         }
         else {
-          boolean currentlyHasClearShot = clearShot(here, targetRobot.location);
+          boolean currentlyHasClearShot = clearShot(here, targetRobot);
           Direction rotated30 = direction.opposite().rotateLeftDegrees(30);
           MapLocation newLoc = targetRobot.location.add(rotated30, KEEPAWAY_RADIUS);
           if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-            if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
+            if (currentlyHasClearShot && clearShot(newLoc, targetRobot)) {
               //System.out.println("d");
               rc.move(newLoc);
             }
@@ -251,7 +251,7 @@ public class Scout extends Globals {
             rotated30 = direction.opposite().rotateRightDegrees(30);
             newLoc = targetRobot.location.add(rotated30, KEEPAWAY_RADIUS);
             if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-              if (currentlyHasClearShot && clearShot(newLoc, targetRobot.location)) {
+              if (currentlyHasClearShot && clearShot(newLoc, targetRobot)) {
                 //System.out.println("e");
                 rc.move(newLoc);
               }
@@ -265,7 +265,7 @@ public class Scout extends Globals {
     }
     Globals.update();
     direction = here.directionTo(targetRobot.location);
-    if (shouldShoot && rc.canFireSingleShot() && clearShot(here, targetRobot.location)) {
+    if (shouldShoot && rc.canFireSingleShot() && clearShot(here, targetRobot)) {
       rc.fireSingleShot(direction);
       if (DEBUG) {
         System.out.println("CLEARSHOT!");

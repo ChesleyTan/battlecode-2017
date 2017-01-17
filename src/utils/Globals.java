@@ -29,6 +29,7 @@ public class Globals {
   public static int maxY = UNKNOWN;
   public static final int PRODUCTION_GARDENERS_CHANNEL = 101;
   public static final int PRODUCED_PRODUCTION_GARDENERS_CHANNEL = 102;
+  public static int penultimateRound = 0;
 
 	public static void init(RobotController theRC){
 		rc = theRC;
@@ -42,6 +43,7 @@ public class Globals {
 		SOUTH = Direction.getSouth();
 		EAST = Direction.getEast();
 		WEST = Direction.getWest();
+		penultimateRound = rc.getRoundLimit() - 1;
 	}
 	
 	public static void update(){
