@@ -143,7 +143,7 @@ public class Scout extends Globals {
       return;
     }
     else {
-      if (rc.getRoundNum() < 200) {
+      if (currentRoundNum < 200) {
         RobotInfo[] nearbyFriendlies = rc.senseNearbyRobots(-1, us);
         boolean friendlyGardener = false;
         for (RobotInfo ri : nearbyFriendlies) {
@@ -173,7 +173,7 @@ public class Scout extends Globals {
       else {
         RobotInfo enemy = null;
         // Preferred targets: Enemy gardeners if round < 1000
-        if (rc.getRoundNum() < 2000) {
+        if (currentRoundNum < 2000) {
           for (RobotInfo ri : nearbyRobots) {
             if (ri.type == RobotType.GARDENER) {
               enemy = ri;
@@ -185,7 +185,7 @@ public class Scout extends Globals {
           enemy = nearbyRobots[0];
         }
         // Avoid wasting time/bullets attacking archons below round 1000
-        if (enemy.type == RobotType.ARCHON && rc.getRoundNum() < 1000) {
+        if (enemy.type == RobotType.ARCHON && currentRoundNum < 1000) {
           return;
         }
         rc.broadcast(squad_channel + 1, enemy.ID);
@@ -454,7 +454,7 @@ public class Scout extends Globals {
       EvasiveScout.init();
       // Early scouts should move towards the archon
       findSquad();
-      if (rc.getRoundNum() < 100) {
+      if (currentRoundNum < 100) {
         int numScouts = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
         if (numScouts <= 3) {
           MapLocation[] enemies = rc.getInitialArchonLocations(them);

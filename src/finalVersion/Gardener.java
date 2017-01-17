@@ -13,11 +13,10 @@ public class Gardener extends Globals {
   private static boolean production_gardener = false;
   private static boolean hasReportedDeath = false;
 
-  
-  public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException{
+  public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
     float sumX = 0;
     float sumY = 0;
-    for (BulletInfo i: bullets) {
+    for (BulletInfo i : bullets) {
       MapLocation endLocation = i.location.add(i.getDir(), i.getSpeed());
       float x0 = i.location.x;
       float y0 = i.location.y;
@@ -28,7 +27,7 @@ public class Gardener extends Globals {
       float c = x0 * y1 - y0 * x1;
       float distance = (float) (Math.abs(a * here.x + b * here.y + c)
           / Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)));
-      if (distance < 2){
+      if (distance < 2) {
         float x2 = (float) ((b * (b * here.x - a * here.y) - a * c)
             / (Math.pow(a, 2) + Math.pow(b, 2)));
         float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
@@ -40,30 +39,32 @@ public class Gardener extends Globals {
         sumY += away.getDeltaY(weighted);
       }
     }
-    
+
     for (RobotInfo r : robots) {
       Direction their_direction = here.directionTo(r.location).opposite();
       System.out.println(r.ID);
-      float their_distance = (float) Math.pow((RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()), 2)
+      float their_distance = (float) Math
+          .pow((RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()), 2)
           / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
-      rc.setIndicatorDot(here.add(their_direction,  their_distance), 255, 0, 0);
+      rc.setIndicatorDot(here.add(their_direction, their_distance), 255, 0, 0);
       System.out.println(their_distance);
-      if (r.getTeam() == us){
+      if (r.getTeam() == us) {
         their_distance = their_distance / 2;
       }
       sumX += their_direction.getDeltaX(their_distance);
       sumY += their_direction.getDeltaY(their_distance);
     }
-    
+
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
     for (TreeInfo t : nearbyTrees) {
       Direction their_direction = t.location.directionTo(here);
-      float their_distance = (float) Math.pow((RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius()), 2)
+      float their_distance = (float) Math
+          .pow((RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius()), 2)
           / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
       sumX += their_direction.getDeltaX(their_distance);
       sumY += their_direction.getDeltaY(their_distance);
     }
-    
+
     float sightRadius = RobotType.GARDENER.sensorRadius;
     updateMapBoundaries();
     if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
@@ -91,6 +92,7 @@ public class Gardener extends Globals {
     Direction finalDir = new Direction(sumX, sumY);
     RobotUtils.tryMoveDist(finalDir, finaldist, 10, 3);
   }
+
   /*
    * Checks that there is enough space around the unit to begin planting
    */
@@ -98,17 +100,18 @@ public class Gardener extends Globals {
     Globals.update();
     float sumX = 0;
     float sumY = 0;
-    
+
     // Opposing forces created by Robots
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
     for (RobotInfo r : nearbyRobots) {
       Direction their_direction = here.directionTo(r.location).opposite();
       System.out.println(r.ID);
-      float their_distance = (float) Math.pow((RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()), 2)
+      float their_distance = (float) Math
+          .pow((RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()), 2)
           / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
-      rc.setIndicatorDot(here.add(their_direction,  their_distance), 255, 0, 0);
+      rc.setIndicatorDot(here.add(their_direction, their_distance), 255, 0, 0);
       System.out.println(their_distance);
-      if (r.getTeam() == us){
+      if (r.getTeam() == us) {
         their_distance = their_distance / 2;
       }
       sumX += their_direction.getDeltaX(their_distance);
@@ -119,7 +122,8 @@ public class Gardener extends Globals {
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
     for (TreeInfo t : nearbyTrees) {
       Direction their_direction = t.location.directionTo(here);
-      float their_distance = (float) Math.pow((RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius()), 2)
+      float their_distance = (float) Math
+          .pow((RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius()), 2)
           / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
       sumX += their_direction.getDeltaX(their_distance);
       sumY += their_direction.getDeltaY(their_distance);
@@ -204,16 +208,16 @@ public class Gardener extends Globals {
         production_gardener = true;
         rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, productionGardeners + 1);
       }
-    }catch(Exception e){
-        e.printStackTrace();
-      }
-      spawnRound = rc.getRoundNum();
-      // Loop: Build trees and water them, and occasionally build scouts
-      while (true) {
-      try{
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    spawnRound = currentRoundNum;
+    // Loop: Build trees and water them, and occasionally build scouts
+    while (true) {
+      try {
         Globals.update();
         int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-        if (rc.getRoundNum() < 100 && scoutCount < 3) {
+        if (currentRoundNum < 100 && scoutCount < 3) {
           checkspace();
           if (spawnRobot(RobotType.SCOUT)) {
             rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
@@ -223,25 +227,25 @@ public class Gardener extends Globals {
           checkspace();
           spawnRobot(RobotType.SCOUT);
         }
-        else{
+        else {
           BulletInfo[] bullets = rc.senseNearbyBullets();
-          if (rc.getRoundNum() - spawnRound < 30 || bullets.length != 0) {
+          if (currentRoundNum - spawnRound < 30 || bullets.length != 0) {
             boolean willGetHitByBullet = false;
-            for (BulletInfo i: bullets){
-              if (RobotUtils.willCollideWithMe(i)){
+            for (BulletInfo i : bullets) {
+              if (RobotUtils.willCollideWithMe(i)) {
                 willGetHitByBullet = true;
                 break;
               }
             }
-            if (willGetHitByBullet){
+            if (willGetHitByBullet) {
               RobotInfo[] robots = rc.senseNearbyRobots();
               System.out.println("dodging");
               dodge(bullets, robots);
             }
-            else{
+            else {
               if (!rc.onTheMap(here, detectRadius)
-                || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant) {
-                  checkspace();
+                  || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius) && !plant) {
+                checkspace();
               }
             }
           }
@@ -252,7 +256,7 @@ public class Gardener extends Globals {
           }
           else {
             int division_factor = (int) (154 / (rc.getTreeCount() + 1));
-            if (rc.getRoundNum() % division_factor == 0 && freeSpaces[0] != null
+            if (currentRoundNum % division_factor == 0 && freeSpaces[0] != null
                 && rc.canBuildRobot(RobotType.LUMBERJACK, freeSpaces[0])) {
               rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
             }
@@ -273,12 +277,12 @@ public class Gardener extends Globals {
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(5, them);
         RobotInfo attacker = null;
         for (RobotInfo ri : nearbyEnemies) {
-          if (ri.getType() == RobotType.SCOUT && here.distanceTo(ri.location) < 2){
-            if (plant == true){
+          if (ri.getType() == RobotType.SCOUT && here.distanceTo(ri.location) < 2) {
+            if (plant == true) {
               plant = false;
               Direction[] freeSpaces = possibleTrees();
               Direction freeSpace = freeSpaces[0];
-              if (rc.canMove(here.add(freeSpace, myType.strideRadius))){
+              if (rc.canMove(here.add(freeSpace, myType.strideRadius))) {
                 rc.move(freeSpace);
               }
             }
@@ -314,7 +318,7 @@ public class Gardener extends Globals {
             int gardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
             hasReportedDeath = true;
             rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners - 1);
-            if(production_gardener){
+            if (production_gardener) {
               int numProductionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
               rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, numProductionGardeners - 1);
             }
@@ -324,10 +328,10 @@ public class Gardener extends Globals {
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
         Clock.yield();
-        }catch (Exception e) {
-          e.printStackTrace();
-          Clock.yield();
-        }
+      } catch (Exception e) {
+        e.printStackTrace();
+        Clock.yield();
       }
+    }
   }
 }
