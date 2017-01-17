@@ -39,7 +39,7 @@ public class Archon extends Globals {
         int producedScouts = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
         int requiredProductionGardeners = (int) (rc.getTreeCount() / 15);
         rc.broadcast(PRODUCTION_GARDENERS_CHANNEL, requiredProductionGardeners);
-        if (producedScouts < 3 && rc.getRoundNum() < 55) {
+        if (producedScouts < 3 && currentRoundNum < 55) {
           EvasiveArchon.move();
         }
         else {
@@ -51,7 +51,7 @@ public class Archon extends Globals {
           }
           EvasiveArchon.move();
         }
-        if (rc.getRoundNum() > 2500 && rc.getTeamBullets() >= 1000) {
+        if (currentRoundNum > 2500 && rc.getTeamBullets() >= 1000) {
           float donationAmount = ((int) (rc.getTeamBullets() / 10)) * 10 - 640;
           rc.donate(donationAmount);
         }
