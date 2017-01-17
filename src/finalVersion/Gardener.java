@@ -338,7 +338,7 @@ public class Gardener extends Globals {
           if (myHP > RobotType.GARDENER.maxHealth / 2) {
             rc.setIndicatorDot(here, 255, 0, 0);
             boolean calledForBackup = false;
-            for (int channel = ATTACK_START_CHANNEL; channel < ATTACK_END_CHANNEL; channel += 4) {
+            for (int channel = ATTACK_START_CHANNEL; channel < ATTACK_END_CHANNEL; channel += ATTACK_BLOCK_WIDTH) {
               if (rc.readBroadcast(channel) != 0 && rc.readBroadcast(channel + 1) == 0) {
                 rc.broadcast(channel + 1, attacker.ID);
                 rc.broadcast(channel + 2, (int) attacker.location.x);

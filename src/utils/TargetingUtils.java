@@ -24,6 +24,9 @@ public class TargetingUtils extends Globals {
     MapLocation outerEdge = shooterLoc.add(targetDir, myType.bodyRadius + 0.1f);
     RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
     for (RobotInfo r : friendlies) {
+      if (Clock.getBytecodesLeft() < 2000) {
+        return false;
+      }
       if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, r.location,
         r.getRadius())) {
         return false;
@@ -33,6 +36,9 @@ public class TargetingUtils extends Globals {
     if (target.type == RobotType.SCOUT) {
       for (TreeInfo t : trees) {
         // TODO do we need an epsilon?
+        if (Clock.getBytecodesLeft() < 2000) {
+          return false;
+        }
         if (t.location.equals(target.location)) {
           continue;
         }
@@ -44,6 +50,9 @@ public class TargetingUtils extends Globals {
     }
     else {
       for (TreeInfo t : trees) {
+        if (Clock.getBytecodesLeft() < 2000) {
+          return false;
+        }
         if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
           t.getRadius())) {
           return false;

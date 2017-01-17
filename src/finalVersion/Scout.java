@@ -23,6 +23,8 @@ public class Scout extends Globals {
   private static int roundsEngaging = 0;
   private static boolean isPerchedInTree = false;
   private static float hpWhenPerched = 0f;
+  private static int targetBlacklist = -1;
+  private static int targetBlacklistPeriodStart = -1;
 
   //public static void dodge(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots)
   //    throws GameActionException {
@@ -117,15 +119,34 @@ public class Scout extends Globals {
       if (squad_count == 0) {
         // Clear out target field
         rc.broadcast(i+1, -1);
+        // Clear out blacklist field
+        rc.broadcast(i+4, -1);
       }
       if (squad_count < 10) {
         squad_channel = i;
         rc.broadcast(i, squad_count + 1);
         return;
       }
-      i = i + 4;
+      i += ATTACK_BLOCK_WIDTH;
     }
     squad_channel = ATTACK_START_CHANNEL;
+  }
+
+  private static void readBlacklist() throws GameActionException {
+    // First 16 bits is ID of blacklisted target
+    // Second 16 bits is starting round of blacklist
+    int data = rc.readBroadcast(squad_channel + 4);
+    targetBlacklist = data & (0xFFFF0000) >>> 16;
+    targetBlacklistPeriodStart = data & (0x0000FFFF);
+  }
+
+  private static void writeBlacklist(int blacklistTarget, int startRound) throws GameActionException {
+    int data = (blacklistTarget << 16) | startRound;
+    rc.broadcast(squad_channel + 4, data);
+  }
+
+  private static boolean isBlacklisted(int target) {
+    return target == targetBlacklist && (currentRoundNum - targetBlacklistPeriodStart < 30);
   }
 
   public static void alert() throws GameActionException {
@@ -144,20 +165,14 @@ public class Scout extends Globals {
     }
     else {
       if (currentRoundNum < 200) {
-        RobotInfo[] nearbyFriendlies = rc.senseNearbyRobots(-1, us);
-        boolean friendlyGardener = false;
-        for (RobotInfo ri : nearbyFriendlies) {
-          if (ri.type == RobotType.GARDENER) {
-            friendlyGardener = true;
-            break;
-          }
-        }
         for (RobotInfo enemy : nearbyRobots) {
           // Prioritize killing enemy gardeners or defending our own gardeners
           // TODO also defend against soldiers and lumberjacks?
           // TODO is this necessary, because we have gardeners defense calls?
-          if ((enemy.type == RobotType.SCOUT && friendlyGardener)
-              || enemy.type == RobotType.GARDENER) {
+          if (isBlacklisted(enemy.ID)) {
+            continue;
+          }
+          if (enemy.type != RobotType.ARCHON) {
             rc.broadcast(squad_channel + 1, enemy.ID);
             rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
             rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
@@ -175,17 +190,28 @@ public class Scout extends Globals {
         // Preferred targets: Enemy gardeners if round < 1000
         if (currentRoundNum < 2000) {
           for (RobotInfo ri : nearbyRobots) {
+            if (isBlacklisted(ri.ID)) {
+              continue;
+            }
             if (ri.type == RobotType.GARDENER) {
               enemy = ri;
               break;
             }
           }
         }
+        // Choose any target that is not blacklisted
         if (enemy == null) {
-          enemy = nearbyRobots[0];
+          for (RobotInfo ri : nearbyRobots) {
+            if (isBlacklisted(ri.ID)) {
+              continue;
+            }
+            else {
+              enemy = ri;
+            }
+          }
         }
         // Avoid wasting time/bullets attacking archons below round 1000
-        if (enemy.type == RobotType.ARCHON && currentRoundNum < 1000) {
+        if (enemy == null || (enemy.type == RobotType.ARCHON && currentRoundNum < 1000)) {
           return;
         }
         rc.broadcast(squad_channel + 1, enemy.ID);
@@ -265,6 +291,9 @@ public class Scout extends Globals {
 
   private static boolean isLocationSafe(BulletInfo[] nearbyBullets, MapLocation loc) {
     for (BulletInfo bi : nearbyBullets) {
+      if (Clock.getBytecodesLeft() < 2000) {
+        return false;
+      }
       if (RobotUtils.willCollideWithTargetLocation(bi.location, bi.dir, loc, myType.bodyRadius)) {
         return false;
       }
@@ -280,12 +309,6 @@ public class Scout extends Globals {
         rc.broadcast(squad_channel + 2, (int) targetRobot.location.x);
         rc.broadcast(squad_channel + 3, (int) targetRobot.location.y);
       }
-      else {
-        // Handle external target change
-        target = broadcastTarget;
-        targetRobot = rc.senseRobot(target);
-        attackTarget = broadcastTarget;
-      }
     }
     /*
     System.out.println(squad_channel);
@@ -299,6 +322,7 @@ public class Scout extends Globals {
     if (!rc.hasMoved() && (nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
     }
+    //System.out.println("Before engage: " + Clock.getBytecodesLeft());
     //System.out.println(target);
     boolean shouldShoot = true;
     if (!rc.hasMoved()) {
@@ -313,6 +337,9 @@ public class Scout extends Globals {
           float optimalDist = 9999f;
           TreeInfo[] nearbyTrees = rc.senseNearbyTrees(targetRobot.location, 2.2f, them);
           for (TreeInfo ti : nearbyTrees) {
+            if (Clock.getBytecodesLeft() < 2000) {
+              break;
+            }
             if (rc.canMove(ti.location)) {
               float newDist = here.distanceTo(ti.location);
               if (newDist < optimalDist) {
@@ -323,6 +350,9 @@ public class Scout extends Globals {
           }
           if (optimalLoc == null && absolute_dist > GARDENER_KEEPAWAY_RADIUS) {
             for (int i = 0; i < GARDENER_PENETRATION_ANGLES.length; ++i) {
+              if (Clock.getBytecodesLeft() < 2000) {
+                break;
+              }
               MapLocation newLoc = targetRobot.location.add(GARDENER_PENETRATION_ANGLES[i],
                   GARDENER_KEEPAWAY_RADIUS);
               // TODO optimize
@@ -361,13 +391,15 @@ public class Scout extends Globals {
           MapLocation optimalLoc = null;
           float optimalDist = 9999f;
           if (targetRobot.type != RobotType.LUMBERJACK) {
-            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(-1);
+            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(targetRobot.location, 8f, Team.NEUTRAL);
             for (TreeInfo ti : nearbyTrees) {
-              if (!ti.team.isPlayer() && ti.radius > 1f) {
+              if (Clock.getBytecodesLeft() < 2000) {
+                break;
+              }
+              if (ti.radius > 1f) {
                 continue;
               }
-              if (rc.canMove(ti.location) && ti.location.distanceTo(targetRobot.location) < 8f
-                  && clearShot(ti.location, targetRobot)) {
+              if (rc.canMove(ti.location) && clearShot(ti.location, targetRobot)) {
                 float newDist = here.distanceTo(ti.location);
                 if (newDist < optimalDist) {
                   optimalLoc = ti.location;
@@ -439,6 +471,7 @@ public class Scout extends Globals {
             (us == Team.B ? 255 : 0));
       }
     }
+    //System.out.println("After engage: " + Clock.getBytecodesLeft());
     return targetRobot;
   }
 
@@ -483,6 +516,7 @@ public class Scout extends Globals {
         }
         if (current_mode == ROAM) {
           Globals.update();
+          readBlacklist();
           System.out.println("Roaming");
           //rc.setIndicatorDot(here, 0, 0, 255);
           // Look for target in broadcast
@@ -537,7 +571,12 @@ public class Scout extends Globals {
           // Currently on attack mode
           int target = rc.readBroadcast(squad_channel + 1);
           // Read assigned target from broadcast
-          attackTarget = target;
+          // Handle external target change
+          if (attackTarget != target) {
+            attackTarget = target;
+            roundsEngaging = 0;
+          }
+          System.out.println(roundsEngaging);
           if (rc.canSenseRobot(target)) {
             // Engage target if it is in range
             //System.out.println("Can sense target: " + target);
@@ -546,7 +585,11 @@ public class Scout extends Globals {
             // TODO fix disengagement
             // Allow re-engagement on priority targets
             if (roundsEngaging > 100) {
-              rc.broadcast(squad_channel + 1, 0);
+              rc.broadcast(squad_channel + 1, -1);
+              targetBlacklist = target;
+              targetBlacklistPeriodStart = currentRoundNum;
+              writeBlacklist(targetBlacklist, targetBlacklistPeriodStart);
+              System.out.println("Blacklisting target: " + target);
             }
             else {
               RobotInfo targetRobot = engage(target, priorityTarget);
