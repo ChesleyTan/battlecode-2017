@@ -53,8 +53,10 @@ public class Lumberjack extends Globals {
       rc.move(mydir);
     }
     else {
-      while (!rc.canMove(mydir)) {
+      int attempts = 0;
+      while (attempts < 10 && !rc.canMove(mydir)) {
         mydir = RobotUtils.randomDirection();
+        ++attempts;
       }
       if (rc.canMove(mydir)) {
         rc.move(mydir);
@@ -69,7 +71,7 @@ public class Lumberjack extends Globals {
       RobotInfo[] attackingLumbers = siftForLumbers(rc.senseNearbyRobots(target.location, 4f, us));
       Direction toMe = target.location.directionTo(here);
       boolean isInRangeOfFriendlies = false;
-      int rotateAmt = 0;
+      //int rotateAmt = 0;
       MapLocation closestPoint = target.location.add(toMe, target.getRadius() + 1.1f);
       for (RobotInfo r : attackingLumbers) {
         //System.out.println(r.ID);
@@ -150,11 +152,11 @@ public class Lumberjack extends Globals {
   public static TreeInfo reachable(RobotInfo target) {
     Direction toThere = here.directionTo(target.location);
     TreeInfo[] nearbyTrees = getAllTrees();
+    float distToTarget = here.distanceTo(target.location) - target.getRadius();
     for (TreeInfo t : nearbyTrees) {
       Direction toTree = here.directionTo(t.getLocation());
       if (Math.abs(toThere.degreesBetween(toTree)) < 90) {
         float distToTree = here.distanceTo(t.location) - t.getRadius();
-        float distToTarget = here.distanceTo(target.location) - target.getRadius();
         if (distToTree < distToTarget) {
           return t;
         }
@@ -166,12 +168,12 @@ public class Lumberjack extends Globals {
   public static RobotInfo reachable(TreeInfo target) {
     Direction toThere = here.directionTo(target.location);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
+    float distToTarget = here.distanceTo(target.location) - target.getRadius();
     for (RobotInfo r : nearbyRobots) {
-      Direction toTree = here.directionTo(r.getLocation());
-      if (Math.abs(toThere.degreesBetween(toTree)) < 90) {
-        float distToTree = here.distanceTo(r.location) - r.getRadius();
-        float distToTarget = here.distanceTo(target.location) - target.getRadius();
-        if (distToTree < distToTarget) {
+      Direction toRobot = here.directionTo(r.getLocation());
+      if (Math.abs(toThere.degreesBetween(toRobot)) < 90) {
+        float distToRobot = here.distanceTo(r.location) - r.getRadius();
+        if (distToRobot < distToTarget) {
           return r;
         }
       }
@@ -271,29 +273,32 @@ public class Lumberjack extends Globals {
         mode = NEUTRAL;
       }
       mydir = new Direction((float) (rand.nextFloat() * 2 * Math.PI));
-      while (true) {
+    } catch (Exception e) {
+      e.printStackTrace();
+      Clock.yield();
+    }
+    while (true) {
+      try {
         Globals.update();
         // Consider targets that are behind trees
-        if (target != null || targetTree != null) {
-          if (target != null) {
-            TreeInfo closerTree = reachable(target);
-            if (closerTree == null) {
-              chase();
-            }
-            else {
-              switchTarget(closerTree);
-              tryChop();
-            }
+        if (target != null) {
+          TreeInfo closerTree = reachable(target);
+          if (closerTree == null) {
+            chase();
           }
-          else if (targetTree != null) {
-            RobotInfo closerRobot = reachable(targetTree);
-            if (closerRobot == null) {
-              tryChop();
-            }
-            else {
-              switchTarget(closerRobot);
-              chase();
-            }
+          else {
+            switchTarget(closerTree);
+            tryChop();
+          }
+        }
+        else if (targetTree != null) {
+          RobotInfo closerRobot = reachable(targetTree);
+          if (closerRobot == null) {
+            tryChop();
+          }
+          else {
+            switchTarget(closerRobot);
+            chase();
           }
         }
         else {
@@ -312,7 +317,16 @@ public class Lumberjack extends Globals {
           else {
             TreeInfo[] trees = getAllTrees();
             if (trees.length != 0) {
-              targetTree = trees[0];
+              TreeInfo closestTree = null;
+              float minDist = 9999f;
+              for (TreeInfo ti : trees) {
+                float treeDist = ti.location.distanceTo(here);
+                if (treeDist < minDist) {
+                  closestTree = ti;
+                  minDist = treeDist;
+                }
+              }
+              targetTree = closestTree;
               RobotInfo closerRobot = reachable(targetTree);
               if (closerRobot == null) {
                 tryChop();
@@ -330,10 +344,10 @@ public class Lumberjack extends Globals {
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
         Clock.yield();
+      } catch (Exception e) {
+        e.printStackTrace();
+        Clock.yield();
       }
-    } catch (GameActionException e) {
-      e.printStackTrace();
-      Clock.yield();
     }
   }
 }
