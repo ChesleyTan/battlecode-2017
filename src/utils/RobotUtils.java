@@ -41,16 +41,17 @@ public class RobotUtils extends Globals {
     }
 
     // Now try a bunch of similar angles
-    boolean moved = false;
     int currentCheck = 1;
 
     while (currentCheck <= checksPerSide) {
       // Try the offset of the left side
+      //rc.setIndicatorLine(here, here.add(dir.rotateLeftDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
       if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
         rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
         return true;
       }
       // Try the offset on the right side
+      //rc.setIndicatorLine(here, here.add(dir.rotateRightDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
       if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
         rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
         return true;
@@ -78,11 +79,13 @@ public class RobotUtils extends Globals {
 
     while (currentCheck <= checksPerSide) {
       // Try the offset of the left side
+      //rc.setIndicatorLine(here, here.add(dir.rotateLeftDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
       if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck), distance)) {
         rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck), distance);
         return true;
       }
       // Try the offset on the right side
+      //rc.setIndicatorLine(here, here.add(dir.rotateRightDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
       if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck), distance)) {
         rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck), distance);
         return true;

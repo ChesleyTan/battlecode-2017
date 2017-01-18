@@ -24,7 +24,7 @@ public class Gardener extends Globals {
       float y1 = endLocation.y;
       float a = x1 - x0;
       float b = y0 - y1;
-      if (a == 0 && b == 0){
+      if (a == 0 && b == 0) {
         a = 0.01f;
       }
       float c = x0 * y1 - y0 * x1;
@@ -45,11 +45,14 @@ public class Gardener extends Globals {
 
     for (RobotInfo r : robots) {
       Direction their_direction = r.location.directionTo(here);
-      float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()) * (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius());
-      float their_distance = baseValue / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
-      rc.setIndicatorDot(here.add(their_direction,  their_distance), 255, 0, 0);
+      float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location)
+          + r.getRadius())
+          * (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius());
+      float their_distance = baseValue / RobotType.GARDENER.sensorRadius
+          * RobotType.GARDENER.strideRadius;
+      rc.setIndicatorDot(here.add(their_direction, their_distance), 255, 0, 0);
       //System.out.println(their_distance);
-      if (r.getTeam() == us){
+      if (r.getTeam() == us) {
         their_distance = their_distance / 2;
       }
       sumX += their_direction.getDeltaX(their_distance);
@@ -57,17 +60,20 @@ public class Gardener extends Globals {
     }
 
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees(GameConstants.NEUTRAL_TREE_MAX_RADIUS);
-    if(nearbyTrees.length <= 10){
+    if (nearbyTrees.length <= 10) {
       for (TreeInfo t : nearbyTrees) {
         Direction their_direction = t.location.directionTo(here);
-        float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius()) * (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius());
-        float their_distance = baseValue / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
+        float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location)
+            + t.getRadius())
+            * (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius());
+        float their_distance = baseValue / RobotType.GARDENER.sensorRadius
+            * RobotType.GARDENER.strideRadius;
         sumX += their_direction.getDeltaX(their_distance);
         sumY += their_direction.getDeltaY(their_distance);
       }
     }
-    
-    if (!(Clock.getBytecodesLeft() < 2000)){
+
+    if (!(Clock.getBytecodesLeft() < 2000)) {
       float sightRadius = RobotType.GARDENER.sensorRadius - 1;
       updateMapBoundaries();
       if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
@@ -168,17 +174,17 @@ public class Gardener extends Globals {
       rc.move(finalDir);
     }
   }
-  
-  private static Direction scoutOppDir(){
+
+  private static Direction scoutOppDir() {
     RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
     TreeInfo[] trees = rc.senseNearbyTrees(3, us);
-    for(RobotInfo r: enemies){
-      if (r.getType() != RobotType.SCOUT){
+    for (RobotInfo r : enemies) {
+      if (r.getType() != RobotType.SCOUT) {
         continue;
       }
-      else{
-        for (TreeInfo t: trees){
-          if (r.getLocation().isWithinDistance(t.getLocation(), t.getRadius())){
+      else {
+        for (TreeInfo t : trees) {
+          if (r.getLocation().isWithinDistance(t.getLocation(), t.getRadius())) {
             return r.location.directionTo(here);
           }
         }
@@ -186,18 +192,18 @@ public class Gardener extends Globals {
     }
     return null;
   }
-  
-  private static boolean blockedByTree(BulletInfo i, TreeInfo[] trees){
+
+  private static boolean blockedByTree(BulletInfo i, TreeInfo[] trees) {
     Direction base = here.directionTo(i.location);
     float baseDistance = here.distanceTo(i.location);
-    for (TreeInfo tree: trees){
-      if (i.location.distanceTo(tree.location) > baseDistance){
+    for (TreeInfo tree : trees) {
+      if (i.location.distanceTo(tree.location) > baseDistance) {
         continue;
       }
       Direction t = here.directionTo(tree.location);
       float radians = Math.abs(t.radiansBetween(base));
-      float dist = (float)Math.sin(radians);
-      if (dist < tree.getRadius()){
+      float dist = (float) Math.sin(radians);
+      if (dist < tree.getRadius()) {
         return true;
       }
     }
@@ -258,8 +264,8 @@ public class Gardener extends Globals {
         int unitCount = rc.readBroadcast(EARLY_UNITS_CHANNEL);
         if (currentRoundNum < 100 && unitCount < 3) {
           checkspace();
-          if (unitCount == 2){
-            if(spawnRobot(RobotType.SOLDIER)){
+          if (unitCount == 2) {
+            if (spawnRobot(RobotType.SOLDIER)) {
               rc.broadcast(EARLY_UNITS_CHANNEL, 3);
             }
           }
@@ -271,37 +277,38 @@ public class Gardener extends Globals {
           checkspace();
           spawnRobot(RobotType.SCOUT);
         }
-        else{
+        else {
           Direction d = scoutOppDir();
-          if (d != null){
+          if (d != null) {
             System.out.println("scouts in trees, moving");
-            if (plant){
+            if (plant) {
               plant = false;
             }
-            System.out.println(here.add(possibleTrees()[0]));
+            //MapLocation openLoc = here.add(possibleTrees()[0]);
+            //System.out.println(openLoc);
             RobotUtils.tryMove(d, 10, 18);
           }
-          else{
+          else {
             BulletInfo[] bullets = rc.senseNearbyBullets();
             if (rc.getRoundNum() - spawnRound < 30 || bullets.length != 0) {
               boolean willGetHitByBullet = false;
               TreeInfo[] trees = rc.senseNearbyTrees();
-              for (BulletInfo i: bullets){
-                if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)){
+              for (BulletInfo i : bullets) {
+                if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)) {
                   System.out.println("in danger");
                   willGetHitByBullet = true;
                   break;
                 }
               }
-              if (willGetHitByBullet){
+              if (willGetHitByBullet) {
                 RobotInfo[] robots = rc.senseNearbyRobots();
-                System.out.println("dodging");               
+                System.out.println("dodging");
                 dodge(bullets, robots);
               }
-              else{
+              else {
                 if ((!rc.onTheMap(here, detectRadius)
-                  || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius)) && !plant) {
-                    checkspace();
+                    || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius)) && !plant) {
+                  checkspace();
                 }
               }
             }

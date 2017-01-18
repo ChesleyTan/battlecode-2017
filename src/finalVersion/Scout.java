@@ -136,7 +136,7 @@ public class Scout extends Globals {
     // First 16 bits is ID of blacklisted target
     // Second 16 bits is starting round of blacklist
     int data = rc.readBroadcast(squad_channel + 4);
-    targetBlacklist = data & (0xFFFF0000) >>> 16;
+    targetBlacklist = (data & (0xFFFF0000)) >>> 16;
     targetBlacklistPeriodStart = data & (0x0000FFFF);
   }
 
@@ -164,11 +164,26 @@ public class Scout extends Globals {
       return;
     }
     else {
+      // TODO needs code cleanup
       if (currentRoundNum < 200) {
         for (RobotInfo enemy : nearbyRobots) {
-          // Prioritize killing enemy gardeners or defending our own gardeners
-          // TODO also defend against soldiers and lumberjacks?
-          // TODO is this necessary, because we have gardeners defense calls?
+          // Prioritize killing enemy gardeners
+          if (isBlacklisted(enemy.ID)) {
+            continue;
+          }
+          if (enemy.type == RobotType.GARDENER) {
+            rc.broadcast(squad_channel + 1, enemy.ID);
+            rc.broadcast(squad_channel + 2, (int) (enemy.location.x));
+            rc.broadcast(squad_channel + 3, (int) (enemy.location.y));
+            targetDirection = here.directionTo(enemy.location);
+            if (rc.canFireSingleShot() && clearShot(here, enemy)) {
+              rc.fireSingleShot(targetDirection);
+            }
+            current_mode = ATTACK;
+            return;
+          }
+        }
+        for (RobotInfo enemy : nearbyRobots) {
           if (isBlacklisted(enemy.ID)) {
             continue;
           }
@@ -181,7 +196,7 @@ public class Scout extends Globals {
               rc.fireSingleShot(targetDirection);
             }
             current_mode = ATTACK;
-            break;
+            return;
           }
         }
       }
@@ -261,6 +276,7 @@ public class Scout extends Globals {
       // Try the offset of the left side
       float offset = degreeOffset * currentCheck;
       newLoc = here.add(dir.rotateLeftDegrees(offset), myType.strideRadius);
+      //rc.setIndicatorLine(here, newLoc, 255, 0, 0);
       if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
         rc.move(newLoc);
         isPerchedInTree = false;
@@ -271,6 +287,7 @@ public class Scout extends Globals {
         return false;
       }
       newLoc = here.add(dir.rotateRightDegrees(offset), myType.strideRadius);
+      //rc.setIndicatorLine(here, newLoc, 255, 0, 0);
       // Try the offset on the right side
       if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
         rc.move(newLoc);
@@ -329,16 +346,22 @@ public class Scout extends Globals {
       float absolute_dist = (float) here.distanceTo(targetRobot.location);
       if (absolute_dist > KEEPAWAY_RADIUS + RobotType.SCOUT.strideRadius) {
         shouldShoot = false;
-        tryMoveIfSafe(direction, nearbyBullets, 15, 3);
+        tryMoveIfSafe(direction, nearbyBullets, 30, 3);
       }
       else {
         if (targetRobot.type == RobotType.GARDENER) {
           MapLocation optimalLoc = null;
           float optimalDist = 9999f;
           TreeInfo[] nearbyTrees = rc.senseNearbyTrees(targetRobot.location, 2.2f, them);
+          boolean alreadyInTree = false;
           for (TreeInfo ti : nearbyTrees) {
             if (Clock.getBytecodesLeft() < 2000) {
               break;
+            }
+            // Try to avoid staying in 1 tree
+            if (here.equals(ti.location)) {
+              alreadyInTree = true;
+              continue;
             }
             if (rc.canMove(ti.location)) {
               float newDist = here.distanceTo(ti.location);
@@ -348,7 +371,8 @@ public class Scout extends Globals {
               }
             }
           }
-          if (optimalLoc == null && absolute_dist > GARDENER_KEEPAWAY_RADIUS) {
+          boolean inTree = optimalLoc != null;
+          if (optimalLoc == null && !alreadyInTree && absolute_dist > GARDENER_KEEPAWAY_RADIUS) {
             for (int i = 0; i < GARDENER_PENETRATION_ANGLES.length; ++i) {
               if (Clock.getBytecodesLeft() < 2000) {
                 break;
@@ -360,6 +384,10 @@ public class Scout extends Globals {
               System.out.println(rc.canMove(newLoc));
               System.out.println(clearShot(newLoc, targetRobot.location));
               */
+              // Avoid staying in one position
+              if (here.equals(newLoc)) {
+                continue;
+              }
               float newDist = here.distanceTo(newLoc);
               if (rc.canMove(newLoc) && newDist < optimalDist) {
                 optimalLoc = newLoc;
@@ -378,13 +406,17 @@ public class Scout extends Globals {
             }
             else if (isLocationSafe(nearbyBullets, optimalLoc)) {
               rc.move(optimalLoc);
-              isPerchedInTree = true;
-              hpWhenPerched = rc.getHealth();
+              if (inTree) {
+                isPerchedInTree = true;
+                hpWhenPerched = rc.getHealth();
+              }
             }
+            /*
             if (DEBUG) {
               Globals.update();
               rc.setIndicatorDot(here, 255, 0, 0);
             }
+            */
           }
         }
         else {
@@ -555,7 +587,7 @@ public class Scout extends Globals {
               }
               BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
               System.out.println("Moving towards target");
-              tryMoveIfSafe(targetDirection, nearbyBullets, 15, 3);
+              tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
             }
             // If mode changed, yield before beginning attack logic
             if (current_mode == ATTACK) {
@@ -576,15 +608,15 @@ public class Scout extends Globals {
             attackTarget = target;
             roundsEngaging = 0;
           }
-          System.out.println(roundsEngaging);
           if (rc.canSenseRobot(target)) {
             // Engage target if it is in range
-            //System.out.println("Can sense target: " + target);
+            System.out.println("Can sense target: " + target);
             engagingTarget = true;
             ++roundsEngaging;
             // TODO fix disengagement
             // Allow re-engagement on priority targets
-            if (roundsEngaging > 100) {
+            System.out.println(roundsEngaging);
+            if (roundsEngaging > 50) {
               rc.broadcast(squad_channel + 1, -1);
               targetBlacklist = target;
               targetBlacklistPeriodStart = currentRoundNum;
@@ -595,10 +627,11 @@ public class Scout extends Globals {
               RobotInfo targetRobot = engage(target, priorityTarget);
               if ((targetRobot != null && targetRobot.type != RobotType.GARDENER)
                   || targetRobot == null) {
-                RobotInfo[] nearbyRobots = rc.senseNearbyRobots(6, them);
+                RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
                 for (RobotInfo ri : nearbyRobots) {
                   if (ri.type == RobotType.GARDENER) {
                     target = ri.ID;
+                    System.out.println("Switching to priority target: " + target);
                     priorityTarget = true;
                     break;
                   }
@@ -612,7 +645,7 @@ public class Scout extends Globals {
             if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
               EvasiveScout.move(nearbyBullets, nearbyRobots);
             }
-            //System.out.println("Cannot sense target: " + target);
+            System.out.println("Cannot sense target: " + target);
             // We are out of range of our target,
             // so try to move in known direction of target to find target
             if (engagingTarget) {
@@ -652,7 +685,7 @@ public class Scout extends Globals {
                 targetDirection = here.directionTo(targetLoc);
                 if (!rc.hasMoved()) {
                   //System.out.println("j");
-                  tryMoveIfSafe(targetDirection, nearbyBullets, 15, 3);
+                  tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
                 }
                 else {
                   // We had to evade, so we couldn't move towards the target

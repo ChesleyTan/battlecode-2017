@@ -198,7 +198,7 @@ public class Lumberjack extends Globals {
       if (distanceBetween - RobotType.LUMBERJACK.bodyRadius
           - targetTree.getRadius() > RobotType.LUMBERJACK.strideRadius) {
         Direction towardsTree = here.directionTo(targetTree.location);
-        boolean moved = RobotUtils.tryMove(towardsTree, 15, 3);
+        boolean moved = RobotUtils.tryMove(towardsTree, 15, 6);
         if (!moved) {
           targetTree = null;
         }
