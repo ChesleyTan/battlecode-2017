@@ -44,6 +44,9 @@ public class RobotUtils extends Globals {
     int currentCheck = 1;
 
     while (currentCheck <= checksPerSide) {
+      if (Clock.getBytecodesLeft() < 1000) {
+        return false;
+      }
       // Try the offset of the left side
       //rc.setIndicatorLine(here, here.add(dir.rotateLeftDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
       if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
@@ -78,6 +81,9 @@ public class RobotUtils extends Globals {
     int currentCheck = 1;
 
     while (currentCheck <= checksPerSide) {
+      if (Clock.getBytecodesLeft() < 1000) {
+        return false;
+      }
       // Try the offset of the left side
       //rc.setIndicatorLine(here, here.add(dir.rotateLeftDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
       if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck), distance)) {

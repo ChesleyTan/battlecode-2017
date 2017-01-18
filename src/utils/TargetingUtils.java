@@ -39,7 +39,7 @@ public class TargetingUtils extends Globals {
         if (Clock.getBytecodesLeft() < 2000) {
           return false;
         }
-        if (t.location.equals(target.location)) {
+        if (t.location.isWithinDistance(target.location, 1f)) {
           continue;
         }
         else if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
