@@ -19,11 +19,12 @@ public class Globals {
   public static final int EARLY_UNITS_CHANNEL = 5;
   public static final int DEFENSE_START_CHANNEL = 250;
   public static final int DEFENSE_END_CHANNEL = 350;
+  public static final int DEFENSE_BLOCK_WIDTH = 4;
   public static final int ATTACK_START_CHANNEL = 500;
   public static final int ATTACK_END_CHANNEL = 600;
+  public static final int ATTACK_BLOCK_WIDTH = 5;
   public static final int PRODUCTION_GARDENERS_CHANNEL = 101;
   public static final int PRODUCED_PRODUCTION_GARDENERS_CHANNEL = 102;
-  public static final int ATTACK_BLOCK_WIDTH = 5;
   public static Direction NORTH, SOUTH, EAST, WEST;
   public static final int UNKNOWN = Integer.MIN_VALUE;
   public static int minX = UNKNOWN;

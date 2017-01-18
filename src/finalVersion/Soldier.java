@@ -118,9 +118,9 @@ public class Soldier extends Globals {
         rc.broadcast(i, squad_count + 1);
         return;
       }
-      i = i + 4;
+      i += DEFENSE_BLOCK_WIDTH;
     }
-    squad_channel = ATTACK_START_CHANNEL;
+    squad_channel = DEFENSE_START_CHANNEL;
   }
   
   private static boolean blockedByTree(BulletInfo i, TreeInfo[] trees){

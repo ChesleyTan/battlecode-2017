@@ -345,7 +345,7 @@ public class Gardener extends Globals {
           if (myHP > RobotType.GARDENER.maxHealth / 2) {
             rc.setIndicatorDot(here, 255, 0, 0);
             boolean calledForBackup = false;
-            for (int channel = DEFENSE_START_CHANNEL; channel < DEFENSE_END_CHANNEL; channel += ATTACK_BLOCK_WIDTH) {
+            for (int channel = DEFENSE_START_CHANNEL; channel < DEFENSE_END_CHANNEL; channel += DEFENSE_BLOCK_WIDTH) {
               if (rc.readBroadcast(channel) != 0 && rc.readBroadcast(channel + 1) == 0) {
                 rc.broadcast(channel + 1, attacker.ID);
                 rc.broadcast(channel + 2, (int) attacker.location.x);
@@ -360,6 +360,7 @@ public class Gardener extends Globals {
               rc.broadcast(DEFENSE_START_CHANNEL + 3, (int) attacker.location.y);
               calledForBackup = true;
             }
+            // TODO call for scouts if no soldiers
           }
           else if (!hasReportedDeath && myHP < 3 && attacker != null) {
             int gardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);

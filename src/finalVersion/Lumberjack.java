@@ -18,13 +18,13 @@ public class Lumberjack extends Globals {
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees(-1);
     int count = 0;
     for (TreeInfo ti : nearbyTrees) {
-      if (ti.team == them || ti.team == Team.NEUTRAL) {
+      if (ti.team != us) {
         ++count;
       }
     }
     union = new TreeInfo[count];
     for (TreeInfo ti : nearbyTrees) {
-      if (ti.team == them || ti.team == Team.NEUTRAL) {
+      if (ti.team != us) {
         union[--count] = ti;
       }
     }
