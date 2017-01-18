@@ -396,6 +396,8 @@ public class Soldier extends Globals {
           roam();
           // check defense every turn, if so then head to defend target
         }
+        RobotUtils.donateEverythingAtTheEnd();
+        RobotUtils.shakeNearbyTrees();
         Clock.yield();
       }catch(Exception e){
         e.printStackTrace();
