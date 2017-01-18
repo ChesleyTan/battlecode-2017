@@ -76,7 +76,8 @@ public class Lumberjack extends Globals {
       for (RobotInfo r : attackingLumbers) {
         //System.out.println(r.ID);
         //System.out.println(r.location.distanceTo(closestPoint));
-        if (r.location.isWithinDistance(closestPoint, 3)) {
+        if (r.location.isWithinDistance(closestPoint, RobotType.LUMBERJACK.bodyRadius
+            + RobotType.LUMBERJACK.strideRadius + r.type.bodyRadius)) {
           isInRangeOfFriendlies = true;
           break;
         }

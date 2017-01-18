@@ -15,7 +15,7 @@ public class Scout extends Globals {
   private static final float GARDENER_KEEPAWAY_RADIUS = 2.00001f;
   private static Direction[] GARDENER_PENETRATION_ANGLES = new Direction[6];
   private static Direction targetDirection = null;
-  private static int squad_channel;
+  private static int squad_channel = -1;
   private static int attackTarget;
   private static boolean hasReportedDeath = false;
   private static boolean priorityTarget = false;
@@ -25,6 +25,7 @@ public class Scout extends Globals {
   private static float hpWhenPerched = 0f;
   private static int targetBlacklist = -1;
   private static int targetBlacklistPeriodStart = -1;
+  private static boolean gardenerOnlyMode = false;
 
   //public static void dodge(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots)
   //    throws GameActionException {
@@ -112,6 +113,17 @@ public class Scout extends Globals {
   */
 
   public static void findSquad() throws GameActionException {
+    int numGardenerOnly = rc.readBroadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH);
+    if (numGardenerOnly == 0) {
+      gardenerOnlyMode = true;
+      squad_channel = ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH;
+      rc.broadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH, 1);
+      // Clear out target field
+      rc.broadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH + 1, -1);
+      // Clear out blacklist field
+      rc.broadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH + 4, -1);
+      return;
+    }
     int i = ATTACK_START_CHANNEL;
     while (i < ATTACK_END_CHANNEL) {
       int squad_count = rc.readBroadcast(i);
@@ -184,6 +196,9 @@ public class Scout extends Globals {
             return;
           }
         }
+        if (gardenerOnlyMode) {
+          return;
+        }
         for (RobotInfo enemy : nearbyRobots) {
           if (isBlacklisted(enemy.ID)) {
             continue;
@@ -204,7 +219,7 @@ public class Scout extends Globals {
       }
       else {
         RobotInfo enemy = null;
-        // Preferred targets: Enemy gardeners if round < 1000
+        // Preferred targets: Enemy gardeners if round < 2000
         if (currentRoundNum < 2000) {
           for (RobotInfo ri : nearbyRobots) {
             if (isBlacklisted(ri.ID)) {
@@ -215,6 +230,9 @@ public class Scout extends Globals {
               break;
             }
           }
+        }
+        if (gardenerOnlyMode && enemy == null) {
+          return;
         }
         // Choose any target that is not blacklisted
         if (enemy == null) {
@@ -520,8 +538,8 @@ public class Scout extends Globals {
       GARDENER_PENETRATION_ANGLES[4] = new Direction((float) Math.toRadians(240));
       GARDENER_PENETRATION_ANGLES[5] = new Direction((float) Math.toRadians(300));
       EvasiveScout.init();
-      // Early scouts should move towards the archon
       findSquad();
+      // Early scouts should move towards the archon
       if (currentRoundNum < 100) {
         int numUnits = rc.readBroadcast(EARLY_UNITS_CHANNEL);
         if (numUnits <= 3) {
@@ -744,6 +762,9 @@ public class Scout extends Globals {
         }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
+        if (gardenerOnlyMode) {
+          rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
+        }
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();
