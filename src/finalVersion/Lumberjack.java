@@ -9,6 +9,9 @@ public class Lumberjack extends Globals{
   private static Direction mydir;
   private static RobotInfo target;
   private static TreeInfo targetTree;
+  private static final int NEUTRAL = 0;
+  private static final int DEFENSE = 1;
+  private static int mode;
   
   public static TreeInfo[] getAllTrees() {
     TreeInfo[] first = rc.senseNearbyTrees(-1, them);
@@ -254,6 +257,12 @@ public class Lumberjack extends Globals{
   
   public static void loop() throws GameActionException{
     try{
+      if(currentRoundNum < 500){
+        mode = DEFENSE;
+      }
+      else{
+        mode = NEUTRAL;
+      }
       mydir = new Direction((float)(rand.nextFloat() * 2 * Math.PI));
       while(true){
         Globals.update();
