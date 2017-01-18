@@ -350,8 +350,10 @@ public class Gardener extends Globals {
             else {
               queuedMove = here.add(freeSpaces[1].opposite(), 0.3f);
             }
-            rc.plantTree(freeSpaces[1]);
-            plant = true;
+            if (rc.canPlantTree(freeSpaces[1])) {
+              rc.plantTree(freeSpaces[1]);
+              plant = true;
+            }
           }
           else {
             int division_factor = (int) (154 / (rc.getTreeCount() + 1));
