@@ -15,9 +15,14 @@ public class Soldier extends Globals {
   private static Direction mydir;
   private static RobotInfo target;
 
-  private static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
+  private static void dodge(BulletInfo[] bullets, RobotInfo[] robots, MapLocation targetLocation) throws GameActionException {
     float sumX = 0;
     float sumY = 0;
+    if (targetLocation != null){
+      Direction toTarget = here.directionTo(targetLocation);
+      sumX = toTarget.getDeltaX(myType.strideRadius);
+      sumY = toTarget.getDeltaY(myType.strideRadius);
+    }
     for (BulletInfo i : bullets) {
       MapLocation endLocation = i.location.add(i.getDir(), i.getSpeed());
       float x0 = i.location.x;
@@ -38,8 +43,8 @@ public class Soldier extends Globals {
         float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
             / (Math.pow(a, 2) + Math.pow(b, 2)));
         Direction away = new MapLocation(x2, y2).directionTo(here);
-        float weighted = (float) Math.pow((RobotType.SCOUT.bulletSightRadius - distance), 2)
-            / RobotType.SCOUT.bulletSightRadius * RobotType.SCOUT.strideRadius;
+        float weighted = (float) Math.pow((RobotType.SOLDIER.bulletSightRadius - distance), 2)
+            / myType.bulletSightRadius / myType.bulletSightRadius * RobotType.SOLDIER.strideRadius;
         sumX += away.getDeltaX(weighted);
         sumY += away.getDeltaY(weighted);
       }
@@ -47,8 +52,8 @@ public class Soldier extends Globals {
 
     for (RobotInfo r : robots) {
       Direction their_direction = r.location.directionTo(here);
-      float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()) * (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius());
-      float their_distance = baseValue / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
+      float baseValue = (RobotType.SOLDIER.sensorRadius - here.distanceTo(r.location) + r.getRadius()) * (RobotType.SOLDIER.sensorRadius - here.distanceTo(r.location) + r.getRadius());
+      float their_distance = baseValue /myType.sensorRadius / myType.sensorRadius * RobotType.SOLDIER.strideRadius;
       rc.setIndicatorDot(here.add(their_direction,  their_distance), 255, 0, 0);
       //System.out.println(their_distance);
       if (r.getTeam() == us){
@@ -63,33 +68,33 @@ public class Soldier extends Globals {
       for (TreeInfo t : nearbyTrees) {
         Direction their_direction = t.location.directionTo(here);
         float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius()) * (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius());
-        float their_distance = baseValue / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
+        float their_distance = baseValue / RobotType.GARDENER.sensorRadius / myType.sensorRadius * RobotType.GARDENER.strideRadius;
         sumX += their_direction.getDeltaX(their_distance);
         sumY += their_direction.getDeltaY(their_distance);
       }
     }
     
     if (!(Clock.getBytecodesLeft() < 2000)){
-      float sightRadius = RobotType.GARDENER.sensorRadius - 1;
+      float sightRadius = RobotType.SOLDIER.sensorRadius - 1;
       updateMapBoundaries();
       if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
         float distance = (here.x - minX) * (here.x - minX);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
+        float weightedDistance = distance / sightRadius / sightRadius * myType.strideRadius;
         sumX += weightedDistance;
       }
       if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sightRadius, here.y))) {
         float distance = (maxX - here.x) * (maxX - here.x);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
+        float weightedDistance = distance / sightRadius / sightRadius * myType.strideRadius;
         sumX -= weightedDistance;
       }
       if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sightRadius))) {
         float distance = (here.y - minY) * (here.y - minY);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
+        float weightedDistance = distance / sightRadius / sightRadius * myType.strideRadius;
         sumY += weightedDistance;
       }
       if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sightRadius))) {
         float distance = (maxY - here.y) * (maxY - here.y);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
+        float weightedDistance = distance / sightRadius / sightRadius * myType.strideRadius;
         sumY -= weightedDistance;
       }
     }
@@ -136,9 +141,9 @@ public class Soldier extends Globals {
   }
   
   private static void checkBulletsAndDodge() throws GameActionException{
-    BulletInfo[] bullets = rc.senseNearbyBullets();
+    BulletInfo[] bullets = rc.senseNearbyBullets(3);
     boolean willGetHitByBullet = false;
-    TreeInfo[] trees = rc.senseNearbyTrees();
+    TreeInfo[] trees = rc.senseNearbyTrees(3);
     for (BulletInfo i: bullets){
       if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)){
         System.out.println("in danger");
@@ -147,9 +152,9 @@ public class Soldier extends Globals {
       }
     }
     if (willGetHitByBullet){
-      RobotInfo[] robots = rc.senseNearbyRobots();
+      RobotInfo[] robots = rc.senseNearbyRobots(3, us);
       System.out.println("dodging");               
-      dodge(bullets, robots);
+      dodge(bullets, robots, null);
     }
   }
   /*
@@ -160,11 +165,17 @@ public class Soldier extends Globals {
     if(!rc.hasMoved()){
       BulletInfo[] bullets = rc.senseNearbyBullets();
       RobotInfo[] robots = rc.senseNearbyRobots(-1, them);
-      dodge(bullets, robots);
+      MapLocation targetLocation = target.location;
+      dodge(bullets, robots, targetLocation);
     }
-    if (rc.canFireTriadShot()){
+    if (rc.canFireTriadShot() && TargetingUtils.clearShot(here, target)){
       Direction towardsEnemy = here.directionTo(target.location);
-      rc.fireTriadShot(towardsEnemy);
+      if (here.distanceTo(target.location) <= 3.5){
+        rc.fireTriadShot(towardsEnemy);
+      }
+      else{
+        rc.fireSingleShot(towardsEnemy);
+      }
     }
   }
   
@@ -182,13 +193,17 @@ public class Soldier extends Globals {
       attack();
     }
     else if (enemies.length != 0){
-      target = enemies[0];
-      attack();
+      int index = priority(enemies);
+      if (index != -1){
+        target = enemies[priority(enemies)];
+        attack();
+      }
     }
     else{
       float xCor = rc.readBroadcast(squad_channel + 2);
       float yCor = rc.readBroadcast(squad_channel + 3);
-      mydir = here.directionTo(new MapLocation(xCor, yCor));
+      MapLocation targetLocation = new MapLocation(xCor, yCor);
+      mydir = here.directionTo(targetLocation);
       if (!rc.hasMoved() && !RobotUtils.tryMove(mydir, 10, 9)){
         while(!rc.canMove(mydir)){
           mydir = RobotUtils.randomDirection();
@@ -197,12 +212,17 @@ public class Soldier extends Globals {
           rc.move(mydir);
         }
       }
+      if (here.distanceTo(targetLocation) <= 2){
+        rc.broadcast(squad_channel + 1, -1);
+        rc.broadcast(squad_channel + 2, 0);
+        rc.broadcast(squad_channel + 3, 0);
+      }
     }
   }
   
   private static void roam() throws GameActionException{
     int targetID = rc.readBroadcast(squad_channel + 1);
-    if (targetID != 0){
+    if (targetID != -1){
       mode = ATTACK;
       moveToAttack(targetID);
     }
@@ -213,33 +233,43 @@ public class Soldier extends Globals {
       while (priority != -1){
         RobotInfo enemy = enemies[priority];
         MapLocation destination = enemy.location;
-        boolean successfulMove = RobotUtils.tryMove(here.directionTo(destination), 10, 6);
-        if (successfulMove){
-          target = enemy;
-          rc.broadcast(squad_channel + 1, target.ID);
-          rc.broadcast(squad_channel + 2, (int)target.location.x);
-          rc.broadcast(squad_channel + 3, (int)target.location.y);
-          mode = ATTACK;
-          break;
-        }
-        else{
-          enemies[priority] = null;
-          priority = priority(enemies);
+        target = enemy;
+        rc.broadcast(squad_channel + 1, target.ID);
+        rc.broadcast(squad_channel + 2, (int)target.location.x);
+        rc.broadcast(squad_channel + 3, (int)target.location.y);
+        mode = ATTACK;
+        if (!rc.hasMoved()){
+          boolean successfulMove = RobotUtils.tryMove(here.directionTo(destination), 10, 6);
+          if (successfulMove){
+            break;
+          }
+          else{
+            enemies[priority] = null;
+            priority = priority(enemies);
+          }
         }
       }
       if (priority != -1){
-        if (TargetingUtils.clearShot(here, target)){
-          rc.fireTriadShot(here.directionTo(target.location));
+        if (rc.canFireTriadShot() && TargetingUtils.clearShot(here, target)){
+          Direction towardsEnemy = here.directionTo(target.location);
+          if (here.distanceTo(target.location) <= 3.5){
+            rc.fireTriadShot(towardsEnemy);
+          }
+          else{
+            rc.fireSingleShot(towardsEnemy);
+          }
         }
       }
       else{
-        int attempts = 0;
-        while(!rc.canMove(mydir) || attempts < 20){
-          mydir = RobotUtils.randomDirection();
-          attempts ++;
-        }
-        if (rc.canMove(mydir)){
-          rc.move(mydir);
+        if (!rc.hasMoved()){
+          int attempts = 0;
+          while(!rc.canMove(mydir) || attempts < 20){
+            mydir = RobotUtils.randomDirection();
+            attempts ++;
+          }
+          if (rc.canMove(mydir)){
+            rc.move(mydir);
+          }
         }
       }
     }
@@ -256,7 +286,7 @@ public class Soldier extends Globals {
     case SOLDIER:
       return 2;
     case ARCHON:
-      return 1;
+      return -1;
     case TANK:
       return 0;
     default:
@@ -280,7 +310,7 @@ public class Soldier extends Globals {
         value = 3;
         break;
       case ARCHON:
-        value = 2;
+        value = -1;
         break;
       case SOLDIER:
         value = 1;
@@ -304,27 +334,33 @@ public class Soldier extends Globals {
   public static void loop() {
     try{
       findSquad();
-      mydir = RobotUtils.randomDirection();
+      MapLocation[] enemies = rc.getInitialArchonLocations(them);
+      mydir = here.directionTo(enemies[0]);
+      mode = ROAM;
     }catch(Exception e){
       e.printStackTrace();
     }
     while(true){
       Globals.update();
       try{
+        System.out.println(mode);
         if (mode == ATTACK){
           if(target == null){
             //hasn't found him or he recently died
             int targetID = rc.readBroadcast(squad_channel + 1);
-            if (targetID == 0){
+            if (targetID == -1){
+              System.out.println("null target, roaming");
               mode = ROAM;
               roam();
             }
             else{
               // if there is a target requested but not yet seen
+              System.out.println("null target, moving to attack");
               moveToAttack(targetID);
             }
           }
           else{
+            System.out.println("target ID: " + target.ID);
             // if target != null
             if (rc.canSenseRobot(target.ID)){
               target = rc.senseRobot(target.ID);
@@ -336,7 +372,9 @@ public class Soldier extends Globals {
             else{
               int ogTarget = rc.readBroadcast(squad_channel + 1);
               if (target.ID == ogTarget){
-                rc.broadcast(squad_channel + 1, 0);
+                target = null;
+                mode = ROAM;
+                rc.broadcast(squad_channel + 1, -1);
                 rc.broadcast(squad_channel + 2, 0);
                 rc.broadcast(squad_channel + 3, 0);
                 roam();
@@ -358,6 +396,7 @@ public class Soldier extends Globals {
           roam();
           // check defense every turn, if so then head to defend target
         }
+        Clock.yield();
       }catch(Exception e){
         e.printStackTrace();
       }

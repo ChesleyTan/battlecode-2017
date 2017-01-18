@@ -36,10 +36,10 @@ public class Archon extends Globals {
 
     while (true) {
       try {
-        int producedScouts = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+        int producedScouts = rc.readBroadcast(EARLY_UNITS_CHANNEL);
         int requiredProductionGardeners = (int) (rc.getTreeCount() / 15);
         rc.broadcast(PRODUCTION_GARDENERS_CHANNEL, requiredProductionGardeners);
-        if (producedScouts < 3 && currentRoundNum < 55) {
+        if (producedScouts < 4 && currentRoundNum < 55) {
           EvasiveArchon.move();
         }
         else {

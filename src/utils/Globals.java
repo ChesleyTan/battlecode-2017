@@ -16,7 +16,7 @@ public class Globals {
 	public static RobotType myType;
 	public static Random rand;
   public static final int PRODUCED_GARDENERS_CHANNEL = 50;
-  public static final int EARLY_SCOUTS_CHANNEL = 5;
+  public static final int EARLY_UNITS_CHANNEL = 5;
   public static final int DEFENSE_START_CHANNEL = 250;
   public static final int DEFENSE_END_CHANNEL = 350;
   public static final int ATTACK_START_CHANNEL = 500;

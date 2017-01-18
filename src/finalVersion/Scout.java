@@ -488,12 +488,12 @@ public class Scout extends Globals {
       // Early scouts should move towards the archon
       findSquad();
       if (currentRoundNum < 100) {
-        int numScouts = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-        if (numScouts <= 3) {
+        int numUnits = rc.readBroadcast(EARLY_UNITS_CHANNEL);
+        if (numUnits <= 3) {
           MapLocation[] enemies = rc.getInitialArchonLocations(them);
           MapLocation targetArchonLoc;
-          if (numScouts <= enemies.length) {
-            targetArchonLoc = enemies[numScouts - 1];
+          if (numUnits <= enemies.length) {
+            targetArchonLoc = enemies[numUnits - 1];
           }
           else {
             targetArchonLoc = enemies[0];
@@ -517,7 +517,7 @@ public class Scout extends Globals {
         if (current_mode == ROAM) {
           Globals.update();
           readBlacklist();
-          System.out.println("Roaming");
+          //System.out.println("Roaming");
           //rc.setIndicatorDot(here, 0, 0, 255);
           // Look for target in broadcast
           int target = rc.readBroadcast(squad_channel + 1);
@@ -567,7 +567,7 @@ public class Scout extends Globals {
         else if (current_mode == ATTACK) {
           Globals.update();
           //int startBytecodes = Clock.getBytecodeNum();
-          System.out.println("ATTACK");
+          //System.out.println("ATTACK");
           // Currently on attack mode
           int target = rc.readBroadcast(squad_channel + 1);
           // Read assigned target from broadcast
@@ -612,7 +612,7 @@ public class Scout extends Globals {
             if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
               EvasiveScout.move(nearbyBullets, nearbyRobots);
             }
-            System.out.println("Cannot sense target: " + target);
+            //System.out.println("Cannot sense target: " + target);
             // We are out of range of our target,
             // so try to move in known direction of target to find target
             if (engagingTarget) {
@@ -642,7 +642,7 @@ public class Scout extends Globals {
               int xLoc = rc.readBroadcast(squad_channel + 2);
               int yLoc = rc.readBroadcast(squad_channel + 3);
               MapLocation targetLoc = new MapLocation(xLoc, yLoc);
-              System.out.println("Moving towards target: " + targetLoc);
+              //System.out.println("Moving towards target: " + targetLoc);
               float distToTarget = here.distanceTo(targetLoc);
               if (distToTarget < RobotType.ARCHON.sensorRadius && !rc.canSenseRobot(target)) {
                 System.out.println("Could not find target at last known location");

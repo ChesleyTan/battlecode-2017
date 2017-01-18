@@ -104,14 +104,14 @@ public class Gardener extends Globals {
     // Initial setup moves to a clear spot and spawns 3 scouts
     try {
       startDirection = RobotPlayer.randomDirection();
-      int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+      int scoutCount = rc.readBroadcast(EARLY_UNITS_CHANNEL);
       if (scoutCount == 0) {
         while(scoutCount < 3){
           checkspace();
           spawnScout();
-          rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
+          rc.broadcast(EARLY_UNITS_CHANNEL, scoutCount + 1);
           Clock.yield();
-          scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+          scoutCount = rc.readBroadcast(EARLY_UNITS_CHANNEL);
           continue;
         }
       }

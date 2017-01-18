@@ -19,7 +19,7 @@ public class Archon extends Globals {
       rc.broadcast(PRODUCED_GARDENERS_CHANNEL, 1);
     }
     while (true) {
-      int producedScouts = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
+      int producedScouts = rc.readBroadcast(EARLY_UNITS_CHANNEL);
       if (producedScouts < 3 && rc.getRoundNum() < 55) {
         EvasiveArchon.move();
         Clock.yield();

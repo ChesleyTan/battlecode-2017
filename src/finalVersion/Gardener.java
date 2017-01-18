@@ -36,8 +36,8 @@ public class Gardener extends Globals {
         float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
             / (Math.pow(a, 2) + Math.pow(b, 2)));
         Direction away = new MapLocation(x2, y2).directionTo(here);
-        float weighted = (float) Math.pow((RobotType.SCOUT.bulletSightRadius - distance), 2)
-            / RobotType.SCOUT.bulletSightRadius * RobotType.SCOUT.strideRadius;
+        float weighted = (float) Math.pow((RobotType.GARDENER.bulletSightRadius - distance), 2)
+            / RobotType.GARDENER.bulletSightRadius * RobotType.GARDENER.strideRadius;
         sumX += away.getDeltaX(weighted);
         sumY += away.getDeltaY(weighted);
       }
@@ -255,11 +255,16 @@ public class Gardener extends Globals {
     while (true) {
       try {
         Globals.update();
-        int scoutCount = rc.readBroadcast(EARLY_SCOUTS_CHANNEL);
-        if (currentRoundNum < 100 && scoutCount < 3) {
+        int unitCount = rc.readBroadcast(EARLY_UNITS_CHANNEL);
+        if (currentRoundNum < 100 && unitCount < 3) {
           checkspace();
-          if (spawnRobot(RobotType.SCOUT)) {
-            rc.broadcast(EARLY_SCOUTS_CHANNEL, scoutCount + 1);
+          if (unitCount == 2){
+            if(spawnRobot(RobotType.SOLDIER)){
+              rc.broadcast(EARLY_UNITS_CHANNEL, 3);
+            }
+          }
+          else if (spawnRobot(RobotType.SCOUT)) {
+            rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
           }
         }
         else if (production_gardener) {
@@ -340,7 +345,7 @@ public class Gardener extends Globals {
           if (myHP > RobotType.GARDENER.maxHealth / 2) {
             rc.setIndicatorDot(here, 255, 0, 0);
             boolean calledForBackup = false;
-            for (int channel = ATTACK_START_CHANNEL; channel < ATTACK_END_CHANNEL; channel += ATTACK_BLOCK_WIDTH) {
+            for (int channel = DEFENSE_START_CHANNEL; channel < DEFENSE_END_CHANNEL; channel += ATTACK_BLOCK_WIDTH) {
               if (rc.readBroadcast(channel) != 0 && rc.readBroadcast(channel + 1) == 0) {
                 rc.broadcast(channel + 1, attacker.ID);
                 rc.broadcast(channel + 2, (int) attacker.location.x);
@@ -350,9 +355,9 @@ public class Gardener extends Globals {
               }
             }
             if (!calledForBackup) {
-              rc.broadcast(ATTACK_START_CHANNEL + 1, attacker.ID);
-              rc.broadcast(ATTACK_START_CHANNEL + 2, (int) attacker.location.x);
-              rc.broadcast(ATTACK_START_CHANNEL + 3, (int) attacker.location.y);
+              rc.broadcast(DEFENSE_START_CHANNEL + 1, attacker.ID);
+              rc.broadcast(DEFENSE_START_CHANNEL + 2, (int) attacker.location.x);
+              rc.broadcast(DEFENSE_START_CHANNEL + 3, (int) attacker.location.y);
               calledForBackup = true;
             }
           }
