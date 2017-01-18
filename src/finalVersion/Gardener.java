@@ -12,11 +12,15 @@ public class Gardener extends Globals {
   private static Direction startDirection = null;
   private static boolean production_gardener = false;
   private static boolean hasReportedDeath = false;
+  private static MapLocation queuedMove = null;
 
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
     float sumX = 0;
     float sumY = 0;
     for (BulletInfo i : bullets) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        break;
+      }
       MapLocation endLocation = i.location.add(i.getDir(), i.getSpeed());
       float x0 = i.location.x;
       float y0 = i.location.y;
@@ -44,6 +48,9 @@ public class Gardener extends Globals {
     }
 
     for (RobotInfo r : robots) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        break;
+      }
       Direction their_direction = r.location.directionTo(here);
       float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(r.location)
           + r.getRadius())
@@ -59,9 +66,13 @@ public class Gardener extends Globals {
       sumY += their_direction.getDeltaY(their_distance);
     }
 
+    // TODO add check to ensure NEUTRAL_TREE_MAX_RADIUS does not exceed sensorRadius
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees(GameConstants.NEUTRAL_TREE_MAX_RADIUS);
     if (nearbyTrees.length <= 10) {
       for (TreeInfo t : nearbyTrees) {
+        if (Clock.getBytecodesLeft() < 3000) {
+          break;
+        }
         Direction their_direction = t.location.directionTo(here);
         float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location)
             + t.getRadius())
@@ -73,7 +84,7 @@ public class Gardener extends Globals {
       }
     }
 
-    if (!(Clock.getBytecodesLeft() < 2000)) {
+    if (Clock.getBytecodesLeft() >= 2000) {
       float sightRadius = RobotType.GARDENER.sensorRadius - 1;
       updateMapBoundaries();
       if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
@@ -168,10 +179,14 @@ public class Gardener extends Globals {
       rc.move(finalDir);
     }
     else {
-      while (!rc.canMove(finalDir)) {
+      int attempts = 0;
+      while (attempts < 10 && !rc.canMove(finalDir)) {
         finalDir = finalDir.rotateLeftDegrees(20);
+        ++attempts;
       }
-      rc.move(finalDir);
+      if (rc.canMove(finalDir)) {
+        rc.move(finalDir);
+      }
     }
   }
 
@@ -246,7 +261,6 @@ public class Gardener extends Globals {
     // Initial setup moves to a clear spot and spawns 3 scouts
     try {
       startDirection = RobotUtils.randomDirection();
-      int producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
       int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
       int requiredProductionGardeners = rc.readBroadcast(PRODUCTION_GARDENERS_CHANNEL);
       if (productionGardeners < requiredProductionGardeners) {
@@ -262,7 +276,13 @@ public class Gardener extends Globals {
       try {
         Globals.update();
         int unitCount = rc.readBroadcast(EARLY_UNITS_CHANNEL);
-        if (currentRoundNum < 100 && unitCount < 4) {
+        if (queuedMove != null) {
+          if (!rc.hasMoved() && rc.canMove(queuedMove)) {
+            rc.move(queuedMove);
+          }
+          queuedMove = null;
+        }
+        if (currentRoundNum < 100 && unitCount < 3) {
           checkspace();
           if (unitCount == 2) {
             if (spawnRobot(RobotType.SOLDIER)) {
@@ -286,7 +306,12 @@ public class Gardener extends Globals {
             }
             //MapLocation openLoc = here.add(possibleTrees()[0]);
             //System.out.println(openLoc);
-            RobotUtils.tryMove(d, 10, 18);
+            if (!rc.hasMoved() && !RobotUtils.tryMove(d, 5, 18)) {
+              MapLocation openLoc = here.add(possibleTrees()[0]);
+              if (rc.canMove(openLoc)) {
+                rc.move(openLoc);
+              }
+            }
           }
           else {
             BulletInfo[] bullets = rc.senseNearbyBullets();
@@ -294,6 +319,9 @@ public class Gardener extends Globals {
               boolean willGetHitByBullet = false;
               TreeInfo[] trees = rc.senseNearbyTrees();
               for (BulletInfo i : bullets) {
+                if (Clock.getBytecodesLeft() < 2000) {
+                  break;
+                }
                 if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)) {
                   System.out.println("in danger");
                   willGetHitByBullet = true;
@@ -315,6 +343,13 @@ public class Gardener extends Globals {
           }
           Direction[] freeSpaces = possibleTrees();
           if (freeSpaces[1] != null && rc.canPlantTree(freeSpaces[1])) {
+            if (!rc.hasMoved() && rc.canMove(freeSpaces[1], 0.3f)) {
+              rc.move(freeSpaces[1], 0.3f);
+              queuedMove = here;
+            }
+            else {
+              queuedMove = here.add(freeSpaces[1].opposite(), 0.3f);
+            }
             rc.plantTree(freeSpaces[1]);
             plant = true;
           }
@@ -325,7 +360,8 @@ public class Gardener extends Globals {
               rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
             }
           }
-          TreeInfo[] nearbyTrees = rc.senseNearbyTrees(2, us);
+          // TODO do not water tree with scout in it
+          TreeInfo[] nearbyTrees = rc.senseNearbyTrees(3f, us);
           if (nearbyTrees != null && nearbyTrees.length != 0) {
             TreeInfo minWaterable = nearbyTrees[0];
             for (TreeInfo x : nearbyTrees) {
