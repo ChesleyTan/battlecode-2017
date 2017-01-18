@@ -22,8 +22,8 @@ public class Gardener extends Globals {
       float y0 = i.location.y;
       float x1 = endLocation.x;
       float y1 = endLocation.y;
-      float a = x1 - x0;
-      float b = y0 - y1;
+      float a = y0 - y1;
+      float b = x1 - y0;
       if (a == 0 && b == 0) {
         a = 0.01f;
       }
@@ -262,7 +262,7 @@ public class Gardener extends Globals {
       try {
         Globals.update();
         int unitCount = rc.readBroadcast(EARLY_UNITS_CHANNEL);
-        if (currentRoundNum < 100 && unitCount < 3) {
+        if (currentRoundNum < 100 && unitCount < 4) {
           checkspace();
           if (unitCount == 2) {
             if (spawnRobot(RobotType.SOLDIER)) {

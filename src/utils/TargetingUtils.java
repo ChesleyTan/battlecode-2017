@@ -20,7 +20,7 @@ public class TargetingUtils extends Globals {
     if (targetDir == null) {
       return false;
     }
-    float distanceTarget = shooterLoc.distanceTo(target.location);
+    float distanceTarget = shooterLoc.distanceTo(target.location) - target.getRadius();
     MapLocation outerEdge = shooterLoc.add(targetDir, myType.bodyRadius + 0.1f);
     RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
     for (RobotInfo r : friendlies) {

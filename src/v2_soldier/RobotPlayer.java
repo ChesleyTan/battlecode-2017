@@ -6,6 +6,7 @@ import finalVersion.Scout;
 import finalVersion.Archon;
 import finalVersion.Lumberjack;
 import finalVersion.Tank;
+import finalVersion.Soldier;
 import utils.Globals;
 import utils.RobotUtils;
 

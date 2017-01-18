@@ -20,8 +20,9 @@ public class Soldier extends Globals {
     float sumY = 0;
     if (targetLocation != null){
       Direction toTarget = here.directionTo(targetLocation);
-      sumX = toTarget.getDeltaX(myType.strideRadius);
-      sumY = toTarget.getDeltaY(myType.strideRadius);
+      float distTarget = here.distanceTo(targetLocation);
+      sumX = toTarget.getDeltaX(distTarget / myType.sensorRadius * myType.strideRadius);
+      sumY = toTarget.getDeltaY(distTarget / myType.sensorRadius * myType.strideRadius);
     }
     for (BulletInfo i : bullets) {
       MapLocation endLocation = i.location.add(i.getDir(), i.getSpeed());
@@ -29,22 +30,25 @@ public class Soldier extends Globals {
       float y0 = i.location.y;
       float x1 = endLocation.x;
       float y1 = endLocation.y;
-      float a = x1 - x0;
-      float b = y0 - y1;
+      float a = y0 - y1;
+      float b = x1 - x0;
       if (a == 0 && b == 0){
         a = 0.01f;
       }
       float c = x0 * y1 - y0 * x1;
       float distance = (float) (Math.abs(a * here.x + b * here.y + c)
-          / Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)));
-      if (distance < 2) {
+          / Math.sqrt(a * a + b * b));
+      if (distance <= 2.5){
         float x2 = (float) ((b * (b * here.x - a * here.y) - a * c)
-            / (Math.pow(a, 2) + Math.pow(b, 2)));
+            / (a * a + b * b));
         float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
             / (Math.pow(a, 2) + Math.pow(b, 2)));
         Direction away = new MapLocation(x2, y2).directionTo(here);
-        float weighted = (float) Math.pow((RobotType.SOLDIER.bulletSightRadius - distance), 2)
-            / myType.bulletSightRadius / myType.bulletSightRadius * RobotType.SOLDIER.strideRadius;
+        System.out.println("distance: " + distance);
+        float weighted = (float) Math.pow((RobotType.SOLDIER.bulletSightRadius - distance / myType.bulletSightRadius), 2);
+        //float weighted = RobotType.SOLDIER.bulletSightRadius / distance;
+        System.out.println("weighted: " + weighted); 
+        rc.setIndicatorDot(here.add(away,  1), 255, 0, 0);
         sumX += away.getDeltaX(weighted);
         sumY += away.getDeltaY(weighted);
       }
@@ -52,10 +56,8 @@ public class Soldier extends Globals {
 
     for (RobotInfo r : robots) {
       Direction their_direction = r.location.directionTo(here);
-      float baseValue = (RobotType.SOLDIER.sensorRadius - here.distanceTo(r.location) + r.getRadius()) * (RobotType.SOLDIER.sensorRadius - here.distanceTo(r.location) + r.getRadius());
-      float their_distance = baseValue /myType.sensorRadius / myType.sensorRadius * RobotType.SOLDIER.strideRadius;
-      rc.setIndicatorDot(here.add(their_direction,  their_distance), 255, 0, 0);
-      //System.out.println(their_distance);
+      float their_distance = ((RobotType.SOLDIER.sensorRadius - here.distanceTo(r.location) + r.getRadius())) * ((RobotType.SOLDIER.sensorRadius - here.distanceTo(r.location) + r.getRadius()));
+      System.out.println(their_distance);
       if (r.getTeam() == us){
         their_distance = their_distance / 2;
       }
@@ -67,8 +69,8 @@ public class Soldier extends Globals {
     if(nearbyTrees.length <= 10){
       for (TreeInfo t : nearbyTrees) {
         Direction their_direction = t.location.directionTo(here);
-        float baseValue = (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius()) * (RobotType.GARDENER.sensorRadius - here.distanceTo(t.location) + t.getRadius());
-        float their_distance = baseValue / RobotType.GARDENER.sensorRadius / myType.sensorRadius * RobotType.GARDENER.strideRadius;
+        float baseValue = ((myType.sensorRadius - here.distanceTo(t.location) + t.getRadius())) * ((myType.sensorRadius - here.distanceTo(t.location) + t.getRadius()));
+        float their_distance = baseValue * myType.strideRadius;
         sumX += their_direction.getDeltaX(their_distance);
         sumY += their_direction.getDeltaY(their_distance);
       }
@@ -79,36 +81,36 @@ public class Soldier extends Globals {
       updateMapBoundaries();
       if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
         float distance = (here.x - minX) * (here.x - minX);
-        float weightedDistance = distance / sightRadius / sightRadius * myType.strideRadius;
+        float weightedDistance = distance / sightRadius * myType.strideRadius;
         sumX += weightedDistance;
       }
       if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sightRadius, here.y))) {
         float distance = (maxX - here.x) * (maxX - here.x);
-        float weightedDistance = distance / sightRadius / sightRadius * myType.strideRadius;
+        float weightedDistance = distance / sightRadius * myType.strideRadius;
         sumX -= weightedDistance;
       }
       if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sightRadius))) {
         float distance = (here.y - minY) * (here.y - minY);
-        float weightedDistance = distance / sightRadius / sightRadius * myType.strideRadius;
+        float weightedDistance = distance / sightRadius * myType.strideRadius;
         sumY += weightedDistance;
       }
       if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sightRadius))) {
         float distance = (maxY - here.y) * (maxY - here.y);
-        float weightedDistance = distance / sightRadius / sightRadius * myType.strideRadius;
+        float weightedDistance = distance / sightRadius * myType.strideRadius;
         sumY -= weightedDistance;
       }
     }
-    float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
+    //float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
 
     Direction finalDir = new Direction(sumX, sumY);
-    RobotUtils.tryMoveDist(finalDir, finaldist, 10, 6);
+    RobotUtils.tryMove(finalDir, 10, 6);
   }
   
   private static void findSquad() throws GameActionException {
     int i = DEFENSE_START_CHANNEL;
     while (i < DEFENSE_END_CHANNEL) {
       int squad_count = rc.readBroadcast(i);
-      // System.out.println(squad_count);
+      System.out.println(squad_count);
       if (squad_count == 0) {
         // Clear out target field
         rc.broadcast(i + 1, -1);
@@ -162,9 +164,10 @@ public class Soldier extends Globals {
    * Makes no assumption about movement
    */
   private static void attack() throws GameActionException{
+    System.out.println("attacking");
     if(!rc.hasMoved()){
       BulletInfo[] bullets = rc.senseNearbyBullets();
-      RobotInfo[] robots = rc.senseNearbyRobots(-1, them);
+      RobotInfo[] robots = rc.senseNearbyRobots(-1, us);
       MapLocation targetLocation = target.location;
       dodge(bullets, robots, targetLocation);
     }
@@ -322,7 +325,7 @@ public class Soldier extends Globals {
         value = 0;
         break;
       }
-      // System.out.println("Value: " + value);
+      System.out.println("Value: " + value);
       if (value > currValue) {
         currValue = value;
         result = i;
