@@ -43,7 +43,11 @@ public class Soldier extends Globals {
             / (a * a + b * b));
         float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
             / (Math.pow(a, 2) + Math.pow(b, 2)));
+        MapLocation destLocation = new MapLocation(x2,y2);
         Direction away = new MapLocation(x2, y2).directionTo(here);
+        if (away == null){
+          away = here.directionTo(i.getLocation()).rotateLeftDegrees(90);
+        }
         System.out.println("distance: " + distance);
         float weighted = (float) Math.pow((RobotType.SOLDIER.bulletSightRadius - distance / myType.bulletSightRadius), 2);
         //float weighted = RobotType.SOLDIER.bulletSightRadius / distance;
@@ -163,7 +167,7 @@ public class Soldier extends Globals {
    * Assumes target has already been seen and is a local variable
    * Makes no assumption about movement
    */
-  private static void attack() throws GameActionException{
+  private static void attack(RobotInfo target) throws GameActionException{
     System.out.println("attacking");
     if(!rc.hasMoved()){
       BulletInfo[] bullets = rc.senseNearbyBullets();
@@ -175,9 +179,6 @@ public class Soldier extends Globals {
       Direction towardsEnemy = here.directionTo(target.location);
       if (here.distanceTo(target.location) <= 3.5){
         rc.fireTriadShot(towardsEnemy);
-      }
-      else{
-        rc.fireSingleShot(towardsEnemy);
       }
     }
   }
@@ -193,13 +194,13 @@ public class Soldier extends Globals {
       target = rc.senseRobot(targetID);
       rc.broadcast(squad_channel + 2, (int)target.location.x);
       rc.broadcast(squad_channel + 3, (int)target.location.y);
-      attack();
+      attack(target);
     }
     else if (enemies.length != 0){
       int index = priority(enemies);
       if (index != -1){
         target = enemies[priority(enemies)];
-        attack();
+        attack(target);
       }
     }
     else{
@@ -370,7 +371,7 @@ public class Soldier extends Globals {
               rc.broadcast(squad_channel + 1, target.ID);
               rc.broadcast(squad_channel + 2, (int)target.location.x);
               rc.broadcast(squad_channel + 3, (int)target.location.y);
-              attack();
+              attack(target);
             }
             else{
               int ogTarget = rc.readBroadcast(squad_channel + 1);
