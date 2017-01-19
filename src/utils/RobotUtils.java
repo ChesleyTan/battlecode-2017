@@ -149,7 +149,7 @@ public class RobotUtils extends Globals {
       else{
         bugStart(target);
       }
-      return bugMove();
+      bugMove();
     }
     
   }
