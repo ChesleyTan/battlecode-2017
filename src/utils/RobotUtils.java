@@ -9,17 +9,18 @@ public class RobotUtils extends Globals {
   private static final int LEFT = 0;
   private static final int RIGHT = 1;
   private static MapLocation bugStartLocation;
+  private static MapLocation bugDestinationLocation;
   private static int bugState = DIRECT;
   private static int wallSide;
   private static Direction bugStartDirection;
   private static Direction lastDirection;
   
   
-  public static void bugStart(Direction dir){
+  public static void bugStart(MapLocation finalLoc){
     bugStartLocation = here;
     bugState = BUG;
-    bugStartDirection = dir;
-    if (dir.getDeltaX(1) * dir.getDeltaY(1) > 0){
+    bugStartDirection = here.directionTo(finalLoc);
+    if (bugStartDirection.getDeltaX(1) * bugStartDirection.getDeltaY(1) > 0){
       wallSide = RIGHT;
     }
     else{
@@ -29,8 +30,9 @@ public class RobotUtils extends Globals {
   
   public static boolean bugMove() throws GameActionException{
     System.out.println("bugging");
+    bugStartDirection = here.directionTo(bugDestinationLocation);
     System.out.println("start direction: " + bugStartDirection.getAngleDegrees());
-    if (rc.canMove(bugStartDirection)){
+    if (rc.canMove(here.directionTo(bugDestinationLocation))){
       rc.move(bugStartDirection);
       bugStartLocation = null;
       bugState = DIRECT;
@@ -80,6 +82,7 @@ public class RobotUtils extends Globals {
     }
   }
 
+
   public static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
       throws GameActionException {
     
@@ -90,27 +93,6 @@ public class RobotUtils extends Globals {
     if (rc.canMove(dir)) {
       rc.move(dir);
       return true;
-    }
-    
-    MapLocation finalLoc = here.add(dir, myType.strideRadius);
-    TreeInfo[] trees = rc.senseNearbyTrees(myType.strideRadius + myType.bodyRadius);
-    if (trees.length != 0){
-      for(TreeInfo t : trees){
-        if (finalLoc.distanceTo(t.location) - myType.bodyRadius < t.radius){
-          bugStart(dir);
-          return bugMove();
-        }
-      }
-    }
-    
-    RobotInfo[] robots = rc.senseNearbyRobots(myType.strideRadius + myType.bodyRadius);
-    if (robots.length != 0){
-      for(RobotInfo r : robots){
-        if (finalLoc.distanceTo(r.location) - myType.bodyRadius < r.getType().bodyRadius){
-          bugStart(dir);
-          return bugMove();
-        }
-      }
     }
 
     // Now try a bunch of similar angles
@@ -139,8 +121,27 @@ public class RobotUtils extends Globals {
     // A move never happened, so return false.
     return false;
   }
+  
+  public static void endBug(){
+    bugStartDirection = null;
+    bugDestinationLocation = null;
+    bugStartLocation = null;
+    bugState = DIRECT;
+  }
+  
   //TODO: IMPLEMENT THIS.
-  public static void tryMoveDestination(MapLocation target){
+  public static void tryMoveDestination(MapLocation target) throws GameActionException{
+    bugStartDirection = here.directionTo(target);
+    if(rc.canMove(bugStartDirection)){
+      rc.move(bugStartDirection);
+      if (bugState == BUG){
+        endBug();
+      }
+    }
+    else{
+      if (bugState == BUG){
+      }
+    }
     
   }
   public static boolean tryMoveDist(Direction dir, float distance, float degreeOffset,
