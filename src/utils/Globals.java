@@ -25,6 +25,9 @@ public class Globals {
   public static final int ATTACK_BLOCK_WIDTH = 5;
   public static final int PRODUCTION_GARDENERS_CHANNEL = 101;
   public static final int PRODUCED_PRODUCTION_GARDENERS_CHANNEL = 102;
+  public static final int DIRECTIVE_START_CHANNEL = 0;
+  public static final int MAP_X_BOUNDS_CHANNEL = 900;
+  public static final int MAP_Y_BOUNDS_CHANNEL = 901;
   public static Direction NORTH, SOUTH, EAST, WEST;
   public static final int UNKNOWN = Integer.MIN_VALUE;
   public static int minX = UNKNOWN;

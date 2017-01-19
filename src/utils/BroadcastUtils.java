@@ -8,16 +8,11 @@ import static utils.Globals.rc;
 /**
  * Class that enables bots to easily read and write to the broadcast array.
  */
-public class BroadcastUtils {
+public class BroadcastUtils extends Globals {
 
-  public static final int DIRECTIVE_START_CHANNEL = 0;
   /** Number of maximum directives active */
   public static final int DIRECTIVE_NUM = 8;
 
-  public static final int MAP_X_BOUNDS_CHANNEL = 900;
-  public static final int MAP_Y_BOUNDS_CHANNEL = 901;
-
-  public static final int SQUAD_START_CHANNEL = 500;
 
 
   private static int hashID(int id) {

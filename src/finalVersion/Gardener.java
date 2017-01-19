@@ -282,61 +282,63 @@ public class Gardener extends Globals {
           }
           queuedMove = null;
         }
-        if (currentRoundNum < 100 && unitCount < 3) {
-          checkspace();
-          if (unitCount == 2) {
-            if (spawnRobot(RobotType.SOLDIER)) {
-              rc.broadcast(EARLY_UNITS_CHANNEL, 3);
-            }
-          }
-          else if (spawnRobot(RobotType.SCOUT)) {
-            rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
-          }
-        }
-        else if (production_gardener) {
-          checkspace();
-          spawnRobot(RobotType.SCOUT);
-        }
-        else {
-          Direction d = scoutOppDir();
-          if (d != null) {
-            System.out.println("scouts in trees, moving");
-            if (plant) {
-              plant = false;
-            }
-            //MapLocation openLoc = here.add(possibleTrees()[0]);
-            //System.out.println(openLoc);
-            if (!rc.hasMoved() && !RobotUtils.tryMove(d, 5, 18)) {
-              MapLocation openLoc = here.add(possibleTrees()[0]);
-              if (rc.canMove(openLoc)) {
-                rc.move(openLoc);
+        if (!rc.hasMoved()) {
+          if (currentRoundNum < 100 && unitCount < 3) {
+            checkspace();
+            if (unitCount == 2) {
+              if (spawnRobot(RobotType.SOLDIER)) {
+                rc.broadcast(EARLY_UNITS_CHANNEL, 3);
               }
             }
+            else if (spawnRobot(RobotType.SCOUT)) {
+              rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
+            }
+          }
+          else if (production_gardener) {
+            checkspace();
+            spawnRobot(RobotType.SCOUT);
           }
           else {
-            BulletInfo[] bullets = rc.senseNearbyBullets();
-            if (rc.getRoundNum() - spawnRound < 30 || bullets.length != 0) {
-              boolean willGetHitByBullet = false;
-              TreeInfo[] trees = rc.senseNearbyTrees();
-              for (BulletInfo i : bullets) {
-                if (Clock.getBytecodesLeft() < 2000) {
-                  break;
-                }
-                if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)) {
-                  System.out.println("in danger");
-                  willGetHitByBullet = true;
-                  break;
+            Direction d = scoutOppDir();
+            if (d != null) {
+              System.out.println("scouts in trees, moving");
+              if (plant) {
+                plant = false;
+              }
+              //MapLocation openLoc = here.add(possibleTrees()[0]);
+              //System.out.println(openLoc);
+              if (!rc.hasMoved() && !RobotUtils.tryMove(d, 5, 18)) {
+                MapLocation openLoc = here.add(possibleTrees()[0]);
+                if (rc.canMove(openLoc)) {
+                  rc.move(openLoc);
                 }
               }
-              if (willGetHitByBullet) {
-                RobotInfo[] robots = rc.senseNearbyRobots();
-                System.out.println("dodging");
-                dodge(bullets, robots);
-              }
-              else {
-                if ((!rc.onTheMap(here, detectRadius)
-                    || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius)) && !plant) {
-                  checkspace();
+            }
+            else {
+              BulletInfo[] bullets = rc.senseNearbyBullets();
+              if (rc.getRoundNum() - spawnRound < 30 || bullets.length != 0) {
+                boolean willGetHitByBullet = false;
+                TreeInfo[] trees = rc.senseNearbyTrees();
+                for (BulletInfo i : bullets) {
+                  if (Clock.getBytecodesLeft() < 2000) {
+                    break;
+                  }
+                  if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)) {
+                    System.out.println("in danger");
+                    willGetHitByBullet = true;
+                    break;
+                  }
+                }
+                if (willGetHitByBullet) {
+                  RobotInfo[] robots = rc.senseNearbyRobots();
+                  System.out.println("dodging");
+                  dodge(bullets, robots);
+                }
+                else {
+                  if ((!rc.onTheMap(here, detectRadius)
+                      || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius)) && !plant) {
+                    checkspace();
+                  }
                 }
               }
             }
@@ -350,8 +352,10 @@ public class Gardener extends Globals {
             else {
               queuedMove = here.add(freeSpaces[1].opposite(), 0.3f);
             }
-            rc.plantTree(freeSpaces[1]);
-            plant = true;
+            if (rc.canPlantTree(freeSpaces[1])) {
+              rc.plantTree(freeSpaces[1]);
+              plant = true;
+            }
           }
           else {
             int division_factor = (int) (154 / (rc.getTreeCount() + 1));
