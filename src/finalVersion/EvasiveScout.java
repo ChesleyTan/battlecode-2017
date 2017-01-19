@@ -157,9 +157,6 @@ public class EvasiveScout extends Globals {
       }
       */
       if (unsafeFromUnit || unsafeFromBullet) {
-        System.out.println("Unsafe, evading!");
-        System.out.println(unsafeFromUnit);
-        System.out.println(unsafeFromBullet);
         // Avoid corners and edges
         if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
           float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (here.x - minX));

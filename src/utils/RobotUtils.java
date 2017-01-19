@@ -66,7 +66,10 @@ public class RobotUtils extends Globals {
 
   public static void donateEverythingAtTheEnd() throws GameActionException {
     float bullets = rc.getTeamBullets();
-    if (currentRoundNum == penultimateRound || bullets >= 10000f) {
+    if (rc.getTeamVictoryPoints() + (bullets / 10) >= 1000) {
+      rc.donate(bullets);
+    }
+    else if (currentRoundNum == penultimateRound) {
       rc.donate(bullets);
     }
   }
