@@ -194,8 +194,8 @@ public class RobotUtils extends Globals {
     MapLocation myLocation = here;
 
     // Get relevant bullet information
-    Direction propagationDirection = bullet.dir;
-    MapLocation bulletLocation = bullet.location;
+    Direction propagationDirection = bullet.getDir();
+    MapLocation bulletLocation = bullet.getLocation();
 
     // Calculate bullet relations to this robot
     Direction directionToRobot = bulletLocation.directionTo(myLocation);

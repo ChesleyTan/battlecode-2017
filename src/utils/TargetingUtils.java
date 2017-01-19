@@ -1,8 +1,11 @@
 package utils;
 
-import battlecode.common.*;
-
-import static utils.Globals.rc;
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
+import battlecode.common.TreeInfo;
 
 /**
  * Targeting utilities to be used throughout the codebase.
@@ -10,40 +13,42 @@ import static utils.Globals.rc;
 public class TargetingUtils extends Globals {
 
   /**
-   * Determines if the shooter can shoot the target location without hitting friendlies or trees.
+   * Determines if the shooter can shoot the target location without hitting
+   * friendlies or trees.
    */
   public static boolean clearShot(MapLocation shooterLoc, RobotInfo target) {
     if (shooterLoc.equals(target)) {
       return false;
     }
-    Direction targetDir = shooterLoc.directionTo(target.location);
+    MapLocation targetLoc = target.getLocation();
+    Direction targetDir = shooterLoc.directionTo(targetLoc);
     if (targetDir == null) {
       return false;
     }
-    float distanceTarget = shooterLoc.distanceTo(target.location);
+    float distanceTarget = shooterLoc.distanceTo(targetLoc);
     MapLocation outerEdge = shooterLoc.add(targetDir, myType.bodyRadius + 0.1f);
     RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
     for (RobotInfo r : friendlies) {
       if (Clock.getBytecodesLeft() < 2000) {
         return false;
       }
-      if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, r.location,
-        r.getRadius())) {
+      if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, r.getLocation(),
+          r.getRadius())) {
         return false;
       }
     }
     TreeInfo[] trees = rc.senseNearbyTrees(distanceTarget);
-    if (target.type == RobotType.SCOUT) {
+    if (target.getType() == RobotType.SCOUT) {
       for (TreeInfo t : trees) {
         // TODO do we need an epsilon?
         if (Clock.getBytecodesLeft() < 2000) {
           return false;
         }
-        if (t.location.isWithinDistance(target.location, 1f)) {
+        if (t.getLocation().isWithinDistance(targetLoc, 1f)) {
           continue;
         }
-        else if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
-          t.getRadius())) {
+        else if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.getLocation(),
+            t.getRadius())) {
           return false;
         }
       }
@@ -53,8 +58,8 @@ public class TargetingUtils extends Globals {
         if (Clock.getBytecodesLeft() < 2000) {
           return false;
         }
-        if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.location,
-          t.getRadius()) && here.distanceTo(t.location) - t.radius < distanceTarget - target.getRadius()) {
+        if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.getLocation(),
+          t.getRadius()) && here.distanceTo(t.getLocation()) - t.getRadius() < distanceTarget - target.getRadius()) {
           return false;
         }
       }
@@ -62,7 +67,8 @@ public class TargetingUtils extends Globals {
     return true;
   }
 
-  public static MapLocation getLinearTargetPoint(MData target, MapLocation shooter, double bulletSpeed) {
+  public static MapLocation getLinearTargetPoint(MData target, MapLocation shooter,
+      double bulletSpeed) {
     //LINEAR TARGETING ALGORITHM//////
     double targetBearing = target.getAngle();
     double targetSpeed = target.getSpeed();
@@ -72,26 +78,28 @@ public class TargetingUtils extends Globals {
     double shooterY = shooter.y;
 
     double A = (targetX - shooterX) / bulletSpeed;
-    double B = targetSpeed/bulletSpeed*Math.cos(targetBearing);
+    double B = targetSpeed / bulletSpeed * Math.cos(targetBearing);
     double C = (targetY - shooterY) / bulletSpeed;
-    double D = targetSpeed/bulletSpeed*Math.sin(targetBearing);
+    double D = targetSpeed / bulletSpeed * Math.sin(targetBearing);
 
-    double a = A*A + C*C;
-    double b = 2*(A*B + C*D);
-    double c = B*B + D*D - 1;
+    double a = A * A + C * C;
+    double b = 2 * (A * B + C * D);
+    double c = B * B + D * D - 1;
 
-    double discriminant = b*b - 4*a*c;
+    double discriminant = b * b - 4 * a * c;
 
     if (discriminant >= 0) {
       //below we have gotten two possible time values
-      double t1 = 2*a / (-b + Math.sqrt(discriminant));
-      double t2 = 2*a / (-b - Math.sqrt(discriminant));
+      double t1 = 2 * a / (-b + Math.sqrt(discriminant));
+      double t2 = 2 * a / (-b - Math.sqrt(discriminant));
 
       //determine which one to use based on which is closer to zero but positive
       double time = (Math.min(t1, t2) >= 0) ? Math.min(t1, t2) : Math.max(t1, t2);
       return target.predictPositionLinear(time);
-    } else {
-      System.out.println("Discriminant < 0 !!!! Linear Prediction resorting to direct prediction...");
+    }
+    else {
+      System.out
+          .println("Discriminant < 0 !!!! Linear Prediction resorting to direct prediction...");
       return target.getLocation();
     }
   }

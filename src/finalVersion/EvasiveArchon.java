@@ -32,8 +32,8 @@ public strictfp class EvasiveArchon extends Globals {
       RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
       float[] directionWeights = new float[12];
       for (RobotInfo ri : nearbyRobots) {
-        if (ri.type.canAttack()) {
-          Direction enemyAngle = here.directionTo(ri.location);
+        if (ri.getType().canAttack()) {
+          Direction enemyAngle = here.directionTo(ri.getLocation());
   /*
           if (DEBUG) {
             System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
@@ -44,15 +44,22 @@ public strictfp class EvasiveArchon extends Globals {
             if (angleDelta > 70) {
               continue;
             }
-            float weightOffset;
-            if (ri.type == RobotType.SCOUT) {
-               weightOffset = (100 * (70 - angleDelta));
-            }
-            else if (ri.type == RobotType.SOLDIER) {
-               weightOffset = (150 * (70 - angleDelta));
-            }
-            else {
-               weightOffset = (200 * (70 - angleDelta));
+            float weightOffset = 0f;
+            switch (ri.getType()) {
+              case SCOUT:
+                weightOffset = (100 * (70 - angleDelta));
+                break;
+              case SOLDIER:
+                weightOffset = (150 * (70 - angleDelta));
+                break;
+              case LUMBERJACK:
+                weightOffset = (200 * (70 - angleDelta));
+                break; 
+              case TANK:
+                weightOffset = (200 * (70 - angleDelta));
+                break; 
+              default:
+                break;
             }
             directionWeights[angleIndex] -= weightOffset;
             /*
@@ -72,7 +79,7 @@ public strictfp class EvasiveArchon extends Globals {
           rc.shake(ti.location);
         }
         */
-        Direction treeAngle = here.directionTo(ti.location);
+        Direction treeAngle = here.directionTo(ti.getLocation());
         /*
         if (DEBUG) {
           System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
@@ -91,42 +98,48 @@ public strictfp class EvasiveArchon extends Globals {
       }
       BulletInfo[] nearbyBullets = rc.senseNearbyBullets(BULLET_DETECT_RADIUS);
       // TODO don't move if it guarantees you will be hit by a bullet?
-      int numBulletsAnalyzed = 0;
-      for (int i = 0; i < nearbyBullets.length && numBulletsAnalyzed < 5; ++i) {
+      for (int i = 0; i < nearbyBullets.length; ++i) {
+        if (Clock.getBytecodesLeft() < 2000) {
+          break;
+        }
         BulletInfo bi = nearbyBullets[i];
         // Get relevant bullet information
-        Direction propagationDirection = bi.dir;
-        MapLocation bulletLocation = bi.location;
+        Direction propagationDirection = bi.getDir();
+        MapLocation bulletLocation = bi.getLocation();
         if (DEBUG) {
           System.out.println("Bullet direction: " + propagationDirection);
         }
-        boolean couldCollide = false;
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-          // Calculate bullet relations to this robot
-          Direction directionToRobot = bulletLocation.directionTo(moveLocations[angleIndex]);
-          float theta = propagationDirection.radiansBetween(directionToRobot);
-          // If theta > 90 degrees, then the bullet is traveling away from us and we can continue
-          if (Math.abs(theta) > Math.PI / 2) {
-            continue;
-          }
-          couldCollide = true;
-          // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
-          // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
-          // This corresponds to the smallest radius circle centered at our location that would intersect with the
-          // line that is the path of the bullet.
+          // Calculate bullet relations to this roboletLocation.distanceTo(moveLocations[angleIndex]);
+          boolean willCollide = false;
           float distToRobot = bulletLocation.distanceTo(moveLocations[angleIndex]);
-          float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta));
-          boolean willCollide = (perpendicularDist <= myType.bodyRadius);
+          if (distToRobot < myType.bodyRadius) {
+            willCollide = true;
+          }
+          else {
+            Direction directionToRobot = bulletLocation.directionTo(moveLocations[angleIndex]);
+            float theta = propagationDirection.radiansBetween(directionToRobot);
+            // Make sure we don't collide into our own bullets!
+            // If theta > 90 degrees, then the bullet is traveling away from us and we can continue
+            if (Math.abs(theta) > Math.PI / 2) {
+              continue;
+            }
+            // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
+            // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
+            // This corresponds to the smallest radius circle centered at our location that would intersect with the
+            // line that is the path of the bullet.
+            float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta));
+            willCollide = (perpendicularDist <= myType.bodyRadius);
+          }
           if (willCollide) {
             directionWeights[angleIndex] -= (10000
                 + 1000 * (myType.strideRadius + BULLET_DETECT_RADIUS - distToRobot));
+            /*
             if (DEBUG) {
               System.out.println("Angle " + (angleIndex * 30) + " is unsafe.");
             }
+            */
           }
-        }
-        if (couldCollide) {
-          ++numBulletsAnalyzed;
         }
       }
       updateMapBoundaries();
@@ -166,6 +179,8 @@ public strictfp class EvasiveArchon extends Globals {
           directionWeights[angleIndex] -= weightOffset;
         }
       }
+      // Increase preference for last direction moved,
+      // helps prevent getting trapped in an oscillation
       if (lastMoveAngleIndex >= 0) {
         directionWeights[lastMoveAngleIndex] += 5000;
       }
@@ -177,19 +192,6 @@ public strictfp class EvasiveArchon extends Globals {
         }
       }
       */
-      // TODO avoid corners using messaging
-      /*
-      // Generate a random direction
-      Direction dir = RobotPlayer.randomDirection();
-      
-      // Randomly attempt to build a gardener in this direction
-      if (rc.canHireGardener(dir)) {
-          rc.hireGardener(dir);
-      }
-      */
-
-      // Increase preference for last direction moved,
-      // helps prevent getting trapped in an oscillation
 
       int moveAngleIndex = 0;
       int attempts = 0;

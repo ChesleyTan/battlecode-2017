@@ -23,7 +23,6 @@ public class EvasiveScout extends Globals {
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
-      //int startBytecodes = Clock.getBytecodeNum();
       /*
       if (DEBUG) {
         System.out.println("========== Round: " + rc.getRoundNum() + "==========");
@@ -38,40 +37,44 @@ public class EvasiveScout extends Globals {
       boolean unsafeFromUnit = false;
       for (RobotInfo ri : nearbyRobots) {
         // Only avoid lumberjacks if within 3 units away
-        if (ri.type.canAttack() && (ri.type != RobotType.LUMBERJACK) || (here.distanceTo(ri.location) < 5f)) {
+        if (ri.getType().canAttack() && ((ri.getType() != RobotType.LUMBERJACK) || (here.distanceTo(ri.getLocation()) < 5f))) {
           unsafeFromUnit = true;
-          Direction enemyAngle = here.directionTo(ri.location);
+          Direction enemyAngle = here.directionTo(ri.getLocation());
           /*
           if (DEBUG) {
             System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
           }
           */
           for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {
-            // TODO add weight for other units or optimize this loop
             float angleDelta = Math.abs(enemyAngle.degreesBetween(angleDirections[angleIndex]));
             if (angleDelta > 70) {
               continue;
             }
             float distBetween = moveLocations[angleIndex].distanceTo(ri.location);
-            if (ri.type == RobotType.LUMBERJACK) {
-              float weightOffset = (150 * (70 - angleDelta))
-                  + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
-              directionWeights[angleIndex] -= weightOffset;
-            }
-            else if (ri.type == RobotType.SOLDIER) {
-              float weightOffset = (150 * (70 - angleDelta))
-                  + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
-              directionWeights[angleIndex] -= weightOffset;
-            }
-            else if (ri.type == RobotType.SCOUT) {
-              float weightOffset = (50 * (70 - angleDelta))
-                  + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
-              directionWeights[angleIndex] -= weightOffset;
-            }
-            else if (ri.type == RobotType.TANK) {
-              float weightOffset = (200 * (70 - angleDelta))
-                  + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
-              directionWeights[angleIndex] -= weightOffset;
+            float weightOffset;
+            switch (ri.getType()) {
+              case LUMBERJACK:
+                weightOffset = (150 * (70 - angleDelta))
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                directionWeights[angleIndex] -= weightOffset;
+                break;
+              case SOLDIER:
+                weightOffset = (150 * (70 - angleDelta))
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                directionWeights[angleIndex] -= weightOffset;
+                break;
+              case SCOUT:
+                weightOffset = (50 * (70 - angleDelta))
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                directionWeights[angleIndex] -= weightOffset;
+                break;
+              case TANK:
+                weightOffset = (200 * (70 - angleDelta))
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                directionWeights[angleIndex] -= weightOffset;
+                break;
+              default:
+                break;
             }
             /*
             if (DEBUG) {
@@ -88,13 +91,14 @@ public class EvasiveScout extends Globals {
         if (Clock.getBytecodesLeft() < 2000) {
           break;
         }
+        //int startBytecodes = Clock.getBytecodeNum();
         BulletInfo bi = nearbyBullets[i];
         if (!unsafeFromBullet && RobotUtils.willCollideWithMe(bi)) {
           unsafeFromBullet = true;
         }
         // Get relevant bullet information
-        Direction propagationDirection = bi.dir;
-        MapLocation bulletLocation = bi.location;
+        Direction propagationDirection = bi.getDir();
+        MapLocation bulletLocation = bi.getLocation();
         /*
         if (DEBUG) {
           System.out.println("Bullet direction: " + propagationDirection);
@@ -133,6 +137,7 @@ public class EvasiveScout extends Globals {
             */
           }
         }
+        //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
       }
       updateMapBoundaries();
       /*
@@ -152,6 +157,9 @@ public class EvasiveScout extends Globals {
       }
       */
       if (unsafeFromUnit || unsafeFromBullet) {
+        System.out.println("Unsafe, evading!");
+        System.out.println(unsafeFromUnit);
+        System.out.println(unsafeFromBullet);
         // Avoid corners and edges
         if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
           float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (here.x - minX));
@@ -219,7 +227,6 @@ public class EvasiveScout extends Globals {
         } while (!moved && ++attempts <= 6);
         return moved;
       }
-      //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
       /*
       if (DEBUG) {
         System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());

@@ -21,7 +21,8 @@ public class Gardener extends Globals {
       if (Clock.getBytecodesLeft() < 3000) {
         break;
       }
-      MapLocation endLocation = i.location.add(i.getDir(), i.getSpeed());
+      int startBytecodes = Clock.getBytecodeNum();
+      MapLocation endLocation = i.getLocation().add(i.getDir(), i.getSpeed());
       float x0 = i.location.x;
       float y0 = i.location.y;
       float x1 = endLocation.x;
@@ -45,6 +46,7 @@ public class Gardener extends Globals {
         sumX += away.getDeltaX(weighted);
         sumY += away.getDeltaY(weighted);
       }
+      System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
     }
 
     for (RobotInfo r : robots) {
