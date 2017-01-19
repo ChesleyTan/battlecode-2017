@@ -20,6 +20,7 @@ public class RobotUtils extends Globals {
     bugStartLocation = here;
     bugState = BUG;
     bugStartDirection = here.directionTo(finalLoc);
+    bugDestinationLocation = finalLoc;
     if (bugStartDirection.getDeltaX(1) * bugStartDirection.getDeltaY(1) > 0){
       wallSide = RIGHT;
     }
@@ -140,10 +141,16 @@ public class RobotUtils extends Globals {
     }
     else{
       if (bugState == BUG){
+        bugDestinationLocation = target;
       }
+      else{
+        bugStart(target);
+      }
+      return bugMove();
     }
     
   }
+  
   public static boolean tryMoveDist(Direction dir, float distance, float degreeOffset,
       int checksPerSide) throws GameActionException {
 

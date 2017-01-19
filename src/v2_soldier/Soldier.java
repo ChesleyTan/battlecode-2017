@@ -341,9 +341,9 @@ public class Soldier extends Globals {
             int xCor = rc.readBroadcast(squad_channel + 2);
             int yCor = rc.readBroadcast(squad_channel + 3);
             MapLocation destination = new MapLocation(xCor, yCor);
-            BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
+            /*BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
-            EvasiveSoldier.move(nearbyBullets, nearbyRobots, here.directionTo(destination));
+            EvasiveSoldier.move(nearbyBullets, nearbyRobots, here.directionTo(destination));*/
           }
         }
         else{
