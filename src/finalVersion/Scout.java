@@ -327,7 +327,9 @@ public class Scout extends Globals {
             }
           }
           boolean inTree = optimalLoc != null;
-          System.out.println("Found tree to perch in");
+          if (inTree) {
+            System.out.println("Found tree to perch in");
+          }
           // TODO how is this affected by perching?
           if (optimalLoc == null && !isPerchedInTree) {
             for (int i = 0; i < GARDENER_PENETRATION_ANGLES.length; ++i) {
@@ -354,11 +356,14 @@ public class Scout extends Globals {
           }
           if (optimalLoc != null) {
             boolean currentlyHasClearShot = clearShot(here, targetRobot);
+            System.out.println("Currently has clear shot: " + currentlyHasClearShot);
+            System.out.println("Is perched: " + isPerchedInTree);
             if ((!isPerchedInTree || !currentlyHasClearShot) && optimalDist > RobotType.SCOUT.strideRadius) {
               Direction optimalDir = here.directionTo(optimalLoc);
               MapLocation scaledLoc = here.add(optimalDir, RobotType.SCOUT.strideRadius);
               if (rc.canMove(scaledLoc) && isLocationSafe(nearbyBullets, scaledLoc)) {
                 rc.move(scaledLoc);
+                isPerchedInTree = false;
               }
               System.out.println("Moved towards optimal location");
             }
