@@ -108,7 +108,7 @@ public strictfp class EvasiveArchon extends Globals {
           // Calculate bullet relations to this roboletLocation.distanceTo(moveLocations[angleIndex]);
           boolean willCollide = false;
           float distToRobot = bulletLocation.distanceTo(moveLocations[angleIndex]);
-          if (distToRobot < myType.bodyRadius) {
+          if (distToRobot < RobotType.ARCHON.bodyRadius) {
             willCollide = true;
           }
           else {
@@ -124,11 +124,11 @@ public strictfp class EvasiveArchon extends Globals {
             // This corresponds to the smallest radius circle centered at our location that would intersect with the
             // line that is the path of the bullet.
             float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta));
-            willCollide = (perpendicularDist <= myType.bodyRadius);
+            willCollide = (perpendicularDist <= RobotType.ARCHON.bodyRadius);
           }
           if (willCollide) {
             directionWeights[angleIndex] -= (10000
-                + 1000 * (myType.strideRadius + BULLET_DETECT_RADIUS - distToRobot));
+                + 1000 * (RobotType.ARCHON.strideRadius + BULLET_DETECT_RADIUS - distToRobot));
             /*
             if (DEBUG) {
               System.out.println("Angle " + (angleIndex * 30) + " is unsafe.");
@@ -149,30 +149,35 @@ public strictfp class EvasiveArchon extends Globals {
       // Avoid corners and edges
       if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
         float weightOffset = 1200 * (EDGE_BIAS_RADIUS - (here.x - minX));
-        for (int angleIndex = 4; angleIndex < 9; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
+        directionWeights[4] -= weightOffset;
+        directionWeights[5] -= weightOffset;
+        directionWeights[6] -= weightOffset;
+        directionWeights[7] -= weightOffset;
+        directionWeights[8] -= weightOffset;
       }
       if (minY != UNKNOWN && here.y - minY < EDGE_BIAS_RADIUS) {
         float weightOffset = 1200 * (EDGE_BIAS_RADIUS - (here.y - minY));
-        for (int angleIndex = 7; angleIndex < 12; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
+        directionWeights[7] -= weightOffset;
+        directionWeights[8] -= weightOffset;
+        directionWeights[9] -= weightOffset;
+        directionWeights[10] -= weightOffset;
+        directionWeights[11] -= weightOffset;
       }
       if (maxX != UNKNOWN && maxX - here.x < EDGE_BIAS_RADIUS) {
         float weightOffset = 1200 * (EDGE_BIAS_RADIUS - (maxX - here.x));
-        for (int angleIndex = 0; angleIndex < 3; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
-        for (int angleIndex = 10; angleIndex < 12; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
+        directionWeights[0] -= weightOffset;
+        directionWeights[1] -= weightOffset;
+        directionWeights[2] -= weightOffset;
+        directionWeights[10] -= weightOffset;
+        directionWeights[11] -= weightOffset;
       }
       if (maxY != UNKNOWN && maxY - here.y < EDGE_BIAS_RADIUS) {
         float weightOffset = 1200 * (EDGE_BIAS_RADIUS - (maxY - here.y));
-        for (int angleIndex = 1; angleIndex < 6; ++angleIndex) {
-          directionWeights[angleIndex] -= weightOffset;
-        }
+        directionWeights[1] -= weightOffset;
+        directionWeights[2] -= weightOffset;
+        directionWeights[3] -= weightOffset;
+        directionWeights[4] -= weightOffset;
+        directionWeights[5] -= weightOffset;
       }
       // Increase preference for last direction moved,
       // helps prevent getting trapped in an oscillation

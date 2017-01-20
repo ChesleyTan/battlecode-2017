@@ -123,18 +123,21 @@ public class Gardener extends Globals {
    * Checks that there is enough space around the unit to begin planting
    */
   public static void checkspace() throws GameActionException {
-    Globals.update();
+    System.out.println("Calling checkspace()");
+    if (rc.hasMoved()) {
+      return;
+    }
     float sumX = 0;
     float sumY = 0;
 
     // Opposing forces created by Robots
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
     for (RobotInfo r : nearbyRobots) {
-      Direction their_direction = here.directionTo(r.location).opposite();
+      Direction their_direction = r.getLocation().directionTo(here);
       float their_distance = (float) Math
           .pow((RobotType.GARDENER.sensorRadius - here.distanceTo(r.location) + r.getRadius()), 2)
           / RobotType.GARDENER.sensorRadius * RobotType.GARDENER.strideRadius;
-      rc.setIndicatorDot(here.add(their_direction, their_distance), 255, 0, 0);
+      rc.setIndicatorDot(here.add(their_direction, their_distance), 255, 51, 153);
       if (r.getTeam() == us) {
         their_distance = their_distance / 2;
       }
@@ -178,19 +181,9 @@ public class Gardener extends Globals {
     }
 
     Direction finalDir = new Direction(sumX, sumY);
-    if (rc.canMove(finalDir) && !rc.hasMoved()) {
-      rc.move(finalDir);
-    }
-    else {
-      int attempts = 0;
-      while (attempts < 10 && !rc.canMove(finalDir)) {
-        finalDir = finalDir.rotateLeftDegrees(20);
-        ++attempts;
-      }
-      if (rc.canMove(finalDir)) {
-        rc.move(finalDir);
-      }
-    }
+    rc.setIndicatorLine(here, here.add(finalDir, 1.75f), 255, 51, 153);
+    rc.setIndicatorLine(here.add(finalDir, 1.75f), here.add(finalDir, 2f), 0, 0, 0);
+    RobotUtils.tryMove(finalDir, 5, 3);
   }
   
   
@@ -243,7 +236,7 @@ public class Gardener extends Globals {
   }
 
   private static boolean spawnRobot(RobotType t) throws GameActionException {
-    Direction randomDir = new Direction(rand.nextFloat() * 2 * (float) (Math.PI));
+    Direction randomDir = RobotUtils.randomDirection();
     int attempts = 0;
     while (!rc.canBuildRobot(t, randomDir) && attempts < 36) {
       randomDir = randomDir.rotateLeftDegrees(10);
@@ -469,6 +462,7 @@ public class Gardener extends Globals {
         }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
+        trackEnemyGardeners();
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

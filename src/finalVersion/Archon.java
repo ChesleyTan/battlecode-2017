@@ -51,13 +51,17 @@ public class Archon extends Globals {
           }
           EvasiveArchon.move();
         }
+        /*
         if (currentRoundNum > 2500 && rc.getTeamBullets() >= 1000) {
           float donationAmount = ((int) (rc.getTeamBullets() / 10)) * 10 - 640;
           rc.donate(donationAmount);
         }
+        */
         //System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
+        trackEnemyGardeners();
+        
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

@@ -39,7 +39,8 @@ public class EvasiveScout extends Globals {
         // Only avoid lumberjacks if within 3 units away
         if (ri.getType().canAttack() && ((ri.getType() != RobotType.LUMBERJACK) || (here.distanceTo(ri.getLocation()) < 5f))) {
           unsafeFromUnit = true;
-          Direction enemyAngle = here.directionTo(ri.getLocation());
+          MapLocation enemyLoc = ri.getLocation();
+          Direction enemyAngle = here.directionTo(enemyLoc);
           /*
           if (DEBUG) {
             System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
@@ -50,27 +51,27 @@ public class EvasiveScout extends Globals {
             if (angleDelta > 70) {
               continue;
             }
-            float distBetween = moveLocations[angleIndex].distanceTo(ri.location);
+            float distBetween = moveLocations[angleIndex].distanceTo(enemyLoc);
             float weightOffset;
             switch (ri.getType()) {
               case LUMBERJACK:
                 weightOffset = (150 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case SOLDIER:
                 weightOffset = (150 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case SCOUT:
                 weightOffset = (50 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case TANK:
                 weightOffset = (200 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               default:
@@ -108,7 +109,7 @@ public class EvasiveScout extends Globals {
           // Calculate bullet relations to this robot
           boolean willCollide = false;
           float distToRobot = bulletLocation.distanceTo(moveLocations[angleIndex]);
-          if (distToRobot < myType.bodyRadius) {
+          if (distToRobot < RobotType.SCOUT.bodyRadius) {
             willCollide = true;
           }
           else {
@@ -124,7 +125,7 @@ public class EvasiveScout extends Globals {
             // This corresponds to the smallest radius circle centered at our location that would intersect with the
             // line that is the path of the bullet.
             float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta));
-            willCollide = (perpendicularDist <= myType.bodyRadius);
+            willCollide = (perpendicularDist <= RobotType.SCOUT.bodyRadius);
           }
           if (willCollide) {
             directionWeights[angleIndex] -= (15000
