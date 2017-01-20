@@ -377,6 +377,7 @@ public class Gardener extends Globals {
           else {
             Direction[] freeSpaces = possibleTrees();
             if (freeSpaces[1] != null && rc.canPlantTree(freeSpaces[1])) {
+              /*
               if (!rc.hasMoved() && rc.canMove(freeSpaces[1], 0.3f)) {
                 rc.move(freeSpaces[1], 0.3f);
                 queuedMove = here;
@@ -384,6 +385,7 @@ public class Gardener extends Globals {
               else {
                 queuedMove = here.add(freeSpaces[1].opposite(), 0.3f);
               }
+              */
               if (rc.canPlantTree(freeSpaces[1])) {
                 rc.plantTree(freeSpaces[1]);
                 shouldPlant = true;

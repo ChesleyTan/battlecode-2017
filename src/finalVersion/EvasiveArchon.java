@@ -74,11 +74,6 @@ public strictfp class EvasiveArchon extends Globals {
       }
       TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5);
       for (TreeInfo ti : nearbyTrees) {
-        /* TODO strategy for shaking trees
-        if (!ti.team.isPlayer() && rc.canShake(ti.location)) {
-          rc.shake(ti.location);
-        }
-        */
         Direction treeAngle = here.directionTo(ti.getLocation());
         /*
         if (DEBUG) {

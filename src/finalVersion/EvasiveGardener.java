@@ -143,8 +143,11 @@ public class EvasiveGardener extends Globals {
         int nearestAngle = (int) treeAngle.getAngleDegrees() / 30;
         float treeDistance = here.distanceTo(ti.getLocation()) - myType.bodyRadius - ti.getRadius();
         for (int angleIndexOffset = 0; angleIndexOffset < 3; ++angleIndexOffset) {
-          float weightOffset = (70 * (60 - angleIndexOffset * 30)) - Math.max(0, 500 * (TREE_DETECT_RADIUS - treeDistance));
+          float weightOffset = (70 * (60 - angleIndexOffset * 30)) + Math.max(0, 500 * (TREE_DETECT_RADIUS - treeDistance));
           //int startBytecodes = Clock.getBytecodeNum();
+          System.out.println("Angle: " + (Math.floorMod(nearestAngle + angleIndexOffset, 12) * 30));
+          System.out.println("Angle: " + (Math.floorMod(nearestAngle - angleIndexOffset, 12) * 30));
+          System.out.println("Weight: " + weightOffset);
           directionWeights[Math.floorMod(nearestAngle + angleIndexOffset, 12)] -= weightOffset;
           if (angleIndexOffset != 0) {
             directionWeights[Math.floorMod(nearestAngle - angleIndexOffset, 12)] -= weightOffset;
@@ -238,7 +241,7 @@ public class EvasiveGardener extends Globals {
         }
         */
         directionWeights[moveAngleIndex] -= 999999;
-      } while (!moved && ++attempts <= 6);
+      } while (!moved && ++attempts <= 9);
       return moved;
       /*
       if (DEBUG) {
