@@ -43,6 +43,48 @@ public class Scout extends Globals {
   }
   */
 
+  public static boolean shouldUnperch(RobotInfo[] nearbyEnemies) {
+    if (!isPerchedInTree) {
+      return false;
+    }
+    for (RobotInfo ri : nearbyEnemies) {
+      if (Clock.getBytecodesLeft() < 2000) {
+        return true;
+      }
+      else {
+        switch (ri.getType()) {
+          case LUMBERJACK:
+            if (ri.getLocation().isWithinDistance(here, RobotType.LUMBERJACK.strideRadius
+                + RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius)) {
+              return true;
+            }
+            break;
+          case SCOUT:
+            if (ri.getLocation().isWithinDistance(here,
+                1 + RobotType.SCOUT.bodyRadius + RobotType.SCOUT.bodyRadius)) {
+              return true;
+            }
+            break;
+          case SOLDIER:
+            if (ri.getLocation().isWithinDistance(here, RobotType.SOLDIER.strideRadius
+                + RobotType.SOLDIER.bodyRadius + RobotType.SCOUT.bodyRadius)) {
+              return true;
+            }
+            break;
+          case TANK:
+            if (ri.getLocation().isWithinDistance(here, 1 + RobotType.TANK.strideRadius
+                + RobotType.TANK.bodyRadius + RobotType.SCOUT.bodyRadius)) {
+              return true;
+            }
+            break;
+          default:
+            continue;
+        }
+      }
+    }
+    return false;
+  }
+
   public static void findSquad() throws GameActionException {
     int numGardenerOnly = rc.readBroadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH);
     if (numGardenerOnly == 0) {
@@ -61,9 +103,9 @@ public class Scout extends Globals {
       //System.out.println(squad_count);
       if (squad_count == 0) {
         // Clear out target field
-        rc.broadcast(i+1, -1);
+        rc.broadcast(i + 1, -1);
         // Clear out blacklist field
-        rc.broadcast(i+4, -1);
+        rc.broadcast(i + 4, -1);
       }
       if (squad_count < 10) {
         squad_channel = i;
@@ -83,7 +125,8 @@ public class Scout extends Globals {
     targetBlacklistPeriodStart = data & (0x0000FFFF);
   }
 
-  private static void writeBlacklist(int blacklistTarget, int startRound) throws GameActionException {
+  private static void writeBlacklist(int blacklistTarget, int startRound)
+      throws GameActionException {
     int data = (blacklistTarget << 16) | startRound;
     rc.broadcast(squad_channel + 4, data);
   }
@@ -98,8 +141,10 @@ public class Scout extends Globals {
     }
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
-    if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
+    if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
+        && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
+      isPerchedInTree = false;
     }
     if (nearbyRobots.length == 0) {
       // TODO Use message broadcast location to try to find enemies
@@ -268,7 +313,8 @@ public class Scout extends Globals {
       if (Clock.getBytecodesLeft() < 2000) {
         return false;
       }
-      if (RobotUtils.willCollideWithTargetLocation(bi.getLocation(), bi.getDir(), loc, myType.bodyRadius)) {
+      if (RobotUtils.willCollideWithTargetLocation(bi.getLocation(), bi.getDir(), loc,
+          myType.bodyRadius)) {
         return false;
       }
     }
@@ -294,7 +340,8 @@ public class Scout extends Globals {
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.ENEMY_DETECT_RADIUS, them);
     System.out.println("Engaging " + targetRobot);
-    if (!rc.hasMoved() && (nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
+    if (!rc.hasMoved() && (nearbyBullets.length != 0 || nearbyRobots.length != 0)
+        && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
       EvasiveScout.move(nearbyBullets, nearbyRobots);
     }
     //System.out.println("Before engage: " + Clock.getBytecodesLeft());
@@ -360,7 +407,8 @@ public class Scout extends Globals {
             }
           }
           if (optimalLoc != null) {
-            if ((!isPerchedInTree || !currentlyHasClearShot) && optimalDist > RobotType.SCOUT.strideRadius) {
+            if ((!isPerchedInTree || !currentlyHasClearShot)
+                && optimalDist > RobotType.SCOUT.strideRadius) {
               Direction optimalDir = here.directionTo(optimalLoc);
               MapLocation scaledLoc = here.add(optimalDir, RobotType.SCOUT.strideRadius);
               shouldShoot = false;
@@ -370,7 +418,8 @@ public class Scout extends Globals {
                 System.out.println("Moved towards optimal location");
               }
             }
-            else if (optimalDist <= RobotType.SCOUT.strideRadius && isLocationSafe(nearbyBullets, optimalLoc)) {
+            else if (optimalDist <= RobotType.SCOUT.strideRadius
+                && isLocationSafe(nearbyBullets, optimalLoc)) {
               rc.move(optimalLoc);
               if (inTree) {
                 System.out.println("Moved to tree!");
@@ -391,7 +440,7 @@ public class Scout extends Globals {
           MapLocation optimalLoc = null;
           float optimalDist = 9999f;
           if (targetRobot.type != RobotType.LUMBERJACK) {
-            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(targetRobot.getLocation(), 8f, Team.NEUTRAL);
+            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5f);
             for (TreeInfo ti : nearbyTrees) {
               if (Clock.getBytecodesLeft() < 2000) {
                 break;
@@ -531,8 +580,10 @@ public class Scout extends Globals {
             targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
             BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(KEEPAWAY_RADIUS, them);
-            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
+            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
+                && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
               EvasiveScout.move(nearbyBullets, nearbyRobots);
+              isPerchedInTree = false;
             }
             else if (rc.canMove(targetDirection)) {
               //System.out.println("f");
@@ -626,8 +677,10 @@ public class Scout extends Globals {
           else {
             BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
-            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
+            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
+                && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
               EvasiveScout.move(nearbyBullets, nearbyRobots);
+              isPerchedInTree = false;
             }
             System.out.println("Cannot sense target: " + attackTarget);
             // We are out of range of our target,
