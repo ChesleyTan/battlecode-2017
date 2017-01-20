@@ -8,6 +8,7 @@ public class Gardener extends Globals {
 
   private static float detectRadius = 3f;
   private static boolean shouldPlant = false;
+  private static int numCheckSpaces = 0;
   private static int spawnRound;
   private static Direction startDirection = null;
   private static boolean production_gardener = false;
@@ -301,6 +302,7 @@ public class Gardener extends Globals {
         }
         if (!rc.hasMoved()) {
           if (currentRoundNum < 100 && unitCount < 3) {
+            ++numCheckSpaces;
             checkspace();
           }
           else if (production_gardener) {
@@ -312,6 +314,7 @@ public class Gardener extends Globals {
             if (d != null) {
               System.out.println("scouts in trees, moving");
               shouldPlant = false;
+              numCheckSpaces = 0;
               //MapLocation openLoc = here.add(possibleTrees()[0]);
               //System.out.println(openLoc);
               if (!rc.hasMoved() && !RobotUtils.tryMove(d, 5, 18)) {
@@ -332,7 +335,7 @@ public class Gardener extends Globals {
                 }
               }
               boolean willGetHitByBullet = false;
-              if (!nearbyShooter && (bullets.length != 0 || currentRoundNum - spawnRound < 30)) {
+              if (!nearbyShooter && (bullets.length != 0)) {
                 TreeInfo[] trees = rc.senseNearbyTrees();
                 for (BulletInfo i : bullets) {
                   System.out.println(i);
@@ -348,14 +351,21 @@ public class Gardener extends Globals {
               }
               if (nearbyShooter || willGetHitByBullet) {
                 shouldPlant = false;
+                numCheckSpaces = 0;
                 System.out.println("dodging");
                 //dodge(bullets, robots);
                 EvasiveGardener.move(bullets, robots,
                     rc.senseNearbyTrees(EvasiveGardener.TREE_DETECT_RADIUS));
               }
-              else if ((!rc.onTheMap(here, detectRadius)
-                  || rc.isCircleOccupiedExceptByThisRobot(here, detectRadius)) && !shouldPlant) {
-                checkspace();
+              else {
+                boolean clearSpace = rc.isCircleOccupiedExceptByThisRobot(here, detectRadius);
+                if ((!clearSpace || !rc.onTheMap(here, detectRadius)) && !shouldPlant) {
+                  checkspace();
+                  ++numCheckSpaces;
+                }
+                else if (clearSpace) {
+                  shouldPlant = true;
+                }
               }
             }
           }
@@ -376,7 +386,7 @@ public class Gardener extends Globals {
           }
           else {
             Direction[] freeSpaces = possibleTrees();
-            if (freeSpaces[1] != null && rc.canPlantTree(freeSpaces[1])) {
+            if ((shouldPlant || numCheckSpaces > 3) && freeSpaces[1] != null && rc.canPlantTree(freeSpaces[1])) {
               /*
               if (!rc.hasMoved() && rc.canMove(freeSpaces[1], 0.3f)) {
                 rc.move(freeSpaces[1], 0.3f);
