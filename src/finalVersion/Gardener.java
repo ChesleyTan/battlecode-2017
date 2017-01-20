@@ -166,30 +166,31 @@ public class Gardener extends Globals {
 
     // Opposing forces created by Edge of Map
     updateMapBoundaries();
+    float sensorRadius = RobotType.GARDENER.sensorRadius - 1;
     if (minX != UNKNOWN
-        && !rc.onTheMap(new MapLocation(here.x - RobotType.GARDENER.sensorRadius, here.y))) {
-      float weightedDistance = (float) Math.pow(RobotType.GARDENER.sensorRadius - (here.x - minX),
+        && !rc.onTheMap(new MapLocation(here.x - sensorRadius, here.y))) {
+      float weightedDistance = (float) Math.pow(sensorRadius - (here.x - minX),
           2);
       //System.out.println("minX: " + weightedDistance);
       sumX += weightedDistance;
     }
     if (maxX != UNKNOWN
-        && !rc.onTheMap(new MapLocation(here.x + RobotType.GARDENER.sensorRadius, here.y))) {
-      float weightedDistance = (float) Math.pow(RobotType.GARDENER.sensorRadius - (maxX - here.x),
+        && !rc.onTheMap(new MapLocation(here.x + sensorRadius, here.y))) {
+      float weightedDistance = (float) Math.pow(sensorRadius - (maxX - here.x),
           2);
       //System.out.println("maxX: " + weightedDistance);
       sumX -= weightedDistance;
     }
     if (minY != UNKNOWN
-        && !rc.onTheMap(new MapLocation(here.x, here.y - RobotType.GARDENER.sensorRadius))) {
-      float weightedDistance = (float) Math.pow(RobotType.GARDENER.sensorRadius - (here.y - minY),
+        && !rc.onTheMap(new MapLocation(here.x, here.y - sensorRadius))) {
+      float weightedDistance = (float) Math.pow(sensorRadius - (here.y - minY),
           2);
       //System.out.println("minY: " + weightedDistance);
       sumY += weightedDistance;
     }
     if (maxY != UNKNOWN
-        && !rc.onTheMap(new MapLocation(here.x, here.y + RobotType.GARDENER.sensorRadius))) {
-      float weightedDistance = (float) Math.pow(RobotType.GARDENER.sensorRadius - (maxY - here.y),
+        && !rc.onTheMap(new MapLocation(here.x, here.y + sensorRadius))) {
+      float weightedDistance = (float) Math.pow(sensorRadius - (maxY - here.y),
           2);
       //System.out.println("maxY: " + weightedDistance);
       sumY -= weightedDistance;

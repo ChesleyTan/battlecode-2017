@@ -26,7 +26,7 @@ public class Globals {
   // Note: A value of -1 represents a null target, an artifact of when 0 could be the ID of an archon
   public static final int ATTACK_START_CHANNEL = 500;
   public static final int ATTACK_END_CHANNEL = 600;
-  public static final int ATTACK_BLOCK_WIDTH = 5;
+  public static final int ATTACK_BLOCK_WIDTH = 4;
   // Note: A value of 0 (default) represents a null target
   public static final int GARDENER_TARGET_CACHE_CHANNEL = 601;
   public static final int GARDENER_TARGET_CACHE_BLOCK_WIDTH = 3;
@@ -165,11 +165,21 @@ public class Globals {
             continue outer;
           }
         }
+        MapLocation targetLoc = ri.getLocation();
+        int targetX = (int) targetLoc.x;
+        int targetY = (int) targetLoc.y;
         rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL, id);
-        rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL + 1, (int)ri.getLocation().x);
-        rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL + 2, (int)ri.getLocation().y);
+        rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL + 1, (targetX << 16) | targetY);
         return;
       }
     }
+  }
+
+  public static int readGardenerCacheX(int data) {
+    return (data & 0xFFFF0000) >>> 16;
+  }
+
+  public static int readGardenerCacheY(int data) {
+    return (data & 0x0000FFFF);
   }
 }

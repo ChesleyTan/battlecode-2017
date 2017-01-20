@@ -94,7 +94,7 @@ public class Scout extends Globals {
       // Clear out target field
       rc.broadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH + 1, -1);
       // Clear out blacklist field
-      rc.broadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH + 4, -1);
+      rc.broadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH + 3, -1);
       return;
     }
     int i = ATTACK_START_CHANNEL;
@@ -105,7 +105,7 @@ public class Scout extends Globals {
         // Clear out target field
         rc.broadcast(i + 1, -1);
         // Clear out blacklist field
-        rc.broadcast(i + 4, -1);
+        rc.broadcast(i + 3, -1);
       }
       if (squad_count < 10) {
         squad_channel = i;
@@ -117,10 +117,22 @@ public class Scout extends Globals {
     squad_channel = ATTACK_START_CHANNEL;
   }
 
+  private static int readTargetX(int data) throws GameActionException {
+    return (data & 0xFFFF0000) >>> 16;
+  }
+
+  private static int readTargetY(int data) throws GameActionException {
+    return (data & 0x0000FFFF);
+  }
+
+  private static void writeTargetXY(int x, int y) throws GameActionException {
+    rc.broadcast(squad_channel + 2, (x << 16) | y);
+  }
+
   private static void readBlacklist() throws GameActionException {
     // First 16 bits is ID of blacklisted target
     // Second 16 bits is starting round of blacklist
-    int data = rc.readBroadcast(squad_channel + 4);
+    int data = rc.readBroadcast(squad_channel + 3);
     targetBlacklist = (data & (0xFFFF0000)) >>> 16;
     targetBlacklistPeriodStart = data & (0x0000FFFF);
   }
@@ -128,7 +140,7 @@ public class Scout extends Globals {
   private static void writeBlacklist(int blacklistTarget, int startRound)
       throws GameActionException {
     int data = (blacklistTarget << 16) | startRound;
-    rc.broadcast(squad_channel + 4, data);
+    rc.broadcast(squad_channel + 3, data);
   }
 
   private static boolean isBlacklisted(int target) {
@@ -162,8 +174,7 @@ public class Scout extends Globals {
           if (enemy.type == RobotType.GARDENER) {
             MapLocation enemyLoc = enemy.getLocation();
             rc.broadcast(squad_channel + 1, enemy.getID());
-            rc.broadcast(squad_channel + 2, (int) (enemyLoc.x));
-            rc.broadcast(squad_channel + 3, (int) (enemyLoc.y));
+            writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
             targetDirection = here.directionTo(enemyLoc);
             if (rc.canFireSingleShot() && clearShot(here, enemy)) {
               rc.fireSingleShot(targetDirection);
@@ -183,8 +194,7 @@ public class Scout extends Globals {
           if (enemy.type != RobotType.ARCHON) {
             MapLocation enemyLoc = enemy.getLocation();
             rc.broadcast(squad_channel + 1, enemy.getID());
-            rc.broadcast(squad_channel + 2, (int) (enemyLoc.x));
-            rc.broadcast(squad_channel + 3, (int) (enemyLoc.y));
+            writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
             targetDirection = here.directionTo(enemyLoc);
             if (rc.canFireSingleShot() && clearShot(here, enemy)) {
               rc.fireSingleShot(targetDirection);
@@ -229,8 +239,7 @@ public class Scout extends Globals {
         }
         MapLocation enemyLoc = enemy.getLocation();
         rc.broadcast(squad_channel + 1, enemy.getID());
-        rc.broadcast(squad_channel + 2, (int) (enemyLoc.x));
-        rc.broadcast(squad_channel + 3, (int) (enemyLoc.y));
+        writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
         targetDirection = here.directionTo(enemyLoc);
         if (rc.canFireSingleShot() && clearShot(here, enemy)) {
           rc.fireSingleShot(targetDirection);
@@ -326,8 +335,8 @@ public class Scout extends Globals {
     if (!priorityTarget) {
       int broadcastTarget = rc.readBroadcast(squad_channel + 1);
       if (broadcastTarget == target) {
-        rc.broadcast(squad_channel + 2, (int) targetRobot.getLocation().x);
-        rc.broadcast(squad_channel + 3, (int) targetRobot.getLocation().y);
+        MapLocation targetLoc = targetRobot.getLocation();
+        writeTargetXY((int) targetLoc.x, (int) targetLoc.y);
       }
     }
     /*
@@ -575,8 +584,9 @@ public class Scout extends Globals {
             System.out.println("Found target in broadcast: " + target);
             current_mode = ATTACK;
             attackTarget = target;
-            int xLoc = rc.readBroadcast(squad_channel + 2);
-            int yLoc = rc.readBroadcast(squad_channel + 3);
+            int data = rc.readBroadcast(squad_channel + 2);
+            int xLoc = readTargetX(data);
+            int yLoc = readTargetY(data);
             targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
             BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(KEEPAWAY_RADIUS, them);
@@ -597,13 +607,13 @@ public class Scout extends Globals {
             if (!foundTarget) {
               int cacheTarget = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL);
               if (cacheTarget != 0) {
-                int cacheTargetX = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL + 1);
-                int cacheTargetY = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL + 2);
+                int data = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL + 1);
+                int cacheTargetX = readGardenerCacheX(data);
+                int cacheTargetY = readGardenerCacheY(data);
                 attackTarget = cacheTarget;
                 targetDirection = here.directionTo(new MapLocation(cacheTargetX, cacheTargetY));
                 rc.broadcast(squad_channel + 1, cacheTarget);
-                rc.broadcast(squad_channel + 2, cacheTargetX);
-                rc.broadcast(squad_channel + 3, cacheTargetY);
+                writeTargetXY(cacheTargetX, cacheTargetY);
                 rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL, 0);
               }
             }
@@ -717,8 +727,9 @@ public class Scout extends Globals {
               }
             }
             if (!priorityTarget && attackTarget != -1) {
-              int xLoc = rc.readBroadcast(squad_channel + 2);
-              int yLoc = rc.readBroadcast(squad_channel + 3);
+              int data = rc.readBroadcast(squad_channel + 2);
+              int xLoc = readTargetX(data);
+              int yLoc = readTargetY(data);
               MapLocation targetLoc = new MapLocation(xLoc, yLoc);
               System.out.println("Moving towards target: " + targetLoc);
               float distToTarget = here.distanceTo(targetLoc);
