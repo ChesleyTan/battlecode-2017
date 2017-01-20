@@ -58,6 +58,8 @@ public class Archon extends Globals {
         //System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
+        trackEnemyGardeners();
+        
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

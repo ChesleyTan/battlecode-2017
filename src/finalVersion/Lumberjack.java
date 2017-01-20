@@ -344,6 +344,7 @@ public class Lumberjack extends Globals {
         }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
+        trackEnemyGardeners();
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();
