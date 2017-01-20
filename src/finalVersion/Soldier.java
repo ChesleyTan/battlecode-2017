@@ -147,9 +147,9 @@ public class Soldier extends Globals {
   }
   
   private static void checkBulletsAndDodge() throws GameActionException{
-    BulletInfo[] bullets = rc.senseNearbyBullets(3);
+    BulletInfo[] bullets = rc.senseNearbyBullets(4);
     boolean willGetHitByBullet = false;
-    TreeInfo[] trees = rc.senseNearbyTrees(3);
+    TreeInfo[] trees = rc.senseNearbyTrees(4);
     for (BulletInfo i: bullets){
       if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)){
         System.out.println("in danger");
@@ -158,7 +158,7 @@ public class Soldier extends Globals {
       }
     }
     if (willGetHitByBullet){
-      RobotInfo[] robots = rc.senseNearbyRobots(3, us);
+      RobotInfo[] robots = rc.senseNearbyRobots(4, us);
       System.out.println("dodging");               
       dodge(bullets, robots, null);
     }

@@ -134,7 +134,10 @@ public class RobotUtils extends Globals {
   }
   
   //TODO: IMPLEMENT THIS.
-  public static void tryMoveDestination(MapLocation target) throws GameActionException{
+  public static boolean tryMoveDestination(MapLocation target) throws GameActionException{
+    System.out.println("tryMoveDestination");
+    System.out.println(target.x);
+    System.out.println(target.y);
     bugStartDirection = here.directionTo(target);
     if(rc.canMove(bugStartDirection)){
       rc.move(bugStartDirection);
@@ -151,7 +154,7 @@ public class RobotUtils extends Globals {
       }
       bugMove();
     }
-    
+    return bugState==BUG;
   }
   
   public static boolean tryMoveDist(Direction dir, float distance, float degreeOffset,

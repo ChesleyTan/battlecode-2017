@@ -192,7 +192,8 @@ public class Gardener extends Globals {
       }
     }
   }
-
+  
+  
   private static Direction scoutOppDir(RobotInfo[] enemies, TreeInfo[] trees) {
     for (RobotInfo r : enemies) {
       if (r.getType() != RobotType.SCOUT) {

@@ -20,7 +20,7 @@ public class EvasiveSoldier extends Globals {
     }
   }
 
-  static boolean move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots, Direction bias) {
+  static boolean move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots, Direction bias, MapLocation destination) {
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
@@ -232,7 +232,9 @@ public class EvasiveSoldier extends Globals {
         return moved;
       }
       else{
-        RobotUtils.tryMove(bias, 10, 6);
+        if (destination != null){
+          RobotUtils.tryMoveDestination(destination);
+        }
       }
       //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
       /*
