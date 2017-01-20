@@ -602,6 +602,8 @@ public class Scout extends Globals {
               writeBlacklist(targetBlacklist, targetBlacklistPeriodStart);
               System.out.println("Blacklisting target: " + attackTarget);
               attackTarget = -1;
+              roundsEngaging = 0;
+              engagingTarget = false;
               current_mode = ROAM;
             }
             else {
@@ -689,9 +691,9 @@ public class Scout extends Globals {
                 }
               }
             }
-            // Disengage if no target
+            // Disengage attack mode if no target
             else if (attackTarget == -1) {
-              System.out.println("Disengaging: no broadcast target");
+              System.out.println("Disengaging attack mode: no broadcast target");
               current_mode = ROAM;
               targetDirection = RobotUtils.randomDirection();
               /*
@@ -708,6 +710,8 @@ public class Scout extends Globals {
               attackTarget = -1;
               targetDirection = RobotUtils.randomDirection();
               priorityTarget = false;
+              engagingTarget = false;
+              roundsEngaging = 0;
             }
           }
           //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));

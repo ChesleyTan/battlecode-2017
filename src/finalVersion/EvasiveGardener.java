@@ -37,7 +37,8 @@ public class EvasiveGardener extends Globals {
 
       for (RobotInfo ri : nearbyRobots) {
         if (ri.getType().canAttack()) {
-          Direction enemyAngle = here.directionTo(ri.getLocation());
+          MapLocation enemyLoc = ri.getLocation();
+          Direction enemyAngle = here.directionTo(enemyLoc);
           /*
           if (DEBUG) {
             System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
@@ -48,27 +49,27 @@ public class EvasiveGardener extends Globals {
             if (angleDelta > 70) {
               continue;
             }
-            float distBetween = moveLocations[angleIndex].distanceTo(ri.location);
+            float distBetween = moveLocations[angleIndex].distanceTo(enemyLoc);
             float weightOffset;
             switch (ri.getType()) {
               case LUMBERJACK:
                 weightOffset = (150 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case SOLDIER:
                 weightOffset = (200 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case SCOUT:
                 weightOffset = (150 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case TANK:
                 weightOffset = (200 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               default:
@@ -102,7 +103,7 @@ public class EvasiveGardener extends Globals {
           // Calculate bullet relations to this robot
           boolean willCollide = false;
           float distToRobot = bulletLocation.distanceTo(moveLocations[angleIndex]);
-          if (distToRobot < myType.bodyRadius) {
+          if (distToRobot < RobotType.GARDENER.bodyRadius) {
             willCollide = true;
           }
           else {
@@ -118,7 +119,7 @@ public class EvasiveGardener extends Globals {
             // This corresponds to the smallest radius circle centered at our location that would intersect with the
             // line that is the path of the bullet.
             float perpendicularDist = (float) Math.abs(distToRobot * Math.sin(theta));
-            willCollide = (perpendicularDist <= myType.bodyRadius);
+            willCollide = (perpendicularDist <= RobotType.GARDENER.bodyRadius);
           }
           if (willCollide) {
             directionWeights[angleIndex] -= (10000
@@ -141,7 +142,7 @@ public class EvasiveGardener extends Globals {
         }
         */
         int nearestAngle = (int) treeAngle.getAngleDegrees() / 30;
-        float treeDistance = here.distanceTo(ti.getLocation()) - myType.bodyRadius - ti.getRadius();
+        float treeDistance = here.distanceTo(ti.getLocation()) - RobotType.GARDENER.bodyRadius - ti.getRadius();
         for (int angleIndexOffset = 0; angleIndexOffset < 3; ++angleIndexOffset) {
           float weightOffset = (70 * (60 - angleIndexOffset * 30)) + Math.max(0, 500 * (TREE_DETECT_RADIUS - treeDistance));
           //int startBytecodes = Clock.getBytecodeNum();
