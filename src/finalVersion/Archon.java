@@ -25,6 +25,12 @@ public class Archon extends Globals {
   public static void loop() {
     int producedGardeners;
     try {
+      /*
+      System.out.println(determineMapSymmetry());
+      System.out.println(symmetryX);
+      System.out.println(symmetryY);
+      rc.disintegrate();
+      */
       EvasiveArchon.init();
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
       if (producedGardeners == 0) {

@@ -36,7 +36,7 @@ public class EvasiveScout extends Globals {
 
       boolean unsafeFromUnit = false;
       for (RobotInfo ri : nearbyRobots) {
-        // Only avoid lumberjacks if within 3 units away
+        // Only avoid lumberjacks if within 5 units away
         if (ri.getType().canAttack() && ((ri.getType() != RobotType.LUMBERJACK) || (here.distanceTo(ri.getLocation()) < 5f))) {
           unsafeFromUnit = true;
           MapLocation enemyLoc = ri.getLocation();
@@ -60,7 +60,7 @@ public class EvasiveScout extends Globals {
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case SOLDIER:
-                weightOffset = (150 * (70 - angleDelta))
+                weightOffset = (200 * (70 - angleDelta))
                     + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
@@ -70,7 +70,7 @@ public class EvasiveScout extends Globals {
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case TANK:
-                weightOffset = (200 * (70 - angleDelta))
+                weightOffset = (250 * (70 - angleDelta))
                     + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;

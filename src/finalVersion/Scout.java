@@ -54,7 +54,7 @@ public class Scout extends Globals {
       else {
         switch (ri.getType()) {
           case LUMBERJACK:
-            if (ri.getLocation().isWithinDistance(here, RobotType.LUMBERJACK.strideRadius
+            if (ri.getLocation().isWithinDistance(here, 1
                 + RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius)) {
               return true;
             }
@@ -66,13 +66,13 @@ public class Scout extends Globals {
             }
             break;
           case SOLDIER:
-            if (ri.getLocation().isWithinDistance(here, RobotType.SOLDIER.strideRadius
+            if (ri.getLocation().isWithinDistance(here, 4
                 + RobotType.SOLDIER.bodyRadius + RobotType.SCOUT.bodyRadius)) {
               return true;
             }
             break;
           case TANK:
-            if (ri.getLocation().isWithinDistance(here, 1 + RobotType.TANK.strideRadius
+            if (ri.getLocation().isWithinDistance(here, 6
                 + RobotType.TANK.bodyRadius + RobotType.SCOUT.bodyRadius)) {
               return true;
             }
@@ -269,7 +269,7 @@ public class Scout extends Globals {
       float degreeOffset, int checksPerSide) throws GameActionException {
     // First, try intended direction
     //System.out.println("Called tryMove");
-    MapLocation newLoc = here.add(dir, myType.strideRadius);
+    MapLocation newLoc = here.add(dir, RobotType.SCOUT.strideRadius);
     if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
       //System.out.println("tryMove: " + newLoc);
       rc.move(newLoc);
@@ -286,7 +286,7 @@ public class Scout extends Globals {
     while (currentCheck <= checksPerSide) {
       // Try the offset of the left side
       float offset = degreeOffset * currentCheck;
-      newLoc = here.add(dir.rotateLeftDegrees(offset), myType.strideRadius);
+      newLoc = here.add(dir.rotateLeftDegrees(offset), RobotType.SCOUT.strideRadius);
       //rc.setIndicatorLine(here, newLoc, 255, 0, 0);
       if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
         rc.move(newLoc);
@@ -297,7 +297,7 @@ public class Scout extends Globals {
       else if (Clock.getBytecodesLeft() < 2000) {
         return false;
       }
-      newLoc = here.add(dir.rotateRightDegrees(offset), myType.strideRadius);
+      newLoc = here.add(dir.rotateRightDegrees(offset), RobotType.SCOUT.strideRadius);
       //rc.setIndicatorLine(here, newLoc, 255, 0, 0);
       // Try the offset on the right side
       if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
@@ -656,7 +656,7 @@ public class Scout extends Globals {
             // TODO fix disengagement
             // Allow re-engagement on priority targets
             System.out.println(roundsEngaging);
-            if (roundsEngaging > 100) {
+            if (roundsEngaging > 200) {
               rc.broadcast(squad_channel + 1, -1);
               targetBlacklist = attackTarget;
               targetBlacklistPeriodStart = currentRoundNum;

@@ -29,7 +29,7 @@ public class Globals {
   public static final int ATTACK_BLOCK_WIDTH = 4;
   // Note: A value of 0 (default) represents a null target
   public static final int GARDENER_TARGET_CACHE_CHANNEL = 601;
-  public static final int GARDENER_TARGET_CACHE_BLOCK_WIDTH = 3;
+  public static final int GARDENER_TARGET_CACHE_BLOCK_WIDTH = 2;
   public static final int MAP_X_BOUNDS_CHANNEL = 900;
   public static final int MAP_Y_BOUNDS_CHANNEL = 901;
   public static Direction NORTH, SOUTH, EAST, WEST;
@@ -40,6 +40,19 @@ public class Globals {
   public static int maxY = UNKNOWN;
   public static int penultimateRound = 0;
   public static int currentRoundNum = 0;
+  // Horizontal line of symmetry
+  public static final int HORIZONTAL_SYMMETRY = 0;
+  // Vertical line of symmetry
+  public static final int VERTICAL_SYMMETRY = 1;
+  public static final int ROTATIONAL_SYMMETRY = 2;
+  public static final int SYMMETRY_UNKNOWN = -1;
+  public static int symmetry = SYMMETRY_UNKNOWN;
+  // If vertical symmetry, this is the x coordinate of the line of symmetry
+  // If rotational symmetry, this is the x coordinate of the point of rotation
+  public static float symmetryX = -1f;
+  // If horizontal symmetry, this is the y coordinate of the line of symmetry
+  // If rotational symmetry, this is the y coordinate of the point of rotation
+  public static float symmetryY = -1f;
 
   public static void init(RobotController theRC) {
     rc = theRC;
@@ -181,5 +194,93 @@ public class Globals {
 
   public static int readGardenerCacheY(int data) {
     return (data & 0x0000FFFF);
+  }
+
+  public static int determineMapSymmetry() throws GameActionException {
+    // TODO rotational symmetry may take the form of horizontal or vertical symmetry
+    MapLocation[] myArchons = rc.getInitialArchonLocations(us);
+    MapLocation[] enemyArchons = rc.getInitialArchonLocations(them);
+    int symmetry1 = SYMMETRY_UNKNOWN;
+    outer1: for (MapLocation myArchonLoc : myArchons) {
+      for (MapLocation enemyArchonLoc : enemyArchons) {
+        if (MathUtils.isNear(myArchonLoc.x, enemyArchonLoc.x)) {
+          symmetry1 = HORIZONTAL_SYMMETRY;
+          if (symmetryY < 0) {
+            symmetryY = (myArchonLoc.y + enemyArchonLoc.y) / 2;
+          }
+          else {
+            if (!MathUtils.isNear(symmetryY, (myArchonLoc.y + enemyArchonLoc.y) / 2)) {
+              symmetry1 = SYMMETRY_UNKNOWN;
+              break outer1;
+            }
+          }
+          continue outer1;
+        }
+      }
+      symmetry1 = SYMMETRY_UNKNOWN;
+      break;
+    }
+    int symmetry2 = SYMMETRY_UNKNOWN;
+    outer2: for (MapLocation myArchonLoc : myArchons) {
+      for (MapLocation enemyArchonLoc : enemyArchons) {
+        if (MathUtils.isNear(myArchonLoc.y, enemyArchonLoc.y)) {
+          symmetry2 = VERTICAL_SYMMETRY;
+          if (symmetryX < 0) {
+            symmetryX = (myArchonLoc.x + enemyArchonLoc.x) / 2;
+          }
+          else {
+            if (!MathUtils.isNear(symmetryX, (myArchonLoc.x + enemyArchonLoc.x) / 2)) {
+              symmetry2 = SYMMETRY_UNKNOWN;
+              break outer2;
+            }
+          }
+          continue outer2;
+        }
+      }
+      symmetry2 = SYMMETRY_UNKNOWN;
+      break;
+    }
+    if (symmetry1 == HORIZONTAL_SYMMETRY && symmetry2 == SYMMETRY_UNKNOWN) {
+      symmetry = HORIZONTAL_SYMMETRY;
+    }
+    else if (symmetry1 == SYMMETRY_UNKNOWN && symmetry2 == VERTICAL_SYMMETRY) {
+      symmetry = VERTICAL_SYMMETRY;
+    }
+    else if (symmetry1 == HORIZONTAL_SYMMETRY && symmetry2 == VERTICAL_SYMMETRY) {
+      symmetry = ROTATIONAL_SYMMETRY;
+    }
+    if (symmetry != SYMMETRY_UNKNOWN) {
+      return symmetry;
+    }
+    // Find point of rotation of rotational symmetry
+    float[] candidateXCoordinates = new float[myArchons.length];
+    float[] candidateYCoordinates = new float[myArchons.length];
+    MapLocation referenceArchonLoc = enemyArchons[0];
+    for (int i = 0; i < myArchons.length; ++i) {
+      MapLocation myArchonLoc = myArchons[i];
+      candidateXCoordinates[i] = (myArchonLoc.x + referenceArchonLoc.x) / 2;
+      candidateYCoordinates[i] = (myArchonLoc.y + referenceArchonLoc.y) / 2;
+    }
+    if (enemyArchons.length > 1) {
+      // Find intersection of candidate centers of rotation
+      referenceArchonLoc = enemyArchons[1];
+      outer3: for (int i = 0; i < myArchons.length; ++i) {
+        MapLocation myArchonLoc = myArchons[i];
+        float candidateX = (myArchonLoc.x + referenceArchonLoc.x) / 2;
+        float candidateY = (myArchonLoc.y + referenceArchonLoc.y) / 2;
+        for (int j = 0; j < myArchons.length; ++j) {
+          if (MathUtils.isNear(candidateX, candidateXCoordinates[j], 0.01f) && MathUtils.isNear(candidateY,  candidateYCoordinates[j], 0.01f)) {
+            symmetryX = candidateX;
+            symmetryY = candidateY;
+            break outer3;
+          }
+        }
+      }
+    }
+    else {
+      symmetryX = candidateXCoordinates[0];
+      symmetryY = candidateYCoordinates[0];
+    }
+    return ROTATIONAL_SYMMETRY;
   }
 }
