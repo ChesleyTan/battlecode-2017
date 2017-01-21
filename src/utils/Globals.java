@@ -201,10 +201,8 @@ public class Globals {
     return (data & 0x0000FFFF);
   }
 
-  public static int determineMapSymmetry() throws GameActionException {
+  public static int determineMapSymmetry(MapLocation[] myArchons, MapLocation[] enemyArchons) throws GameActionException {
     // TODO rotational symmetry may take the form of horizontal or vertical symmetry
-    MapLocation[] myArchons = rc.getInitialArchonLocations(us);
-    MapLocation[] enemyArchons = rc.getInitialArchonLocations(them);
     int symmetry1 = SYMMETRY_UNKNOWN;
     outer1: for (MapLocation myArchonLoc : myArchons) {
       for (MapLocation enemyArchonLoc : enemyArchons) {
