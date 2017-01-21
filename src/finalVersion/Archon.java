@@ -44,6 +44,10 @@ public class Archon extends Globals {
       System.out.println(determineMapSymmetry());
       System.out.println(symmetryX);
       System.out.println(symmetryY);
+      readMapSymmetry();
+      System.out.println(symmetry);
+      System.out.println(symmetryX);
+      System.out.println(symmetryY);
       rc.disintegrate();
       */
       EvasiveArchon.init();

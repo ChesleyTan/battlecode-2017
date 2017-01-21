@@ -36,6 +36,7 @@ public class Globals {
   public static final int GARDENER_TARGET_CACHE_BLOCK_WIDTH = 2;
   public static final int MAP_X_BOUNDS_CHANNEL = 900;
   public static final int MAP_Y_BOUNDS_CHANNEL = 901;
+  public static final int MAP_SYMMETRY_CHANNEL = 902;
   public static Direction NORTH, SOUTH, EAST, WEST;
   public static final int UNKNOWN = Integer.MIN_VALUE;
   public static int minX = UNKNOWN;
@@ -45,11 +46,11 @@ public class Globals {
   public static int penultimateRound = 0;
   public static int currentRoundNum = 0;
   // Horizontal line of symmetry
-  public static final int HORIZONTAL_SYMMETRY = 0;
+  public static final int HORIZONTAL_SYMMETRY = 1;
   // Vertical line of symmetry
-  public static final int VERTICAL_SYMMETRY = 1;
-  public static final int ROTATIONAL_SYMMETRY = 2;
-  public static final int SYMMETRY_UNKNOWN = -1;
+  public static final int VERTICAL_SYMMETRY = 2;
+  public static final int ROTATIONAL_SYMMETRY = 3;
+  public static final int SYMMETRY_UNKNOWN = 0;
   public static int symmetry = SYMMETRY_UNKNOWN;
   // If vertical symmetry, this is the x coordinate of the line of symmetry
   // If rotational symmetry, this is the x coordinate of the point of rotation
@@ -253,38 +254,51 @@ public class Globals {
     else if (symmetry1 == HORIZONTAL_SYMMETRY && symmetry2 == VERTICAL_SYMMETRY) {
       symmetry = ROTATIONAL_SYMMETRY;
     }
-    if (symmetry != SYMMETRY_UNKNOWN) {
-      return symmetry;
-    }
-    // Find point of rotation of rotational symmetry
-    float[] candidateXCoordinates = new float[myArchons.length];
-    float[] candidateYCoordinates = new float[myArchons.length];
-    MapLocation referenceArchonLoc = enemyArchons[0];
-    for (int i = 0; i < myArchons.length; ++i) {
-      MapLocation myArchonLoc = myArchons[i];
-      candidateXCoordinates[i] = (myArchonLoc.x + referenceArchonLoc.x) / 2;
-      candidateYCoordinates[i] = (myArchonLoc.y + referenceArchonLoc.y) / 2;
-    }
-    if (enemyArchons.length > 1) {
-      // Find intersection of candidate centers of rotation
-      referenceArchonLoc = enemyArchons[1];
-      outer3: for (int i = 0; i < myArchons.length; ++i) {
+    if (symmetry == SYMMETRY_UNKNOWN) {
+      // Find point of rotation of rotational symmetry
+      symmetry = ROTATIONAL_SYMMETRY;
+      float[] candidateXCoordinates = new float[myArchons.length];
+      float[] candidateYCoordinates = new float[myArchons.length];
+      MapLocation referenceArchonLoc = enemyArchons[0];
+      for (int i = 0; i < myArchons.length; ++i) {
         MapLocation myArchonLoc = myArchons[i];
-        float candidateX = (myArchonLoc.x + referenceArchonLoc.x) / 2;
-        float candidateY = (myArchonLoc.y + referenceArchonLoc.y) / 2;
-        for (int j = 0; j < myArchons.length; ++j) {
-          if (MathUtils.isNear(candidateX, candidateXCoordinates[j], 0.01f) && MathUtils.isNear(candidateY,  candidateYCoordinates[j], 0.01f)) {
-            symmetryX = candidateX;
-            symmetryY = candidateY;
-            break outer3;
+        candidateXCoordinates[i] = (myArchonLoc.x + referenceArchonLoc.x) / 2;
+        candidateYCoordinates[i] = (myArchonLoc.y + referenceArchonLoc.y) / 2;
+      }
+      if (enemyArchons.length > 1) {
+        // Find intersection of candidate centers of rotation
+        referenceArchonLoc = enemyArchons[1];
+        outer3: for (int i = 0; i < myArchons.length; ++i) {
+          MapLocation myArchonLoc = myArchons[i];
+          float candidateX = (myArchonLoc.x + referenceArchonLoc.x) / 2;
+          float candidateY = (myArchonLoc.y + referenceArchonLoc.y) / 2;
+          for (int j = 0; j < myArchons.length; ++j) {
+            if (MathUtils.isNear(candidateX, candidateXCoordinates[j], 0.01f)
+                && MathUtils.isNear(candidateY, candidateYCoordinates[j], 0.01f)) {
+              symmetryX = candidateX;
+              symmetryY = candidateY;
+              break outer3;
+            }
           }
         }
       }
+      else {
+        symmetryX = candidateXCoordinates[0];
+        symmetryY = candidateYCoordinates[0];
+      }
     }
-    else {
-      symmetryX = candidateXCoordinates[0];
-      symmetryY = candidateYCoordinates[0];
-    }
-    return ROTATIONAL_SYMMETRY;
+    int data = (symmetry & 0b00000000000000000000000000000011) << 30;
+    int x = ((int) symmetryX) & 0b00000000000000000111111111111111;
+    int y = ((int) symmetryY) & 0b00000000000000000111111111111111;;
+    data = data | (x << 15) | y;
+    rc.broadcast(MAP_SYMMETRY_CHANNEL, data);
+    return symmetry;
+  }
+
+  public static void readMapSymmetry() throws GameActionException {
+    int data = rc.readBroadcast(MAP_SYMMETRY_CHANNEL);
+    symmetry = (data & 0b11000000000000000000000000000000) >>> 30;
+    symmetryX = (data & 0b00111111111111111000000000000000) >>> 15;
+    symmetryY = (data & 0b00000000000000000111111111111111);
   }
 }
