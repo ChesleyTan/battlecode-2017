@@ -7,7 +7,22 @@ import utils.RobotUtils;
 public class Archon extends Globals {
 
   static int ArchonCount = rc.getInitialArchonLocations(us).length;
-
+  
+  private static void calculateDistanceBetweenArchons() throws GameActionException{
+    int me = 0;
+    MapLocation[] locations = rc.getInitialArchonLocations(us);
+    for (int i = 0; i < locations.length; i++ ){
+      if(locations[i].equals(here)){
+        me = i;
+        break;
+      }
+    }
+    float distance = here.distanceTo(rc.getInitialArchonLocations(them)[me]);
+    int currDistance = rc.readBroadcast(DISTANCE_BETWEEN_ARCHONS);
+    if (currDistance == 0 || distance < currDistance){
+      rc.broadcast(DISTANCE_BETWEEN_ARCHONS, (int)distance);
+    }
+  }
   private static void trySpawnGardener(int producedGardeners) throws GameActionException {
     Direction attemptedDirection = RobotUtils.randomDirection();
     int attempts = 0;
@@ -30,12 +45,14 @@ public class Archon extends Globals {
       if (producedGardeners == 0) {
         trySpawnGardener(producedGardeners);
       }
+      calculateDistanceBetweenArchons();
     } catch (Exception e) {
       e.printStackTrace();
     }
 
     while (true) {
       try {
+        Globals.update();
         int producedScouts = rc.readBroadcast(EARLY_UNITS_CHANNEL);
         int requiredProductionGardeners = (int) (rc.getTreeCount() / 15);
         rc.broadcast(PRODUCTION_GARDENERS_CHANNEL, requiredProductionGardeners);

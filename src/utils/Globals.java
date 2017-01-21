@@ -15,6 +15,10 @@ public class Globals {
   public static int myID;
   public static RobotType myType;
   public static Random rand;
+  public static final int MIDPOINT_COORDINATE_X = 1000;
+  public static final int MIDPOINT_COORDINATE_Y = 1001;
+  public static final int DISTANCE_BETWEEN_ARCHONS = 1002;
+  public static final int UNITS_BIAS_PRODUCTION = 1002;
   public static final int DIRECTIVE_START_CHANNEL = 0;
   public static final int EARLY_UNITS_CHANNEL = 5;
   public static final int PRODUCED_GARDENERS_CHANNEL = 50;

@@ -13,6 +13,7 @@ public class Gardener extends Globals {
   private static boolean production_gardener = false;
   private static boolean hasReportedDeath = false;
   private static MapLocation queuedMove = null;
+  private static boolean spawnedEarlySoldier = false;
 
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
     float sumX = 0;
@@ -282,19 +283,17 @@ public class Gardener extends Globals {
           }
           queuedMove = null;
         }
-        if (currentRoundNum < 100 && unitCount < 4) {
+        if (currentRoundNum < 100 && unitCount < 3) {
           checkspace();
-          if (unitCount == 2) {
-            if (spawnRobot(RobotType.SOLDIER)) {
-              rc.broadcast(EARLY_UNITS_CHANNEL, 3);
-              rc.broadcast(DEFENSE_START_CHANNEL + 1, myID);
-              rc.broadcast(DEFENSE_START_CHANNEL + 2, (int)here.x);
-              rc.broadcast(DEFENSE_START_CHANNEL + 3, (int)here.y);
+          if (rc.senseNearbyTrees().length > 2 && unitCount == 0){
+            if (spawnRobot(RobotType.LUMBERJACK)){
+              rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
             }
           }
-          else if (unitCount == 3 && rc.senseNearbyTrees().length != 0){
-            if (spawnRobot(RobotType.LUMBERJACK)){
-              rc.broadcast(EARLY_UNITS_CHANNEL, 4);
+          else if (rc.readBroadcast(DISTANCE_BETWEEN_ARCHONS) < 30 && !spawnedEarlySoldier){
+            if (spawnRobot(RobotType.SOLDIER)){
+              rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
+              spawnedEarlySoldier = true;
             }
           }
           else if (spawnRobot(RobotType.SCOUT)) {
