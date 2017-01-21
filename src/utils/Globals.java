@@ -15,10 +15,6 @@ public class Globals {
   public static int myID;
   public static RobotType myType;
   public static Random rand;
-  public static final int MIDPOINT_COORDINATE_X = 1000;
-  public static final int MIDPOINT_COORDINATE_Y = 1001;
-  public static final int DISTANCE_BETWEEN_ARCHONS = 1002;
-  public static final int UNITS_BIAS_PRODUCTION = 1002;
   public static final int DIRECTIVE_START_CHANNEL = 0;
   public static final int EARLY_UNITS_CHANNEL = 5;
   public static final int PRODUCED_GARDENERS_CHANNEL = 50;
@@ -37,6 +33,10 @@ public class Globals {
   public static final int MAP_X_BOUNDS_CHANNEL = 900;
   public static final int MAP_Y_BOUNDS_CHANNEL = 901;
   public static final int MAP_SYMMETRY_CHANNEL = 902;
+  public static final int MIDPOINT_COORDINATE_X_CHANNEL = 1000;
+  public static final int MIDPOINT_COORDINATE_Y_CHANNEL = 1001;
+  public static final int DISTANCE_BETWEEN_ARCHONS_CHANNEL = 1002;
+  public static final int UNITS_BIAS_PRODUCTION_CHANNEL = 1002;
   public static Direction NORTH, SOUTH, EAST, WEST;
   public static final int UNKNOWN = Integer.MIN_VALUE;
   public static int minX = UNKNOWN;

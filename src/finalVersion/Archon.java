@@ -6,23 +6,25 @@ import utils.RobotUtils;
 
 public class Archon extends Globals {
 
-  static int ArchonCount = rc.getInitialArchonLocations(us).length;
-  
-  private static void calculateDistanceBetweenArchons() throws GameActionException{
+  static MapLocation[] myArchons = rc.getInitialArchonLocations(us);
+  static MapLocation[] enemyArchons = rc.getInitialArchonLocations(them);
+  static int ArchonCount = myArchons.length;
+
+  private static void calculateDistanceBetweenArchons() throws GameActionException {
     int me = 0;
-    MapLocation[] locations = rc.getInitialArchonLocations(us);
-    for (int i = 0; i < locations.length; i++ ){
-      if(locations[i].equals(here)){
+    for (int i = 0; i < myArchons.length; i++) {
+      if (myArchons[i].equals(here)) {
         me = i;
         break;
       }
     }
-    float distance = here.distanceTo(rc.getInitialArchonLocations(them)[me]);
-    int currDistance = rc.readBroadcast(DISTANCE_BETWEEN_ARCHONS);
-    if (currDistance == 0 || distance < currDistance){
-      rc.broadcast(DISTANCE_BETWEEN_ARCHONS, (int)distance);
+    float distance = here.distanceTo(enemyArchons[me]);
+    int currDistance = rc.readBroadcast(DISTANCE_BETWEEN_ARCHONS_CHANNEL);
+    if (currDistance == 0 || distance < currDistance) {
+      rc.broadcast(DISTANCE_BETWEEN_ARCHONS_CHANNEL, (int) distance);
     }
   }
+
   private static void trySpawnGardener(int producedGardeners) throws GameActionException {
     Direction attemptedDirection = RobotUtils.randomDirection();
     int attempts = 0;
@@ -88,7 +90,7 @@ public class Archon extends Globals {
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
         trackEnemyGardeners();
-        
+
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();
