@@ -311,7 +311,7 @@ public class Gardener extends Globals {
           queuedMove = null;
         }
         if (!rc.hasMoved()) {
-          if (currentRoundNum < 100 && unitCount < 3) {
+          if (currentRoundNum < 100) {
             ++numCheckSpaces;
             checkspace();
           }
@@ -400,13 +400,13 @@ public class Gardener extends Globals {
           }
           // Either plant a tree or produce a unit
           // Initial setup moves to a clear spot and spawns 3 scouts
-          if (unitCount < 3) {
-            if (rc.senseNearbyTrees().length > 2 && unitCount == 0){
+          if (currentRoundNum < 100) {
+            if (unitCount == 0 && rc.senseNearbyTrees().length > 2){
               if (spawnRobot(RobotType.LUMBERJACK)){
                 rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
               }
             }
-            else if (rc.readBroadcast(1) < 30 || !spawnedEarlySoldier){
+            else if (!spawnedEarlySoldier){
               if (spawnRobot(RobotType.SOLDIER)){
                 rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
                 spawnedEarlySoldier = true;

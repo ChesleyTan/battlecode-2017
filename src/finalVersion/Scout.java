@@ -177,7 +177,7 @@ public class Scout extends Globals {
             writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
             targetDirection = here.directionTo(enemyLoc);
             if (rc.canFireSingleShot() && clearShot(here, enemy)) {
-              rc.fireSingleShot(targetDirection);
+              //rc.fireSingleShot(targetDirection);
             }
             attackTarget = enemy.getID();
             current_mode = ATTACK;
@@ -197,7 +197,7 @@ public class Scout extends Globals {
             writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
             targetDirection = here.directionTo(enemyLoc);
             if (rc.canFireSingleShot() && clearShot(here, enemy)) {
-              rc.fireSingleShot(targetDirection);
+              //rc.fireSingleShot(targetDirection);
             }
             attackTarget = enemy.getID();
             current_mode = ATTACK;
@@ -242,7 +242,7 @@ public class Scout extends Globals {
         writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
         targetDirection = here.directionTo(enemyLoc);
         if (rc.canFireSingleShot() && clearShot(here, enemy)) {
-          rc.fireSingleShot(targetDirection);
+          //rc.fireSingleShot(targetDirection);
         }
         attackTarget = enemy.getID();
         current_mode = ATTACK;
@@ -523,7 +523,7 @@ public class Scout extends Globals {
     Globals.update();
     direction = here.directionTo(targetRobot.getLocation());
     if (shouldShoot && rc.canFireSingleShot() && clearShot(here, targetRobot)) {
-      rc.fireSingleShot(direction);
+      //rc.fireSingleShot(direction);
       if (DEBUG) {
         //System.out.println("CLEARSHOT!");
         rc.setIndicatorDot(targetRobot.getLocation(), (us == Team.A) ? 255 : 0, 0,
@@ -749,7 +749,7 @@ public class Scout extends Globals {
                     RobotInfo targetRobot = nearbyRobots[0];
                     if (rc.canFireSingleShot() && clearShot(here, targetRobot)) {
                       MapLocation obstacleLocation = targetRobot.getLocation();
-                      rc.fireSingleShot(here.directionTo(obstacleLocation));
+                      //rc.fireSingleShot(here.directionTo(obstacleLocation));
                     }
                   }
                 }
