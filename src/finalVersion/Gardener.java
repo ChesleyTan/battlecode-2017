@@ -13,6 +13,8 @@ public class Gardener extends Globals {
   private static boolean production_gardener = false;
   private static boolean hasReportedDeath = false;
   private static MapLocation queuedMove = null;
+  private static boolean spawnedEarlySoldier = false;
+  private static boolean spawnedEarlyScout = false;
 
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
@@ -399,17 +401,26 @@ public class Gardener extends Globals {
           // Either plant a tree or produce a unit
           // Initial setup moves to a clear spot and spawns 3 scouts
           if (unitCount < 3) {
-            if (unitCount == 2) {
-              if (spawnRobot(RobotType.SOLDIER)) {
-                rc.broadcast(EARLY_UNITS_CHANNEL, 3);
+            if (rc.senseNearbyTrees().length > 2 && unitCount == 0){
+              if (spawnRobot(RobotType.LUMBERJACK)){
+                rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
               }
             }
-            else if (spawnRobot(RobotType.SCOUT)) {
-              rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
+            else if (rc.readBroadcast(1) < 30 || !spawnedEarlySoldier){
+              if (spawnRobot(RobotType.SOLDIER)){
+                rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
+                spawnedEarlySoldier = true;
+              }
+            }
+            else if (!spawnedEarlyScout) {
+              if (spawnRobot(RobotType.SCOUT)){
+                rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
+                spawnedEarlyScout = true;
+              }
             }
           }
           else if (production_gardener) {
-            spawnRobot(RobotType.SCOUT);
+            spawnRobot(RobotType.SOLDIER);
           }
           else {
             Direction[] freeSpaces = possibleTrees();

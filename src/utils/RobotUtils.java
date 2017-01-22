@@ -133,11 +133,10 @@ public class RobotUtils extends Globals {
     bugState = DIRECT;
   }
   
-  //TODO: IMPLEMENT THIS.
   public static boolean tryMoveDestination(MapLocation target) throws GameActionException{
     System.out.println("tryMoveDestination");
-    System.out.println(target.x);
-    System.out.println(target.y);
+    //System.out.println(target.x);
+    //System.out.println(target.y);
     bugStartDirection = here.directionTo(target);
     if(rc.canMove(bugStartDirection)){
       rc.move(bugStartDirection);
