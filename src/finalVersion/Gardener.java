@@ -132,7 +132,7 @@ public class Gardener extends Globals {
     float sumY = 0;
 
     // Opposing forces created by Robots
-    RobotInfo[] nearbyRobots = rc.senseNearbyRobots();
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(5f);
     float robotMaxDistance = RobotType.GARDENER.sensorRadius + GameConstants.MAX_ROBOT_RADIUS;
     for (RobotInfo r : nearbyRobots) {
       Direction theirDirection = r.getLocation().directionTo(here);
@@ -152,7 +152,7 @@ public class Gardener extends Globals {
     }
 
     // Opposing forces created by Trees
-    TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+    TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5f);
     float treeMaxDistance = RobotType.GARDENER.sensorRadius + GameConstants.NEUTRAL_TREE_MAX_RADIUS;
     for (TreeInfo t : nearbyTrees) {
       Direction theirDirection = t.location.directionTo(here);
@@ -171,28 +171,28 @@ public class Gardener extends Globals {
     float sensorRadius = RobotType.GARDENER.sensorRadius - 1;
     if (minX != UNKNOWN
         && !rc.onTheMap(new MapLocation(here.x - sensorRadius, here.y))) {
-      float weightedDistance = (float) Math.pow(sensorRadius - (here.x - minX),
+      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.x - minX),
           2);
       //System.out.println("minX: " + weightedDistance);
       sumX += weightedDistance;
     }
     if (maxX != UNKNOWN
         && !rc.onTheMap(new MapLocation(here.x + sensorRadius, here.y))) {
-      float weightedDistance = (float) Math.pow(sensorRadius - (maxX - here.x),
+      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxX - here.x),
           2);
       //System.out.println("maxX: " + weightedDistance);
       sumX -= weightedDistance;
     }
     if (minY != UNKNOWN
         && !rc.onTheMap(new MapLocation(here.x, here.y - sensorRadius))) {
-      float weightedDistance = (float) Math.pow(sensorRadius - (here.y - minY),
+      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.y - minY),
           2);
       //System.out.println("minY: " + weightedDistance);
       sumY += weightedDistance;
     }
     if (maxY != UNKNOWN
         && !rc.onTheMap(new MapLocation(here.x, here.y + sensorRadius))) {
-      float weightedDistance = (float) Math.pow(sensorRadius - (maxY - here.y),
+      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxY - here.y),
           2);
       //System.out.println("maxY: " + weightedDistance);
       sumY -= weightedDistance;
@@ -311,11 +311,8 @@ public class Gardener extends Globals {
           queuedMove = null;
         }
         if (!rc.hasMoved()) {
-          if (currentRoundNum < 100) {
-            ++numCheckSpaces;
-            checkspace();
-          }
-          else if (production_gardener) {
+          if (production_gardener) {
+            // TODO production gardener evasion
             checkspace();
           }
           else {
@@ -353,8 +350,7 @@ public class Gardener extends Globals {
                   nearbyEnemyThreat = true;
                 }
                 else if (ri.getType() == RobotType.LUMBERJACK
-                    // TODO add GameConstants.INTERACT_DISTANCE_FROM_EDGE
-                    && ri.getLocation().isWithinDistance(here, RobotType.LUMBERJACK.strideRadius
+                    && ri.getLocation().isWithinDistance(here, GameConstants.INTERACTION_DIST_FROM_EDGE + RobotType.LUMBERJACK.strideRadius
                         + RobotType.LUMBERJACK.bodyRadius + RobotType.GARDENER.bodyRadius)) {
                   nearbyEnemyThreat = true;
                 }

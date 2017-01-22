@@ -73,7 +73,7 @@ public class RobotUtils extends Globals {
 
   public static void donateEverythingAtTheEnd() throws GameActionException {
     float bullets = rc.getTeamBullets();
-    if (rc.getTeamVictoryPoints() + (bullets / 10) >= 1000) {
+    if (rc.getTeamVictoryPoints() + (bullets / rc.getVictoryPointCost()) >= 1000) {
       rc.donate(bullets);
     }
     else if (currentRoundNum == penultimateRound) {
@@ -85,8 +85,8 @@ public class RobotUtils extends Globals {
     if (Clock.getBytecodesLeft() > 500) {
       TreeInfo[] nearbyTrees = rc.senseNearbyTrees(-1, Team.NEUTRAL);
       for (TreeInfo ti : nearbyTrees) {
-        if (rc.canShake(ti.ID)) {
-          rc.shake(ti.ID);
+        if (rc.canShake(ti.getID()) && ti.getContainedBullets() > 0) {
+          rc.shake(ti.getID());
           break;
         }
       }
@@ -133,6 +133,69 @@ public class RobotUtils extends Globals {
     return false;
   }
   
+  public static boolean tryMoveIfSafe(Direction dir, BulletInfo[] nearbyBullets,
+      float degreeOffset, int checksPerSide) throws GameActionException {
+    // First, try intended direction
+    //System.out.println("Called tryMove");
+    MapLocation newLoc = here.add(dir, myType.strideRadius);
+    rc.setIndicatorLine(here, newLoc, 0, 255, 0);
+    if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+      //System.out.println("tryMove: " + newLoc);
+      rc.move(newLoc);
+      return true;
+    }
+    else if (Clock.getBytecodesLeft() < 2000) {
+      return false;
+    }
+
+    // Now try a bunch of similar angles
+    int currentCheck = 1;
+
+    while (currentCheck <= checksPerSide) {
+      // Try the offset of the left side
+      float offset = degreeOffset * currentCheck;
+      newLoc = here.add(dir.rotateLeftDegrees(offset), myType.strideRadius);
+      rc.setIndicatorLine(here, newLoc, 255, 0, 0);
+      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+        rc.move(newLoc);
+        //System.out.println("tryMove: " + newLoc);
+        return true;
+      }
+      else if (Clock.getBytecodesLeft() < 2000) {
+        return false;
+      }
+      newLoc = here.add(dir.rotateRightDegrees(offset), myType.strideRadius);
+      rc.setIndicatorLine(here, newLoc, 255, 0, 0);
+      // Try the offset on the right side
+      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+        rc.move(newLoc);
+        //System.out.println("tryMove: " + newLoc);
+        return true;
+      }
+      else if (Clock.getBytecodesLeft() < 2000) {
+        return false;
+      }
+      // No move performed, try slightly further
+      currentCheck++;
+    }
+
+    // A move never happened, so return false.
+    return false;
+  }
+
+  public static boolean isLocationSafe(BulletInfo[] nearbyBullets, MapLocation loc) {
+    for (BulletInfo bi : nearbyBullets) {
+      if (Clock.getBytecodesLeft() < 2000) {
+        return false;
+      }
+      if (RobotUtils.willCollideWithTargetLocation(bi.getLocation(), bi.getDir(), loc,
+          myType.bodyRadius)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   public static void endBug(){
     bugStartDirection = null;
     bugDestinationLocation = null;

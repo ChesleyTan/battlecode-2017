@@ -37,7 +37,7 @@ public class EvasiveScout extends Globals {
       boolean unsafeFromUnit = false;
       for (RobotInfo ri : nearbyRobots) {
         // Only avoid lumberjacks if within 5 units away
-        if (ri.getType().canAttack() && ((ri.getType() != RobotType.LUMBERJACK) || (here.distanceTo(ri.getLocation()) < 5f))) {
+        if (ri.getType().canAttack() && ((ri.getType() != RobotType.LUMBERJACK) || (here.distanceTo(ri.getLocation()) < 4f))) {
           unsafeFromUnit = true;
           MapLocation enemyLoc = ri.getLocation();
           Direction enemyAngle = here.directionTo(enemyLoc);

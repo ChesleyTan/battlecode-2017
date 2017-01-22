@@ -269,71 +269,6 @@ public class Scout extends Globals {
     return true;
   }
 
-  private static boolean tryMoveIfSafe(Direction dir, BulletInfo[] nearbyBullets,
-      float degreeOffset, int checksPerSide) throws GameActionException {
-    // First, try intended direction
-    //System.out.println("Called tryMove");
-    MapLocation newLoc = here.add(dir, RobotType.SCOUT.strideRadius);
-    if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-      //System.out.println("tryMove: " + newLoc);
-      rc.move(newLoc);
-      isPerchedInTree = false;
-      return true;
-    }
-    else if (Clock.getBytecodesLeft() < 2000) {
-      return false;
-    }
-
-    // Now try a bunch of similar angles
-    int currentCheck = 1;
-
-    while (currentCheck <= checksPerSide) {
-      // Try the offset of the left side
-      float offset = degreeOffset * currentCheck;
-      newLoc = here.add(dir.rotateLeftDegrees(offset), RobotType.SCOUT.strideRadius);
-      rc.setIndicatorLine(here, newLoc, 255, 0, 0);
-      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-        rc.move(newLoc);
-        isPerchedInTree = false;
-        //System.out.println("tryMove: " + newLoc);
-        return true;
-      }
-      else if (Clock.getBytecodesLeft() < 2000) {
-        return false;
-      }
-      newLoc = here.add(dir.rotateRightDegrees(offset), RobotType.SCOUT.strideRadius);
-      rc.setIndicatorLine(here, newLoc, 255, 0, 0);
-      // Try the offset on the right side
-      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-        rc.move(newLoc);
-        isPerchedInTree = false;
-        //System.out.println("tryMove: " + newLoc);
-        return true;
-      }
-      else if (Clock.getBytecodesLeft() < 2000) {
-        return false;
-      }
-      // No move performed, try slightly further
-      currentCheck++;
-    }
-
-    // A move never happened, so return false.
-    return false;
-  }
-
-  private static boolean isLocationSafe(BulletInfo[] nearbyBullets, MapLocation loc) {
-    for (BulletInfo bi : nearbyBullets) {
-      if (Clock.getBytecodesLeft() < 2000) {
-        return false;
-      }
-      if (RobotUtils.willCollideWithTargetLocation(bi.getLocation(), bi.getDir(), loc,
-          myType.bodyRadius)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   private static RobotInfo engage(int target, boolean priorityTarget) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
     if (!priorityTarget) {
@@ -367,7 +302,9 @@ public class Scout extends Globals {
       float absolute_dist = (float) here.distanceTo(targetRobot.getLocation());
       if (absolute_dist > KEEPAWAY_RADIUS + RobotType.SCOUT.strideRadius) {
         shouldShoot = false;
-        tryMoveIfSafe(direction, nearbyBullets, 30, 3);
+        if (RobotUtils.tryMoveIfSafe(direction, nearbyBullets, 30, 3)) {
+          isPerchedInTree = false;
+        }
       }
       else {
         if (targetRobot.getType() == RobotType.GARDENER) {
@@ -428,14 +365,14 @@ public class Scout extends Globals {
               Direction optimalDir = here.directionTo(optimalLoc);
               MapLocation scaledLoc = here.add(optimalDir, RobotType.SCOUT.strideRadius);
               shouldShoot = false;
-              if (rc.canMove(scaledLoc) && isLocationSafe(nearbyBullets, scaledLoc)) {
+              if (rc.canMove(scaledLoc) && RobotUtils.isLocationSafe(nearbyBullets, scaledLoc)) {
                 rc.move(scaledLoc);
                 isPerchedInTree = false;
                 System.out.println("Moved towards optimal location");
               }
             }
             else if (optimalDist <= RobotType.SCOUT.strideRadius
-                && isLocationSafe(nearbyBullets, optimalLoc)) {
+                && RobotUtils.isLocationSafe(nearbyBullets, optimalLoc)) {
               rc.move(optimalLoc);
               if (inTree) {
                 System.out.println("Moved to tree!");
@@ -478,12 +415,12 @@ public class Scout extends Globals {
               Direction optimalDir = here.directionTo(optimalLoc);
               MapLocation scaledLoc = here.add(optimalDir, RobotType.SCOUT.strideRadius);
               shouldShoot = false;
-              if (rc.canMove(scaledLoc) && isLocationSafe(nearbyBullets, scaledLoc)) {
+              if (rc.canMove(scaledLoc) && RobotUtils.isLocationSafe(nearbyBullets, scaledLoc)) {
                 rc.move(scaledLoc);
                 isPerchedInTree = false;
               }
             }
-            else if (rc.canMove(optimalLoc) && isLocationSafe(nearbyBullets, optimalLoc)) {
+            else if (rc.canMove(optimalLoc) && RobotUtils.isLocationSafe(nearbyBullets, optimalLoc)) {
               rc.move(optimalLoc);
               isPerchedInTree = true;
               hpWhenPerched = rc.getHealth();
@@ -497,7 +434,7 @@ public class Scout extends Globals {
             boolean currentlyHasClearShot = clearShot(here, targetRobot);
             Direction rotated30 = direction.opposite().rotateLeftDegrees(30);
             MapLocation newLoc = targetRobot.getLocation().add(rotated30, KEEPAWAY_RADIUS);
-            if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+            if (rc.canMove(newLoc) && RobotUtils.isLocationSafe(nearbyBullets, newLoc)) {
               if (currentlyHasClearShot && clearShot(newLoc, targetRobot)) {
                 //System.out.println("d");
                 rc.move(newLoc);
@@ -511,7 +448,7 @@ public class Scout extends Globals {
             else {
               rotated30 = direction.opposite().rotateRightDegrees(30);
               newLoc = targetRobot.getLocation().add(rotated30, KEEPAWAY_RADIUS);
-              if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+              if (rc.canMove(newLoc) && RobotUtils.isLocationSafe(nearbyBullets, newLoc)) {
                 if (currentlyHasClearShot && clearShot(newLoc, targetRobot)) {
                   //System.out.println("e");
                   rc.move(newLoc);
@@ -643,7 +580,9 @@ public class Scout extends Globals {
               }
               BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
               System.out.println("Moving towards target");
-              tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
+              if (RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+                isPerchedInTree = false;
+              }
             }
           }
         }
@@ -754,7 +693,9 @@ public class Scout extends Globals {
                 targetDirection = here.directionTo(targetLoc);
                 if (!rc.hasMoved()) {
                   //System.out.println("j");
-                  tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
+                  if (RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+                    isPerchedInTree = false;
+                  }
                 }
                 else {
                   // We had to evade, so we couldn't move towards the target
@@ -834,7 +775,9 @@ public class Scout extends Globals {
               }
               else {
                 System.out.println("Trying to move towards tree");
-                tryMoveIfSafe(here.directionTo(preferredTree.getLocation()), nearbyBullets, 30, 3);
+                if (RobotUtils.tryMoveIfSafe(here.directionTo(preferredTree.getLocation()), nearbyBullets, 30, 3)) {
+                  isPerchedInTree = false;
+                }
               }
             }
             else {
@@ -845,10 +788,19 @@ public class Scout extends Globals {
                 targetDirection = targetDirection
                     .rotateRightRads((float) (rand.nextFloat() * Math.PI));
               }
-              tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
+              // Handle case when blocked by both obstacle and border
+              if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+                targetDirection = targetDirection
+                    .rotateRightRads((float) (rand.nextFloat() * Math.PI));
+              }
+              else {
+                isPerchedInTree = false;
+              }
             }
           }
-
+          if (currentRoundNum > 400) {
+            current_mode = ROAM;
+          }
         }
         if (!hasReportedDeath && rc.getHealth() < 3f) {
           int squad_count = rc.readBroadcast(squad_channel);
