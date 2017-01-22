@@ -56,22 +56,22 @@ public class EvasiveScout extends Globals {
             switch (ri.getType()) {
               case LUMBERJACK:
                 weightOffset = (150 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                    + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case SOLDIER:
                 weightOffset = (200 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                    + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case SCOUT:
                 weightOffset = (50 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                    + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case TANK:
                 weightOffset = (250 * (70 - angleDelta))
-                    + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                    + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               default:
@@ -129,7 +129,7 @@ public class EvasiveScout extends Globals {
           }
           if (willCollide) {
             directionWeights[angleIndex] -= (15000
-                + 1000 * (EVASION_STRIDE_RADIUS + BULLET_DETECT_RADIUS - distToRobot)
+                + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + BULLET_DETECT_RADIUS - distToRobot)
                 + 1000 * (bi.damage * bi.damage));
             /*
             if (DEBUG) {
