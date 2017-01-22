@@ -53,13 +53,14 @@ public class Lumberjack extends Globals {
 
   public static void roam() throws GameActionException {
     System.out.println("Roaming");
+    System.out.println(targetDirection);
     if (!rc.onTheMap(here.add(targetDirection,
         1 + RobotType.LUMBERJACK.strideRadius + RobotType.LUMBERJACK.bodyRadius))) {
       // Change direction when hitting border
       targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
     }
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
-    if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+    if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, (rand.nextFloat() * 10 + 20), 3)) {
       targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
     }
   }

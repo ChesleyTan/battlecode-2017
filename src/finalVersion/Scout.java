@@ -789,7 +789,7 @@ public class Scout extends Globals {
                     .rotateRightRads((float) (rand.nextFloat() * Math.PI));
               }
               // Handle case when blocked by both obstacle and border
-              if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 4)) {
+              if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, rand.nextFloat() * 10 + 30, 3)) {
                 targetDirection = targetDirection
                     .rotateRightRads((float) (rand.nextFloat() * Math.PI));
               }
