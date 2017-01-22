@@ -132,7 +132,7 @@ public class Gardener extends Globals {
     float sumY = 0;
 
     // Opposing forces created by Robots
-    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(4f);
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(5f);
     float robotMaxDistance = RobotType.GARDENER.sensorRadius + GameConstants.MAX_ROBOT_RADIUS;
     for (RobotInfo r : nearbyRobots) {
       Direction theirDirection = r.getLocation().directionTo(here);
@@ -152,7 +152,7 @@ public class Gardener extends Globals {
     }
 
     // Opposing forces created by Trees
-    TreeInfo[] nearbyTrees = rc.senseNearbyTrees(4f);
+    TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5f);
     float treeMaxDistance = RobotType.GARDENER.sensorRadius + GameConstants.NEUTRAL_TREE_MAX_RADIUS;
     for (TreeInfo t : nearbyTrees) {
       Direction theirDirection = t.location.directionTo(here);
