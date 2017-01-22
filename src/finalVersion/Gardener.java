@@ -413,7 +413,7 @@ public class Gardener extends Globals {
           }
           else {
             Direction[] freeSpaces = possibleTrees();
-            if ((shouldPlant || numCheckSpaces > 3) && freeSpaces[1] != null
+            if ((shouldPlant || numCheckSpaces > 8) && freeSpaces[1] != null
                 && rc.canPlantTree(freeSpaces[1])) {
               /*
               if (!rc.hasMoved() && rc.canMove(freeSpaces[1], 0.3f)) {
@@ -486,7 +486,6 @@ public class Gardener extends Globals {
               rc.broadcast(DEFENSE_START_CHANNEL + 3, (int) attacker.getLocation().y);
               calledForBackup = true;
             }
-            // TODO call for scouts if no soldiers
           }
           else if (!hasReportedDeath && myHP < 3 && attacker != null) {
             int gardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
@@ -496,7 +495,6 @@ public class Gardener extends Globals {
               int numProductionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
               rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, numProductionGardeners - 1);
             }
-            //rc.disintegrate();
           }
         }
         RobotUtils.donateEverythingAtTheEnd();
