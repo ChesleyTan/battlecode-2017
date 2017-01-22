@@ -775,7 +775,7 @@ public class Scout extends Globals {
               }
               else {
                 System.out.println("Trying to move towards tree");
-                if (RobotUtils.tryMoveIfSafe(here.directionTo(preferredTree.getLocation()), nearbyBullets, 30, 3)) {
+                if (RobotUtils.tryMoveIfSafe(here.directionTo(preferredTree.getLocation()), nearbyBullets, 30, 4)) {
                   isPerchedInTree = false;
                 }
               }
@@ -789,7 +789,7 @@ public class Scout extends Globals {
                     .rotateRightRads((float) (rand.nextFloat() * Math.PI));
               }
               // Handle case when blocked by both obstacle and border
-              if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+              if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 4)) {
                 targetDirection = targetDirection
                     .rotateRightRads((float) (rand.nextFloat() * Math.PI));
               }

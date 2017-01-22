@@ -65,7 +65,7 @@ public class Lumberjack extends Globals {
       target = rc.senseRobot(target.getID());
       MapLocation targetLoc = target.getLocation();
       RobotInfo[] attackingLumbers = siftForLumbers(rc.senseNearbyRobots(targetLoc,
-          GameConstants.INTERACTION_DIST_FROM_EDGE + 2 * RobotType.LUMBERJACK.bodyRadius, us));
+          GameConstants.LUMBERJACK_STRIKE_RADIUS + 2 * RobotType.LUMBERJACK.bodyRadius, us));
       BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
       Direction toMe = targetLoc.directionTo(here);
       boolean isInRangeOfFriendlies = false;
@@ -76,7 +76,7 @@ public class Lumberjack extends Globals {
         //System.out.println(r.ID);
         //System.out.println(r.location.distanceTo(closestPoint));
         if (r.getLocation().isWithinDistance(closestPoint,
-            2 * RobotType.LUMBERJACK.bodyRadius + GameConstants.INTERACTION_DIST_FROM_EDGE)) {
+            2 * RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS)) {
           isInRangeOfFriendlies = true;
           break;
         }
@@ -134,7 +134,7 @@ public class Lumberjack extends Globals {
   public static void chase() throws GameActionException {
     checkNearbyLumbersAndMove();
     if (target != null && rc.canStrike()) {
-      if (here.distanceTo(target.getLocation()) <= GameConstants.INTERACTION_DIST_FROM_EDGE
+      if (here.distanceTo(target.getLocation()) <= GameConstants.LUMBERJACK_STRIKE_RADIUS
           + RobotType.LUMBERJACK.bodyRadius + target.getRadius()) {
         rc.strike();
       }

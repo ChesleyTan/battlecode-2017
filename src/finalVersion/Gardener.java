@@ -169,31 +169,23 @@ public class Gardener extends Globals {
     // Opposing forces created by Edge of Map
     updateMapBoundaries();
     float sensorRadius = RobotType.GARDENER.sensorRadius - 1;
-    if (minX != UNKNOWN
-        && !rc.onTheMap(new MapLocation(here.x - sensorRadius, here.y))) {
-      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.x - minX),
-          2);
+    if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sensorRadius, here.y))) {
+      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.x - minX), 2);
       //System.out.println("minX: " + weightedDistance);
       sumX += weightedDistance;
     }
-    if (maxX != UNKNOWN
-        && !rc.onTheMap(new MapLocation(here.x + sensorRadius, here.y))) {
-      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxX - here.x),
-          2);
+    if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sensorRadius, here.y))) {
+      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxX - here.x), 2);
       //System.out.println("maxX: " + weightedDistance);
       sumX -= weightedDistance;
     }
-    if (minY != UNKNOWN
-        && !rc.onTheMap(new MapLocation(here.x, here.y - sensorRadius))) {
-      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.y - minY),
-          2);
+    if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sensorRadius))) {
+      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.y - minY), 2);
       //System.out.println("minY: " + weightedDistance);
       sumY += weightedDistance;
     }
-    if (maxY != UNKNOWN
-        && !rc.onTheMap(new MapLocation(here.x, here.y + sensorRadius))) {
-      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxY - here.y),
-          2);
+    if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sensorRadius))) {
+      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxY - here.y), 2);
       //System.out.println("maxY: " + weightedDistance);
       sumY -= weightedDistance;
     }
@@ -203,8 +195,7 @@ public class Gardener extends Globals {
     rc.setIndicatorLine(here.add(finalDir, 1.75f), here.add(finalDir, 2f), 0, 0, 0);
     RobotUtils.tryMove(finalDir, 5, 3);
   }
-  
-  
+
   private static Direction scoutOppDir(RobotInfo[] enemies, TreeInfo[] trees) {
     for (RobotInfo r : enemies) {
       if (r.getType() != RobotType.SCOUT) {
@@ -350,8 +341,10 @@ public class Gardener extends Globals {
                   nearbyEnemyThreat = true;
                 }
                 else if (ri.getType() == RobotType.LUMBERJACK
-                    && ri.getLocation().isWithinDistance(here, GameConstants.INTERACTION_DIST_FROM_EDGE + RobotType.LUMBERJACK.strideRadius
-                        + RobotType.LUMBERJACK.bodyRadius + RobotType.GARDENER.bodyRadius)) {
+                    && ri.getLocation()
+                        .isWithinDistance(here, GameConstants.INTERACTION_DIST_FROM_EDGE
+                            + RobotType.LUMBERJACK.strideRadius + RobotType.LUMBERJACK.bodyRadius
+                            + RobotType.GARDENER.bodyRadius)) {
                   nearbyEnemyThreat = true;
                 }
               }
@@ -397,19 +390,19 @@ public class Gardener extends Globals {
           // Either plant a tree or produce a unit
           // Initial setup moves to a clear spot and spawns 3 scouts
           if (currentRoundNum < 100) {
-            if (unitCount == 0 && rc.senseNearbyTrees().length > 2){
-              if (spawnRobot(RobotType.LUMBERJACK)){
+            if (unitCount == 0 && rc.senseNearbyTrees().length > 2) {
+              if (spawnRobot(RobotType.LUMBERJACK)) {
                 rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
               }
             }
-            else if (!spawnedEarlySoldier){
-              if (spawnRobot(RobotType.SOLDIER)){
+            else if (!spawnedEarlySoldier) {
+              if (spawnRobot(RobotType.SOLDIER)) {
                 rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
                 spawnedEarlySoldier = true;
               }
             }
             else if (!spawnedEarlyScout) {
-              if (spawnRobot(RobotType.SCOUT)){
+              if (spawnRobot(RobotType.SCOUT)) {
                 rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
                 spawnedEarlyScout = true;
               }
@@ -438,9 +431,14 @@ public class Gardener extends Globals {
             }
             else {
               int division_factor = (int) (154 / (rc.getTreeCount() + 1));
-              if (currentRoundNum % division_factor == 0 && freeSpaces[0] != null
-                  && rc.canBuildRobot(RobotType.LUMBERJACK, freeSpaces[0])) {
-                rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
+              if (currentRoundNum % division_factor == 0) {
+                if (freeSpaces[0] != null
+                    && rc.canBuildRobot(RobotType.LUMBERJACK, freeSpaces[0])) {
+                  rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
+                }
+                else {
+                  spawnRobot(RobotType.LUMBERJACK);
+                }
               }
             }
           }
