@@ -46,29 +46,29 @@ public class EvasiveGardener extends Globals {
           */
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
             float angleDelta = Math.abs(enemyAngle.degreesBetween(angleDirections[angleIndex]));
-            if (angleDelta > 70) {
+            if (angleDelta > 90) {
               continue;
             }
             float distBetween = moveLocations[angleIndex].distanceTo(enemyLoc);
             float weightOffset;
             switch (ri.getType()) {
               case LUMBERJACK:
-                weightOffset = (150 * (70 - angleDelta))
+                weightOffset = (150 * (90 - angleDelta))
                     + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case SOLDIER:
-                weightOffset = (200 * (70 - angleDelta))
+                weightOffset = (200 * (90 - angleDelta))
                     + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case SCOUT:
-                weightOffset = (150 * (70 - angleDelta))
+                weightOffset = (150 * (90 - angleDelta))
                     + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
               case TANK:
-                weightOffset = (200 * (70 - angleDelta))
+                weightOffset = (200 * (90 - angleDelta))
                     + 1000 * (EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
                 directionWeights[angleIndex] -= weightOffset;
                 break;
