@@ -6,12 +6,10 @@ public class RobotUtils extends Globals {
   
   private static final int BUG = 1;
   private static final int DIRECT = 0;
-  private static final int LEFT = 0;
-  private static final int RIGHT = 1;
   private static MapLocation bugStartLocation;
   private static MapLocation bugDestinationLocation;
   private static int bugState = DIRECT;
-  private static int wallSide;
+  private static boolean wallSideLeft;
   private static Direction bugStartDirection;
   private static Direction lastDirection;
   
@@ -22,10 +20,10 @@ public class RobotUtils extends Globals {
     bugStartDirection = here.directionTo(finalLoc);
     bugDestinationLocation = finalLoc;
     if (bugStartDirection.getDeltaX(1) * bugStartDirection.getDeltaY(1) > 0){
-      wallSide = RIGHT;
+      wallSideLeft = false;
     }
     else{
-      wallSide = LEFT;
+      wallSideLeft = true;
     }
   }
   
@@ -41,11 +39,20 @@ public class RobotUtils extends Globals {
       return true;
     }
     Direction startDir = bugStartDirection;
-    int rotationAmount = wallSide == LEFT? 10 : -10;
+    int rotationAmount = wallSideLeft? 10 : -10;
     int attempts = 0;
     while(!rc.canMove(startDir) && attempts < 18){
       startDir = startDir.rotateLeftDegrees(rotationAmount);
-      attempts ++;
+      attempts++;
+    }
+    if (!rc.canMove(startDir)){
+      attempts = 0;
+      startDir = bugStartDirection;
+      wallSideLeft = !wallSideLeft;
+      while(!rc.canMove(startDir) && attempts < 18){
+        startDir = startDir.rotateRightDegrees(rotationAmount);
+        attempts ++;
+      }
     }
     if (rc.canMove(startDir)){
       rc.move(startDir);

@@ -386,7 +386,7 @@ public class Soldier extends Globals {
         value = 1;
         break;
       case LUMBERJACK:
-        value = 1;
+        value = 3;
         break;
       case TANK:
         value = 0;
