@@ -43,13 +43,18 @@ public class Archon extends Globals {
     int producedGardeners;
     try {
       /*
-      System.out.println(determineMapSymmetry());
+      System.out.println(determineMapSymmetry(myArchons, enemyArchons));
       System.out.println(symmetryX);
       System.out.println(symmetryY);
       readMapSymmetry();
+      updateMapBoundaries();
       System.out.println(symmetry);
       System.out.println(symmetryX);
       System.out.println(symmetryY);
+      System.out.println(minX);
+      System.out.println(maxX);
+      System.out.println(minY);
+      System.out.println(maxY);
       rc.disintegrate();
       */
       EvasiveArchon.init();
