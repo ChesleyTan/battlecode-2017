@@ -6,7 +6,24 @@ import utils.RobotUtils;
 
 public class Archon extends Globals {
 
-  static int ArchonCount = rc.getInitialArchonLocations(us).length;
+  static MapLocation[] myArchons = rc.getInitialArchonLocations(us);
+  static MapLocation[] enemyArchons = rc.getInitialArchonLocations(them);
+  static int ArchonCount = myArchons.length;
+
+  private static void calculateDistanceBetweenArchons() throws GameActionException {
+    int me = 0;
+    for (int i = 0; i < myArchons.length; i++) {
+      if (myArchons[i].equals(here)) {
+        me = i;
+        break;
+      }
+    }
+    float distance = here.distanceTo(enemyArchons[me]);
+    int currDistance = rc.readBroadcast(DISTANCE_BETWEEN_ARCHONS_CHANNEL);
+    if (currDistance == 0 || distance < currDistance) {
+      rc.broadcast(DISTANCE_BETWEEN_ARCHONS_CHANNEL, (int) distance);
+    }
+  }
 
   private static void trySpawnGardener(int producedGardeners) throws GameActionException {
     Direction attemptedDirection = RobotUtils.randomDirection();
@@ -25,27 +42,44 @@ public class Archon extends Globals {
   public static void loop() {
     int producedGardeners;
     try {
+      /*
+      System.out.println(determineMapSymmetry(myArchons, enemyArchons));
+      System.out.println(symmetryX);
+      System.out.println(symmetryY);
+      readMapSymmetry();
+      updateMapBoundaries();
+      System.out.println(symmetry);
+      System.out.println(symmetryX);
+      System.out.println(symmetryY);
+      System.out.println(minX);
+      System.out.println(maxX);
+      System.out.println(minY);
+      System.out.println(maxY);
+      rc.disintegrate();
+      */
       EvasiveArchon.init();
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
       if (producedGardeners == 0) {
         trySpawnGardener(producedGardeners);
       }
+      calculateDistanceBetweenArchons();
     } catch (Exception e) {
       e.printStackTrace();
     }
 
     while (true) {
       try {
-        int producedScouts = rc.readBroadcast(EARLY_UNITS_CHANNEL);
+        Globals.update();
+        int producedEarlyUnits = rc.readBroadcast(EARLY_UNITS_CHANNEL);
         int requiredProductionGardeners = (int) (rc.getTreeCount() / 15);
         rc.broadcast(PRODUCTION_GARDENERS_CHANNEL, requiredProductionGardeners);
-        if (producedScouts < 4 && currentRoundNum < 55) {
+        if (producedEarlyUnits < 3 && currentRoundNum < 55) {
           EvasiveArchon.move();
         }
         else {
           producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
-          if (producedGardeners < 3 * ArchonCount
+          if (producedGardeners < 3 || producedGardeners < currentRoundNum / 40
               || productionGardeners < requiredProductionGardeners) {
             trySpawnGardener(producedGardeners);
           }
@@ -61,7 +95,7 @@ public class Archon extends Globals {
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
         trackEnemyGardeners();
-        
+
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

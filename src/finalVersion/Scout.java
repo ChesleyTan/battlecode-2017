@@ -9,9 +9,10 @@ import static utils.TargetingUtils.clearShot;
 
 public class Scout extends Globals {
 
-  private final static int ROAM = 0;
-  private final static int ATTACK = 1;
-  private static int current_mode = ROAM;
+  private static final int ROAM = 0;
+  private static final int ATTACK = 1;
+  private static final int DISCOVER = 2;
+  private static int current_mode = DISCOVER;
   private static final float KEEPAWAY_RADIUS = EvasiveScout.ENEMY_DETECT_RADIUS;
   private static final float GARDENER_KEEPAWAY_RADIUS = 2.00001f;
   private static Direction[] GARDENER_PENETRATION_ANGLES = new Direction[6];
@@ -27,6 +28,7 @@ public class Scout extends Globals {
   private static int targetBlacklist = -1;
   private static int targetBlacklistPeriodStart = -1;
   private static boolean gardenerOnlyMode = false;
+  private static MapLocation[] enemyArchons;
 
   /*
   public static boolean isPerchedInTree() {
@@ -43,6 +45,48 @@ public class Scout extends Globals {
   }
   */
 
+  public static boolean shouldUnperch(RobotInfo[] nearbyEnemies) {
+    if (!isPerchedInTree) {
+      return false;
+    }
+    for (RobotInfo ri : nearbyEnemies) {
+      if (Clock.getBytecodesLeft() < 2000) {
+        return true;
+      }
+      else {
+        switch (ri.getType()) {
+          case LUMBERJACK:
+            if (ri.getLocation().isWithinDistance(here,
+                1 + RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius)) {
+              return true;
+            }
+            break;
+          case SCOUT:
+            if (ri.getLocation().isWithinDistance(here,
+                1 + RobotType.SCOUT.bodyRadius + RobotType.SCOUT.bodyRadius)) {
+              return true;
+            }
+            break;
+          case SOLDIER:
+            if (ri.getLocation().isWithinDistance(here,
+                4 + RobotType.SOLDIER.bodyRadius + RobotType.SCOUT.bodyRadius)) {
+              return true;
+            }
+            break;
+          case TANK:
+            if (ri.getLocation().isWithinDistance(here,
+                6 + RobotType.TANK.bodyRadius + RobotType.SCOUT.bodyRadius)) {
+              return true;
+            }
+            break;
+          default:
+            continue;
+        }
+      }
+    }
+    return false;
+  }
+
   public static void findSquad() throws GameActionException {
     int numGardenerOnly = rc.readBroadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH);
     if (numGardenerOnly == 0) {
@@ -52,7 +96,7 @@ public class Scout extends Globals {
       // Clear out target field
       rc.broadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH + 1, -1);
       // Clear out blacklist field
-      rc.broadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH + 4, -1);
+      rc.broadcast(ATTACK_END_CHANNEL - ATTACK_BLOCK_WIDTH + 3, -1);
       return;
     }
     int i = ATTACK_START_CHANNEL;
@@ -61,9 +105,9 @@ public class Scout extends Globals {
       //System.out.println(squad_count);
       if (squad_count == 0) {
         // Clear out target field
-        rc.broadcast(i+1, -1);
+        rc.broadcast(i + 1, -1);
         // Clear out blacklist field
-        rc.broadcast(i+4, -1);
+        rc.broadcast(i + 3, -1);
       }
       if (squad_count < 10) {
         squad_channel = i;
@@ -75,17 +119,30 @@ public class Scout extends Globals {
     squad_channel = ATTACK_START_CHANNEL;
   }
 
+  private static int readTargetX(int data) throws GameActionException {
+    return (data & 0xFFFF0000) >>> 16;
+  }
+
+  private static int readTargetY(int data) throws GameActionException {
+    return (data & 0x0000FFFF);
+  }
+
+  private static void writeTargetXY(int x, int y) throws GameActionException {
+    rc.broadcast(squad_channel + 2, (x << 16) | y);
+  }
+
   private static void readBlacklist() throws GameActionException {
     // First 16 bits is ID of blacklisted target
     // Second 16 bits is starting round of blacklist
-    int data = rc.readBroadcast(squad_channel + 4);
+    int data = rc.readBroadcast(squad_channel + 3);
     targetBlacklist = (data & (0xFFFF0000)) >>> 16;
     targetBlacklistPeriodStart = data & (0x0000FFFF);
   }
 
-  private static void writeBlacklist(int blacklistTarget, int startRound) throws GameActionException {
+  private static void writeBlacklist(int blacklistTarget, int startRound)
+      throws GameActionException {
     int data = (blacklistTarget << 16) | startRound;
-    rc.broadcast(squad_channel + 4, data);
+    rc.broadcast(squad_channel + 3, data);
   }
 
   private static boolean isBlacklisted(int target) {
@@ -98,8 +155,12 @@ public class Scout extends Globals {
     }
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
-    if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
-      EvasiveScout.move(nearbyBullets, nearbyRobots);
+    if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
+        && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
+      if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+        isPerchedInTree = false;
+        here = rc.getLocation();
+      }
     }
     if (nearbyRobots.length == 0) {
       // TODO Use message broadcast location to try to find enemies
@@ -117,8 +178,7 @@ public class Scout extends Globals {
           if (enemy.type == RobotType.GARDENER) {
             MapLocation enemyLoc = enemy.getLocation();
             rc.broadcast(squad_channel + 1, enemy.getID());
-            rc.broadcast(squad_channel + 2, (int) (enemyLoc.x));
-            rc.broadcast(squad_channel + 3, (int) (enemyLoc.y));
+            writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
             targetDirection = here.directionTo(enemyLoc);
             if (rc.canFireSingleShot() && clearShot(here, enemy)) {
               rc.fireSingleShot(targetDirection);
@@ -138,8 +198,7 @@ public class Scout extends Globals {
           if (enemy.type != RobotType.ARCHON) {
             MapLocation enemyLoc = enemy.getLocation();
             rc.broadcast(squad_channel + 1, enemy.getID());
-            rc.broadcast(squad_channel + 2, (int) (enemyLoc.x));
-            rc.broadcast(squad_channel + 3, (int) (enemyLoc.y));
+            writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
             targetDirection = here.directionTo(enemyLoc);
             if (rc.canFireSingleShot() && clearShot(here, enemy)) {
               rc.fireSingleShot(targetDirection);
@@ -184,8 +243,7 @@ public class Scout extends Globals {
         }
         MapLocation enemyLoc = enemy.getLocation();
         rc.broadcast(squad_channel + 1, enemy.getID());
-        rc.broadcast(squad_channel + 2, (int) (enemyLoc.x));
-        rc.broadcast(squad_channel + 3, (int) (enemyLoc.y));
+        writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
         targetDirection = here.directionTo(enemyLoc);
         if (rc.canFireSingleShot() && clearShot(here, enemy)) {
           rc.fireSingleShot(targetDirection);
@@ -211,77 +269,13 @@ public class Scout extends Globals {
     return true;
   }
 
-  private static boolean tryMoveIfSafe(Direction dir, BulletInfo[] nearbyBullets,
-      float degreeOffset, int checksPerSide) throws GameActionException {
-    // First, try intended direction
-    //System.out.println("Called tryMove");
-    MapLocation newLoc = here.add(dir, myType.strideRadius);
-    if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-      //System.out.println("tryMove: " + newLoc);
-      rc.move(newLoc);
-      isPerchedInTree = false;
-      return true;
-    }
-    else if (Clock.getBytecodesLeft() < 2000) {
-      return false;
-    }
-
-    // Now try a bunch of similar angles
-    int currentCheck = 1;
-
-    while (currentCheck <= checksPerSide) {
-      // Try the offset of the left side
-      float offset = degreeOffset * currentCheck;
-      newLoc = here.add(dir.rotateLeftDegrees(offset), myType.strideRadius);
-      //rc.setIndicatorLine(here, newLoc, 255, 0, 0);
-      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-        rc.move(newLoc);
-        isPerchedInTree = false;
-        //System.out.println("tryMove: " + newLoc);
-        return true;
-      }
-      else if (Clock.getBytecodesLeft() < 2000) {
-        return false;
-      }
-      newLoc = here.add(dir.rotateRightDegrees(offset), myType.strideRadius);
-      //rc.setIndicatorLine(here, newLoc, 255, 0, 0);
-      // Try the offset on the right side
-      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
-        rc.move(newLoc);
-        isPerchedInTree = false;
-        //System.out.println("tryMove: " + newLoc);
-        return true;
-      }
-      else if (Clock.getBytecodesLeft() < 2000) {
-        return false;
-      }
-      // No move performed, try slightly further
-      currentCheck++;
-    }
-
-    // A move never happened, so return false.
-    return false;
-  }
-
-  private static boolean isLocationSafe(BulletInfo[] nearbyBullets, MapLocation loc) {
-    for (BulletInfo bi : nearbyBullets) {
-      if (Clock.getBytecodesLeft() < 2000) {
-        return false;
-      }
-      if (RobotUtils.willCollideWithTargetLocation(bi.getLocation(), bi.getDir(), loc, myType.bodyRadius)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   private static RobotInfo engage(int target, boolean priorityTarget) throws GameActionException {
     RobotInfo targetRobot = rc.senseRobot(target);
     if (!priorityTarget) {
       int broadcastTarget = rc.readBroadcast(squad_channel + 1);
       if (broadcastTarget == target) {
-        rc.broadcast(squad_channel + 2, (int) targetRobot.getLocation().x);
-        rc.broadcast(squad_channel + 3, (int) targetRobot.getLocation().y);
+        MapLocation targetLoc = targetRobot.getLocation();
+        writeTargetXY((int) targetLoc.x, (int) targetLoc.y);
       }
     }
     /*
@@ -294,8 +288,12 @@ public class Scout extends Globals {
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.ENEMY_DETECT_RADIUS, them);
     System.out.println("Engaging " + targetRobot);
-    if (!rc.hasMoved() && (nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
-      EvasiveScout.move(nearbyBullets, nearbyRobots);
+    if (!rc.hasMoved() && (nearbyBullets.length != 0 || nearbyRobots.length != 0)
+        && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
+      if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+        isPerchedInTree = false;
+        here = rc.getLocation();
+      }
     }
     //System.out.println("Before engage: " + Clock.getBytecodesLeft());
     //System.out.println(target);
@@ -304,7 +302,9 @@ public class Scout extends Globals {
       float absolute_dist = (float) here.distanceTo(targetRobot.getLocation());
       if (absolute_dist > KEEPAWAY_RADIUS + RobotType.SCOUT.strideRadius) {
         shouldShoot = false;
-        tryMoveIfSafe(direction, nearbyBullets, 30, 3);
+        if (RobotUtils.tryMoveIfSafe(direction, nearbyBullets, 30, 3)) {
+          isPerchedInTree = false;
+        }
       }
       else {
         if (targetRobot.getType() == RobotType.GARDENER) {
@@ -360,17 +360,19 @@ public class Scout extends Globals {
             }
           }
           if (optimalLoc != null) {
-            if ((!isPerchedInTree || !currentlyHasClearShot) && optimalDist > RobotType.SCOUT.strideRadius) {
+            if ((!isPerchedInTree || !currentlyHasClearShot)
+                && optimalDist > RobotType.SCOUT.strideRadius) {
               Direction optimalDir = here.directionTo(optimalLoc);
               MapLocation scaledLoc = here.add(optimalDir, RobotType.SCOUT.strideRadius);
               shouldShoot = false;
-              if (rc.canMove(scaledLoc) && isLocationSafe(nearbyBullets, scaledLoc)) {
+              if (rc.canMove(scaledLoc) && RobotUtils.isLocationSafe(nearbyBullets, scaledLoc)) {
                 rc.move(scaledLoc);
                 isPerchedInTree = false;
                 System.out.println("Moved towards optimal location");
               }
             }
-            else if (optimalDist <= RobotType.SCOUT.strideRadius && isLocationSafe(nearbyBullets, optimalLoc)) {
+            else if (optimalDist <= RobotType.SCOUT.strideRadius
+                && RobotUtils.isLocationSafe(nearbyBullets, optimalLoc)) {
               rc.move(optimalLoc);
               if (inTree) {
                 System.out.println("Moved to tree!");
@@ -391,7 +393,7 @@ public class Scout extends Globals {
           MapLocation optimalLoc = null;
           float optimalDist = 9999f;
           if (targetRobot.type != RobotType.LUMBERJACK) {
-            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(targetRobot.getLocation(), 8f, Team.NEUTRAL);
+            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5f);
             for (TreeInfo ti : nearbyTrees) {
               if (Clock.getBytecodesLeft() < 2000) {
                 break;
@@ -413,12 +415,12 @@ public class Scout extends Globals {
               Direction optimalDir = here.directionTo(optimalLoc);
               MapLocation scaledLoc = here.add(optimalDir, RobotType.SCOUT.strideRadius);
               shouldShoot = false;
-              if (rc.canMove(scaledLoc) && isLocationSafe(nearbyBullets, scaledLoc)) {
+              if (rc.canMove(scaledLoc) && RobotUtils.isLocationSafe(nearbyBullets, scaledLoc)) {
                 rc.move(scaledLoc);
                 isPerchedInTree = false;
               }
             }
-            else if (rc.canMove(optimalLoc) && isLocationSafe(nearbyBullets, optimalLoc)) {
+            else if (rc.canMove(optimalLoc) && RobotUtils.isLocationSafe(nearbyBullets, optimalLoc)) {
               rc.move(optimalLoc);
               isPerchedInTree = true;
               hpWhenPerched = rc.getHealth();
@@ -432,7 +434,7 @@ public class Scout extends Globals {
             boolean currentlyHasClearShot = clearShot(here, targetRobot);
             Direction rotated30 = direction.opposite().rotateLeftDegrees(30);
             MapLocation newLoc = targetRobot.getLocation().add(rotated30, KEEPAWAY_RADIUS);
-            if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+            if (rc.canMove(newLoc) && RobotUtils.isLocationSafe(nearbyBullets, newLoc)) {
               if (currentlyHasClearShot && clearShot(newLoc, targetRobot)) {
                 //System.out.println("d");
                 rc.move(newLoc);
@@ -446,7 +448,7 @@ public class Scout extends Globals {
             else {
               rotated30 = direction.opposite().rotateRightDegrees(30);
               newLoc = targetRobot.getLocation().add(rotated30, KEEPAWAY_RADIUS);
-              if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+              if (rc.canMove(newLoc) && RobotUtils.isLocationSafe(nearbyBullets, newLoc)) {
                 if (currentlyHasClearShot && clearShot(newLoc, targetRobot)) {
                   //System.out.println("e");
                   rc.move(newLoc);
@@ -485,19 +487,20 @@ public class Scout extends Globals {
       GARDENER_PENETRATION_ANGLES[3] = new Direction((float) Math.toRadians(180));
       GARDENER_PENETRATION_ANGLES[4] = new Direction((float) Math.toRadians(240));
       GARDENER_PENETRATION_ANGLES[5] = new Direction((float) Math.toRadians(300));
+      enemyArchons = rc.getInitialArchonLocations(them);
       EvasiveScout.init();
       findSquad();
+      /*
       // Early scouts should move towards the archon
       if (currentRoundNum < 100) {
         int numUnits = rc.readBroadcast(EARLY_UNITS_CHANNEL);
         if (numUnits <= 3) {
-          MapLocation[] enemies = rc.getInitialArchonLocations(them);
           MapLocation targetArchonLoc;
-          if (numUnits <= enemies.length) {
-            targetArchonLoc = enemies[numUnits - 1];
+          if (numUnits <= enemyArchons.length) {
+            targetArchonLoc = enemyArchons[numUnits - 1];
           }
           else {
-            targetArchonLoc = enemies[0];
+            targetArchonLoc = enemyArchons[0];
           }
           targetDirection = here.directionTo(targetArchonLoc);
         }
@@ -506,17 +509,19 @@ public class Scout extends Globals {
       if (targetDirection == null) {
         targetDirection = RobotUtils.randomDirection();
       }
+      */
+      targetDirection = RobotUtils.randomDirection();
     } catch (Exception e) {
       e.printStackTrace();
     }
     while (true) {
       try {
+        Globals.update();
         // If damage is taken while perched in a tree, allow evading
         if (isPerchedInTree && rc.getHealth() != hpWhenPerched) {
           isPerchedInTree = false;
         }
         if (current_mode == ROAM) {
-          Globals.update();
           readBlacklist();
           //System.out.println("Roaming");
           //rc.setIndicatorDot(here, 0, 0, 255);
@@ -526,13 +531,18 @@ public class Scout extends Globals {
             System.out.println("Found target in broadcast: " + target);
             current_mode = ATTACK;
             attackTarget = target;
-            int xLoc = rc.readBroadcast(squad_channel + 2);
-            int yLoc = rc.readBroadcast(squad_channel + 3);
+            int data = rc.readBroadcast(squad_channel + 2);
+            int xLoc = readTargetX(data);
+            int yLoc = readTargetY(data);
             targetDirection = here.directionTo(new MapLocation(xLoc, yLoc));
             BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(KEEPAWAY_RADIUS, them);
-            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
-              EvasiveScout.move(nearbyBullets, nearbyRobots);
+            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
+                && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
+              if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+                isPerchedInTree = false;
+                here = rc.getLocation();
+              }
             }
             else if (rc.canMove(targetDirection)) {
               //System.out.println("f");
@@ -546,13 +556,13 @@ public class Scout extends Globals {
             if (!foundTarget) {
               int cacheTarget = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL);
               if (cacheTarget != 0) {
-                int cacheTargetX = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL + 1);
-                int cacheTargetY = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL + 2);
+                int data = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL + 1);
+                int cacheTargetX = readGardenerCacheX(data);
+                int cacheTargetY = readGardenerCacheY(data);
                 attackTarget = cacheTarget;
                 targetDirection = here.directionTo(new MapLocation(cacheTargetX, cacheTargetY));
                 rc.broadcast(squad_channel + 1, cacheTarget);
-                rc.broadcast(squad_channel + 2, cacheTargetX);
-                rc.broadcast(squad_channel + 3, cacheTargetY);
+                writeTargetXY(cacheTargetX, cacheTargetY);
                 rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL, 0);
               }
             }
@@ -570,12 +580,13 @@ public class Scout extends Globals {
               }
               BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
               System.out.println("Moving towards target");
-              tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
+              if (RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+                isPerchedInTree = false;
+              }
             }
           }
         }
         else if (current_mode == ATTACK) {
-          Globals.update();
           //int startBytecodes = Clock.getBytecodeNum();
           //System.out.println("ATTACK");
           // Currently on attack mode
@@ -595,7 +606,7 @@ public class Scout extends Globals {
             // TODO fix disengagement
             // Allow re-engagement on priority targets
             System.out.println(roundsEngaging);
-            if (roundsEngaging > 100) {
+            if (roundsEngaging > 200) {
               rc.broadcast(squad_channel + 1, -1);
               targetBlacklist = attackTarget;
               targetBlacklistPeriodStart = currentRoundNum;
@@ -626,8 +637,12 @@ public class Scout extends Globals {
           else {
             BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
-            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0) && !isPerchedInTree) {
-              EvasiveScout.move(nearbyBullets, nearbyRobots);
+            if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
+                && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
+              if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+                isPerchedInTree = false;
+                here = rc.getLocation();
+              }
             }
             System.out.println("Cannot sense target: " + attackTarget);
             // We are out of range of our target,
@@ -664,12 +679,13 @@ public class Scout extends Globals {
               }
             }
             if (!priorityTarget && attackTarget != -1) {
-              int xLoc = rc.readBroadcast(squad_channel + 2);
-              int yLoc = rc.readBroadcast(squad_channel + 3);
+              int data = rc.readBroadcast(squad_channel + 2);
+              int xLoc = readTargetX(data);
+              int yLoc = readTargetY(data);
               MapLocation targetLoc = new MapLocation(xLoc, yLoc);
               System.out.println("Moving towards target: " + targetLoc);
               float distToTarget = here.distanceTo(targetLoc);
-              if (distToTarget < RobotType.ARCHON.sensorRadius && !rc.canSenseRobot(attackTarget)) {
+              if (distToTarget < RobotType.ARCHON.sensorRadius + MIN_ROBOT_RADIUS && !rc.canSenseRobot(attackTarget)) {
                 System.out.println("Could not find target at last known location");
                 rc.broadcast(squad_channel + 1, -1);
               }
@@ -677,7 +693,9 @@ public class Scout extends Globals {
                 targetDirection = here.directionTo(targetLoc);
                 if (!rc.hasMoved()) {
                   //System.out.println("j");
-                  tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
+                  if (RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+                    isPerchedInTree = false;
+                  }
                 }
                 else {
                   // We had to evade, so we couldn't move towards the target
@@ -715,6 +733,74 @@ public class Scout extends Globals {
             }
           }
           //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
+        }
+        else if (current_mode == DISCOVER) {
+          BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveScout.BULLET_DETECT_RADIUS);
+          RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.ENEMY_DETECT_RADIUS, them);
+          if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
+              && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
+            if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+              isPerchedInTree = false;
+              here = rc.getLocation();
+            }
+          }
+          if (!rc.hasMoved()) {
+            TreeInfo[] nearbyTrees = rc.senseNearbyTrees(-1, Team.NEUTRAL);
+            TreeInfo preferredTree = null;
+            float preferredTreeDist = 9999f;
+            for (TreeInfo ti : nearbyTrees) {
+              if (Clock.getBytecodesLeft() < 2000) {
+                break;
+              }
+              MapLocation treeLoc = ti.getLocation();
+              /*
+              if (!rc.canMove(treeLoc)) {
+                continue;
+              }
+              */
+              float treeDist = treeLoc.distanceTo(here);
+              if (treeDist < preferredTreeDist && ((preferredTree == null && ti.getContainedBullets() > 0)
+                  || (preferredTree != null && ti.getContainedBullets() >= preferredTree.getContainedBullets()))) {
+                preferredTreeDist = treeDist;
+                preferredTree = ti;
+              }
+            }
+            if (preferredTree != null) {
+              System.out.println("Preferred tree: " + preferredTree);
+              System.out.println("Distance: " + preferredTreeDist);
+              if (preferredTreeDist <= RobotType.SCOUT.strideRadius) {
+                if (rc.canMove(preferredTree.getLocation())) {
+                  rc.move(preferredTree.getLocation());
+                }
+              }
+              else {
+                System.out.println("Trying to move towards tree");
+                if (RobotUtils.tryMoveIfSafe(here.directionTo(preferredTree.getLocation()), nearbyBullets, 30, 4)) {
+                  isPerchedInTree = false;
+                }
+              }
+            }
+            else {
+              System.out.println("No trees with bullets--moving randomly");
+              if (!rc.onTheMap(here.add(targetDirection,
+                  1 + RobotType.SCOUT.strideRadius + RobotType.SCOUT.bodyRadius))) {
+                // Change direction when hitting border
+                targetDirection = targetDirection
+                    .rotateRightRads((float) (rand.nextFloat() * Math.PI));
+              }
+              // Handle case when blocked by both obstacle and border
+              if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, rand.nextFloat() * 10 + 30, 3)) {
+                targetDirection = targetDirection
+                    .rotateRightRads((float) (rand.nextFloat() * Math.PI));
+              }
+              else {
+                isPerchedInTree = false;
+              }
+            }
+          }
+          if (currentRoundNum > 400) {
+            current_mode = ROAM;
+          }
         }
         if (!hasReportedDeath && rc.getHealth() < 3f) {
           int squad_count = rc.readBroadcast(squad_channel);

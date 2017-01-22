@@ -9,7 +9,10 @@ public strictfp class EvasiveArchon extends Globals {
   static Direction[] angleDirections = new Direction[12];
   static final int EDGE_BIAS_RADIUS = 12;
   static int lastMoveAngleIndex = -1;
-  static final int BULLET_DETECT_RADIUS = 7;
+  static final float BULLET_DETECT_RADIUS = 7;
+  static final float EVASION_STRIDE_RADIUS = RobotType.ARCHON.strideRadius;
+  static final float ENEMY_DETECT_RADIUS = 8;
+  static final float TREE_DETECT_RADIUS = 7;
   private static MapLocation[] moveLocations = new MapLocation[12];
 
   public static void init() {
@@ -29,37 +32,78 @@ public strictfp class EvasiveArchon extends Globals {
       for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
         moveLocations[angleIndex] = here.add(angleDirections[angleIndex]);
       }
-      RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
+      RobotInfo[] nearbyRobots = rc.senseNearbyRobots(ENEMY_DETECT_RADIUS);
       float[] directionWeights = new float[12];
       for (RobotInfo ri : nearbyRobots) {
+        if (Clock.getBytecodesLeft() < 7000) {
+          break;
+        }
         if (ri.getType().canAttack()) {
-          Direction enemyAngle = here.directionTo(ri.getLocation());
+          Direction robotAngle = here.directionTo(ri.getLocation());
+          MapLocation robotLoc = ri.getLocation();
   /*
           if (DEBUG) {
             System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
           }
           */
           for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-            float angleDelta = Math.abs(enemyAngle.degreesBetween(angleDirections[angleIndex]));
-            if (angleDelta > 70) {
+            float angleDelta = Math.abs(robotAngle.degreesBetween(angleDirections[angleIndex]));
+            if (angleDelta > 90) {
               continue;
             }
+            float distBetween = moveLocations[angleIndex].distanceTo(robotLoc);
             float weightOffset = 0f;
-            switch (ri.getType()) {
-              case SCOUT:
-                weightOffset = (100 * (70 - angleDelta));
-                break;
-              case SOLDIER:
-                weightOffset = (150 * (70 - angleDelta));
-                break;
-              case LUMBERJACK:
-                weightOffset = (200 * (70 - angleDelta));
-                break; 
-              case TANK:
-                weightOffset = (200 * (70 - angleDelta));
-                break; 
-              default:
-                break;
+            if (ri.getTeam() == them) {
+              switch (ri.getType()) {
+                case SCOUT:
+                  weightOffset = (100 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break;
+                case SOLDIER:
+                  weightOffset = (200 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break;
+                case LUMBERJACK:
+                  weightOffset = (200 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break; 
+                case TANK:
+                  weightOffset = (250 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break; 
+                default:
+                  break;
+              }
+            }
+            else if (ri.getTeam() == us) {
+              switch (ri.getType()) {
+                case SCOUT:
+                  weightOffset = (50 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break;
+                case SOLDIER:
+                  weightOffset = (100 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break;
+                case LUMBERJACK:
+                  weightOffset = (100 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break; 
+                case GARDENER:
+                  weightOffset = (100 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break; 
+                case TANK:
+                  weightOffset = (200 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break; 
+                case ARCHON:
+                  weightOffset = (200 * (90 - angleDelta))
+                      + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS + ri.getRadius() - distBetween);
+                  break; 
+                default:
+                  break;
+              }
             }
             directionWeights[angleIndex] -= weightOffset;
             /*
@@ -72,8 +116,11 @@ public strictfp class EvasiveArchon extends Globals {
           }
         }
       }
-      TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5);
+      TreeInfo[] nearbyTrees = rc.senseNearbyTrees(TREE_DETECT_RADIUS);
       for (TreeInfo ti : nearbyTrees) {
+        if (Clock.getBytecodesLeft() < 5000) {
+          break;
+        }
         Direction treeAngle = here.directionTo(ti.getLocation());
         /*
         if (DEBUG) {
@@ -81,8 +128,9 @@ public strictfp class EvasiveArchon extends Globals {
         }
         */
         int nearestAngle = (int) treeAngle.getAngleDegrees() / 30;
-        for (int angleIndexOffset = 0; angleIndexOffset < 3; ++angleIndexOffset) {
-          float weightOffset = (70 * (60 - angleIndexOffset * 30));
+        float treeDistance = here.distanceTo(ti.getLocation()) - RobotType.ARCHON.bodyRadius - ti.getRadius();
+        for (int angleIndexOffset = 0; angleIndexOffset < 2; ++angleIndexOffset) {
+          float weightOffset = (140 * (30 - angleIndexOffset * 30)) + Math.max(0, 500 * (TREE_DETECT_RADIUS + GameConstants.NEUTRAL_TREE_MAX_RADIUS - ti.getRadius() - RobotType.ARCHON.bodyRadius - treeDistance));
           //int startBytecodes = Clock.getBytecodeNum();
           directionWeights[Math.floorMod(nearestAngle + angleIndexOffset, 12)] -= weightOffset;
           if (angleIndexOffset != 0) {
@@ -94,7 +142,7 @@ public strictfp class EvasiveArchon extends Globals {
       BulletInfo[] nearbyBullets = rc.senseNearbyBullets(BULLET_DETECT_RADIUS);
       // TODO don't move if it guarantees you will be hit by a bullet?
       for (int i = 0; i < nearbyBullets.length; ++i) {
-        if (Clock.getBytecodesLeft() < 2000) {
+        if (Clock.getBytecodesLeft() < 3000) {
           break;
         }
         BulletInfo bi = nearbyBullets[i];
@@ -210,10 +258,13 @@ public strictfp class EvasiveArchon extends Globals {
             moveAngleIndex = angleIndex;
           }
         }
+        /*
         if (DEBUG) {
           System.out.println("Trying to move in direction: " + angleDirections[moveAngleIndex]);
         }
-        moved = RobotUtils.tryMove(angleDirections[moveAngleIndex], 5, 3);
+        */
+        moved = RobotUtils.tryMoveDist(angleDirections[moveAngleIndex], EVASION_STRIDE_RADIUS, 5, 3);
+        /*
         if (DEBUG) {
           rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255, 0);
           rc.setIndicatorLine(here.add(angleDirections[moveAngleIndex], 1),
@@ -226,25 +277,27 @@ public strictfp class EvasiveArchon extends Globals {
                 (int) Math.max(-25500, directionWeights[angleIndex]) / (-100));
           }
         }
+        */
         directionWeights[moveAngleIndex] -= 999999;
       } while (!moved && ++attempts <= 12);
       if (attempts > 12) {
-        RobotUtils.tryMove(NORTH, 10, 18);
+        RobotUtils.tryMoveDist(NORTH, EVASION_STRIDE_RADIUS, 10, 18);
         lastMoveAngleIndex = -1;
       }
       else {
         lastMoveAngleIndex = moveAngleIndex;
       }
       // Broadcast archon's location for other robots on the team to know
-      rc.broadcast(0, (int) here.x);
-      rc.broadcast(1, (int) here.y);
+      //rc.broadcast(0, (int) here.x);
+      //rc.broadcast(1, (int) here.y);
+      /*
       if (DEBUG) {
         System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
       }
+      */
       //System.out.println("Bytecodes left: " + Clock.getBytecodesLeft());
 
     } catch (Exception e) {
-      System.out.println("Archon Exception");
       e.printStackTrace();
     }
   }

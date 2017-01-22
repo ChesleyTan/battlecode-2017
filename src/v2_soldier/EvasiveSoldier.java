@@ -14,13 +14,13 @@ public class EvasiveSoldier extends Globals {
   static final float EVASION_STRIDE_RADIUS = RobotType.SOLDIER.strideRadius;
   private static MapLocation[] moveLocations = new MapLocation[8];
 
-  static void init() {
+  /*static void init() {
     for (int angle = 0; angle < 8; ++angle) {
       angleDirections[angle] = new Direction((float) (angle * Math.PI / 4));
     }
-  }
+  }*/
 
-  static boolean move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots, Direction bias, MapLocation destination) {
+  static boolean move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots, RobotInfo target, MapLocation destination) {
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
@@ -31,6 +31,20 @@ public class EvasiveSoldier extends Globals {
         System.out.println(here);
       }
       */
+      if (target == null || 
+          target.getType() == RobotType.SOLDIER || 
+          target.getType() == RobotType.LUMBERJACK || 
+          target.getType() == RobotType.TANK){
+        for (int angle = 0; angle < 8; ++angle) {
+          angleDirections[angle] = new Direction((float) (angle * Math.PI / 4));
+        }
+      }
+      else{
+        float toTarget = here.directionTo(target.location).radians;
+        for (int angle = 0; angle < 8; ++angle){
+          angleDirections[angle] = new Direction((float) (angle * Math.PI / 8 - Math.PI / 2 + toTarget));
+        }
+      }
       for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {
         moveLocations[angleIndex] = here.add(angleDirections[angleIndex], EVASION_STRIDE_RADIUS);
       }
@@ -152,7 +166,7 @@ public class EvasiveSoldier extends Globals {
         }
       }
       */
-      if (unsafeFromUnit || unsafeFromBullet) {
+      if (unsafeFromUnit || unsafeFromBullet || (target == null && destination == null)) {
         // Avoid corners and edges
         if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
           float weightOffset = 1000 * (EDGE_BIAS_RADIUS - (here.x - minX));
@@ -178,21 +192,11 @@ public class EvasiveSoldier extends Globals {
           directionWeights[2] -= weightOffset;
           directionWeights[3] -= weightOffset;
         }
-        if (lastMoveAngleIndex >= 0) {
-          directionWeights[lastMoveAngleIndex] += 5000;
-        }
         int moveAngleIndex = 0;
         int attempts = 0;
         boolean moved = false;
         
         int movementBiasSeed = Math.abs(rand.nextInt());
-        if (bias != null){
-          int index = (int)( bias.getAngleDegrees() / 45);
-          if (index < 0){
-            index = index + 8;
-          }
-          directionWeights[index] += 5000;
-        }
         do {
           // Prevent clockwise bias in movement angle starting from 0 degrees
           moveAngleIndex = movementBiasSeed % 8;
@@ -212,7 +216,6 @@ public class EvasiveSoldier extends Globals {
           */
           moved = RobotUtils.tryMoveDist(angleDirections[moveAngleIndex], EVASION_STRIDE_RADIUS, 5,
               3);
-          lastMoveAngleIndex = moveAngleIndex;
           /*
           if (DEBUG) {
             rc.setIndicatorLine(here, here.add(angleDirections[moveAngleIndex], 1), 0, 255, 0);

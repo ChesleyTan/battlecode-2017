@@ -166,43 +166,33 @@ public class Soldier extends Globals {
     return false;
   }
   
-  private static void checkBulletsAndDodge(MapLocation destination) throws GameActionException{
-    BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
-    boolean willGetHitByBullet = false;
-    TreeInfo[] trees = rc.senseNearbyTrees();
-    for (BulletInfo i: bullets){
-      if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)){
-        System.out.println("in danger");
-        willGetHitByBullet = true;
-        break;
-      }
-    }
-    if (willGetHitByBullet){
-      RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS);
-      System.out.println("dodging");               
-      EvasiveSoldier.move(bullets, robots, null, destination);
-    }
+  private static void move(BulletInfo[] bullets,RobotInfo[] robots, MapLocation destination) throws GameActionException{      
+    EvasiveSoldier.move(bullets, robots, target, destination);
   }
   /*
    * Assumes target has already been seen and is a local variable
-   * Makes no assumption about movement
+   * make sure whenever this is called, person has not moved yet
    */
   private static void attack(RobotInfo target) throws GameActionException{
     System.out.println("attacking");
-    if(!rc.hasMoved()){
-      BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
-      RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS);
-      MapLocation targetLocation = target.getLocation();
-      //EvasiveSoldier.move(bullets, robots, here.directionTo(targetLocation), target.location);
-      RobotUtils.tryMoveDestination(targetLocation);
-    }
+    BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
+    RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS);
+    MapLocation targetLocation = target.getLocation();
+    move(bullets, robots, target.location);
+      //RobotUtils.tryMoveDestination(targetLocation);
     if (rc.canFireTriadShot() && TargetingUtils.clearShot(here, target)){
       Direction towardsEnemy = here.directionTo(target.location);
-      if (here.distanceTo(target.location) <= 3.5){
-        rc.fireTriadShot(towardsEnemy);
+      float distanceEnemy = here.distanceTo(target.location);
+      if (distanceEnemy <= 3.5 && rc.canFirePentadShot() && rc.getTeamBullets() > 200){
+        rc.firePentadShot(towardsEnemy);
       }
       else{
-        rc.fireSingleShot(towardsEnemy);
+        if (rc.canFireTriadShot() && rc.getTeamBullets() > 50){
+          rc.fireTriadShot(towardsEnemy);
+        }
+        else if (rc.canFireSingleShot()){
+          rc.fireSingleShot(towardsEnemy);
+        }
       }
     }
   }
@@ -211,65 +201,47 @@ public class Soldier extends Globals {
    * Assumes soldier has neither moved nor attacked
    * Also assumes that there is a target
    */
-  private static void moveToDefend(MapLocation destination) throws GameActionException{
-    checkBulletsAndDodge(destination);
+  private static void moveToAttack(MapLocation destination) throws GameActionException{
+    BulletInfo[] bullets = rc.senseNearbyBullets();
     RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
+    
     if (enemies.length != 0){
       int index = priority(enemies);
       if (index != -1){
-        RobotInfo newTarget = enemies[priority(enemies)];
-        attack(newTarget);
+        target = enemies[priority(enemies)];
+        attack(target);
       }
+    }
+    else{
+      move(bullets, enemies, destination);
     }
   }
   
   private static void roam() throws GameActionException{
     int targetID = rc.readBroadcast(squad_channel + 1);
     if (targetID != -1){
-      mode = DEFEND;
+      mode = ATTACK;
       int xCor = rc.readBroadcast(squad_channel + 2);
       int yCor = rc.readBroadcast(squad_channel + 3);
       MapLocation destination = new MapLocation(xCor, yCor);
-      moveToDefend(destination);
+      moveToAttack(destination);
     }
     else{
-      checkBulletsAndDodge(null);
       RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
+      BulletInfo[] bullets = rc.senseNearbyBullets();
+      
+      
       int priority = priority(enemies);
-      while (priority != -1){
-        RobotInfo enemy = enemies[priority];
-        MapLocation destination = enemy.location;
-        target = enemy;
-        //rc.broadcast(squad_channel + 1, target.ID);
-        //rc.broadcast(squad_channel + 2, (int)target.location.x);
-        //rc.broadcast(squad_channel + 3, (int)target.location.y);
-        mode = ATTACK;
-        if (!rc.hasMoved()){
-          boolean successfulMove = RobotUtils.tryMove(here.directionTo(destination), 10, 6);
-          if (successfulMove){
-            break;
-          }
-          else{
-            enemies[priority] = null;
-            priority = priority(enemies);
-          }
-        }
-      }
       if (priority != -1){
-        if (rc.canFireTriadShot() && TargetingUtils.clearShot(here, target)){
-          Direction towardsEnemy = here.directionTo(target.location);
-          if (here.distanceTo(target.location) <= 3.5){
-            rc.fireTriadShot(towardsEnemy);
-          }
-          else{
-            rc.fireSingleShot(towardsEnemy);
-          }
-        }
+        target = enemies[priority];
+        System.out.println(target.ID);
+        mode = ATTACK;
+        attack(target);
       }
       else{
         if (!rc.hasMoved()){
           int attempts = 0;
-          while(!rc.canMove(mydir) || attempts < 20){
+          while(!rc.canMove(mydir) && attempts < 20){
             mydir = RobotUtils.randomDirection();
             attempts ++;
           }
@@ -315,6 +287,7 @@ public class Soldier extends Globals {
         if (rc.canSenseRobot(targetID)){
           System.out.println("acquired target");
           target = rc.senseRobot(targetID);
+          mode = ATTACK;
           rc.broadcast(squad_channel + 2, (int)target.location.x);
           rc.broadcast(squad_channel + 3, (int)target.location.y);
           attack(target);
@@ -393,7 +366,7 @@ public class Soldier extends Globals {
 
   public static int priority(RobotInfo[] enemies) {
     int result = -1;
-    int currValue = 0;
+    int currValue = -1;
     for (int i = 0; i < enemies.length; i++) {
       int value = 0;
       if (enemies[i] == null){
@@ -407,7 +380,7 @@ public class Soldier extends Globals {
         value = 3;
         break;
       case ARCHON:
-        value = -1;
+        value = 0;
         break;
       case SOLDIER:
         value = 1;
@@ -431,11 +404,19 @@ public class Soldier extends Globals {
   public static void loop() {
     try{
       //Start out and join a squad
-      EvasiveSoldier.init();
       findSquad();
-      MapLocation[] enemies = rc.getInitialArchonLocations(them);
-      mydir = here.directionTo(enemies[0]);
-      mode = ROAM;
+      if (rc.getRoundNum() < 100){
+        MapLocation enemy = rc.getInitialArchonLocations(them)[0];
+        rc.broadcast(squad_channel + 1, 0);
+        rc.broadcast(squad_channel + 2, (int)enemy.x);
+        rc.broadcast(squad_channel + 3, (int)enemy.y);
+        mydir = here.directionTo(enemy);
+        mode = ATTACK;
+      }
+      else{
+        mydir = RobotUtils.randomDirection();
+        mode = ROAM;
+      }
     }catch(Exception e){
       e.printStackTrace();
     }
@@ -455,14 +436,18 @@ public class Soldier extends Globals {
             else{
               // if there is a target requested but not yet seen
               System.out.println("null target, moving to attack");
-              //moveToDefend(targetID);
+              int xCor = rc.readBroadcast(squad_channel + 2);
+              int yCor = rc.readBroadcast(squad_channel + 3);
+              MapLocation destination = new MapLocation(xCor, yCor);
+              moveToAttack(destination);
             }
           }
           else{
             System.out.println("target ID: " + target.ID);
             // if target != null
             if (rc.canSenseRobot(target.ID)){
-              target = rc.senseRobot(target.ID);
+              RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
+              target = enemies[priority(enemies)];
               rc.broadcast(squad_channel + 1, target.ID);
               rc.broadcast(squad_channel + 2, (int)target.location.x);
               rc.broadcast(squad_channel + 3, (int)target.location.y);

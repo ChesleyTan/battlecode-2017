@@ -81,6 +81,14 @@ public class MathUtils {
   }
 
   /**
+   * Checks if two numbers are near enough to each other to be considered equal.
+   * Useful to avoid floating point errors.
+   */
+  public static boolean isNear(float a, float b, float epsilon) {
+    return (Math.abs(a-b) < epsilon) ? true : false;
+  }
+
+  /**
    * Checks if two MapLocation objects are near enough to each other to be considered equal.
    * Useful to avoid floating point errors.
    */
