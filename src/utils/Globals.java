@@ -97,7 +97,15 @@ public class Globals {
         }
         if (minX != UNKNOWN) {
           int x = (minX & (0x00000FFF));
-          rc.broadcast(BroadcastUtils.MAP_X_BOUNDS_CHANNEL, xBounds | 0xF0000000 | x);
+          xBounds = xBounds | 0xF0000000 | x;
+          if (symmetry != SYMMETRY_UNKNOWN) {
+            if (symmetry == VERTICAL_SYMMETRY || symmetry == ROTATIONAL_SYMMETRY) {
+              maxX = ((int)symmetryX - minX) + (int)symmetryX;
+              x = (maxX & (0x00000FFF)) << 12;
+              xBounds = xBounds | 0x0F000000 | x;
+            }
+          }
+          rc.broadcast(BroadcastUtils.MAP_X_BOUNDS_CHANNEL, xBounds);
         }
       }
     }
@@ -117,7 +125,15 @@ public class Globals {
         }
         if (maxX != UNKNOWN) {
           int x = (maxX & (0x00000FFF)) << 12;
-          rc.broadcast(BroadcastUtils.MAP_X_BOUNDS_CHANNEL, xBounds | 0x0F000000 | x);
+          xBounds = xBounds | 0x0F000000 | x;
+          if (symmetry != SYMMETRY_UNKNOWN) {
+            if (symmetry == VERTICAL_SYMMETRY || symmetry == ROTATIONAL_SYMMETRY) {
+              minX = ((int)symmetryX - maxX) + (int)symmetryX;
+              x = (minX & (0x00000FFF));
+              xBounds = xBounds | 0xF0000000 | x;
+            }
+          }
+          rc.broadcast(BroadcastUtils.MAP_X_BOUNDS_CHANNEL, xBounds);
         }
       }
     }
@@ -137,7 +153,15 @@ public class Globals {
         }
         if (minY != UNKNOWN) {
           int y = (minY & (0x00000FFF));
-          rc.broadcast(BroadcastUtils.MAP_Y_BOUNDS_CHANNEL, yBounds | 0xF0000000 | y);
+          yBounds = yBounds | 0xF0000000 | y;
+          if (symmetry != SYMMETRY_UNKNOWN) {
+            if (symmetry == HORIZONTAL_SYMMETRY || symmetry == ROTATIONAL_SYMMETRY) {
+              maxY = ((int)symmetryY - minY) + (int)symmetryY;
+              y = (maxY & (0x00000FFF)) << 12;
+              yBounds = yBounds | 0x0F000000 | y;
+            }
+          }
+          rc.broadcast(BroadcastUtils.MAP_Y_BOUNDS_CHANNEL, yBounds);
         }
       }
     }
@@ -157,7 +181,15 @@ public class Globals {
         }
         if (maxY != UNKNOWN) {
           int y = (maxY & (0x00000FFF)) << 12;
-          rc.broadcast(BroadcastUtils.MAP_Y_BOUNDS_CHANNEL, yBounds | 0x0F000000 | y);
+          yBounds = yBounds | 0x0F000000 | y;
+          if (symmetry != SYMMETRY_UNKNOWN) {
+            if (symmetry == HORIZONTAL_SYMMETRY || symmetry == ROTATIONAL_SYMMETRY) {
+              minY = ((int)symmetryY - maxY) + (int)symmetryY;
+              y = (minY & (0x00000FFF));
+              yBounds = yBounds | 0xF0000000 | y;
+            }
+          }
+          rc.broadcast(BroadcastUtils.MAP_Y_BOUNDS_CHANNEL, yBounds);
         }
       }
     }
@@ -287,7 +319,7 @@ public class Globals {
     }
     int data = (symmetry & 0b00000000000000000000000000000011) << 30;
     int x = ((int) symmetryX) & 0b00000000000000000111111111111111;
-    int y = ((int) symmetryY) & 0b00000000000000000111111111111111;;
+    int y = ((int) symmetryY) & 0b00000000000000000111111111111111;
     data = data | (x << 15) | y;
     rc.broadcast(MAP_SYMMETRY_CHANNEL, data);
     return symmetry;

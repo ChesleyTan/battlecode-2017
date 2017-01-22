@@ -43,13 +43,18 @@ public class Archon extends Globals {
     int producedGardeners;
     try {
       /*
-      System.out.println(determineMapSymmetry());
+      System.out.println(determineMapSymmetry(myArchons, enemyArchons));
       System.out.println(symmetryX);
       System.out.println(symmetryY);
       readMapSymmetry();
+      updateMapBoundaries();
       System.out.println(symmetry);
       System.out.println(symmetryX);
       System.out.println(symmetryY);
+      System.out.println(minX);
+      System.out.println(maxX);
+      System.out.println(minY);
+      System.out.println(maxY);
       rc.disintegrate();
       */
       EvasiveArchon.init();
@@ -74,8 +79,8 @@ public class Archon extends Globals {
         else {
           producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
-          if (producedGardeners < 3 || producedGardeners < rc.getRoundNum()/40 ||
-              productionGardeners < requiredProductionGardeners) {
+          if (producedGardeners < 3 || producedGardeners < currentRoundNum / 40
+              || productionGardeners < requiredProductionGardeners) {
             trySpawnGardener(producedGardeners);
           }
           EvasiveArchon.move();
