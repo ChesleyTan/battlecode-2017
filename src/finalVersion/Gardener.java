@@ -311,11 +311,8 @@ public class Gardener extends Globals {
           queuedMove = null;
         }
         if (!rc.hasMoved()) {
-          if (currentRoundNum < 100) {
-            ++numCheckSpaces;
-            checkspace();
-          }
-          else if (production_gardener) {
+          if (production_gardener) {
+            // TODO production gardener evasion
             checkspace();
           }
           else {
