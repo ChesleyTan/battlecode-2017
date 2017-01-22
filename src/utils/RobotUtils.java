@@ -78,8 +78,8 @@ public class RobotUtils extends Globals {
     if (Clock.getBytecodesLeft() > 500) {
       TreeInfo[] nearbyTrees = rc.senseNearbyTrees(-1, Team.NEUTRAL);
       for (TreeInfo ti : nearbyTrees) {
-        if (rc.canShake(ti.ID)) {
-          rc.shake(ti.ID);
+        if (rc.canShake(ti.getID()) && ti.getContainedBullets() > 0) {
+          rc.shake(ti.getID());
           break;
         }
       }
