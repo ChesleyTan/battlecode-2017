@@ -66,7 +66,7 @@ public class RobotUtils extends Globals {
 
   public static void donateEverythingAtTheEnd() throws GameActionException {
     float bullets = rc.getTeamBullets();
-    if (rc.getTeamVictoryPoints() + (bullets / 10) >= 1000) {
+    if (rc.getTeamVictoryPoints() + (bullets / rc.getVictoryPointCost()) >= 1000) {
       rc.donate(bullets);
     }
     else if (currentRoundNum == penultimateRound) {
@@ -131,6 +131,7 @@ public class RobotUtils extends Globals {
     // First, try intended direction
     //System.out.println("Called tryMove");
     MapLocation newLoc = here.add(dir, myType.strideRadius);
+    rc.setIndicatorLine(here, newLoc, 0, 255, 0);
     if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
       //System.out.println("tryMove: " + newLoc);
       rc.move(newLoc);
