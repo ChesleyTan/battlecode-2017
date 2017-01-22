@@ -253,7 +253,7 @@ public class Lumberjack extends Globals {
           value = 1;
           break;
         case TANK:
-          value = 0;
+          value = 1;
           break;
       }
       //System.out.println("Value: " + value);
