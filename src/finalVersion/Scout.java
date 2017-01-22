@@ -845,10 +845,16 @@ public class Scout extends Globals {
                 targetDirection = targetDirection
                     .rotateRightRads((float) (rand.nextFloat() * Math.PI));
               }
-              tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
+              // Handle case when blocked by both obstacle and border
+              if (!tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+                targetDirection = targetDirection
+                    .rotateRightRads((float) (rand.nextFloat() * Math.PI));
+              }
             }
           }
-
+          if (currentRoundNum > 400) {
+            current_mode = ROAM;
+          }
         }
         if (!hasReportedDeath && rc.getHealth() < 3f) {
           int squad_count = rc.readBroadcast(squad_channel);
