@@ -15,6 +15,7 @@ public class Globals {
   public static int myID;
   public static RobotType myType;
   public static Random rand;
+  public static final float MIN_ROBOT_RADIUS = 1f;
   public static final int DIRECTIVE_START_CHANNEL = 0;
   public static final int EARLY_UNITS_CHANNEL = 5;
   public static final int PRODUCED_GARDENERS_CHANNEL = 50;
