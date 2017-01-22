@@ -6,12 +6,13 @@ import utils.Globals;
 
 public class Lumberjack extends Globals {
 
-  private static Direction mydir;
+  private static Direction targetDirection;
   private static RobotInfo target;
   private static TreeInfo targetTree;
   private static final int NEUTRAL = 0;
   private static final int DEFENSE = 1;
   private static int mode;
+  private static TreeInfo[] allNearbyTrees;
 
   public static TreeInfo[] getAllTrees() {
     TreeInfo[] union;
@@ -49,35 +50,31 @@ public class Lumberjack extends Globals {
   }
 
   public static void roam() throws GameActionException {
-    if (rc.canMove(mydir)) {
-      rc.move(mydir);
+    if (!rc.onTheMap(here.add(targetDirection,
+        1 + RobotType.LUMBERJACK.strideRadius + RobotType.LUMBERJACK.bodyRadius))) {
+      // Change direction when hitting border
+      targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
     }
-    else {
-      int attempts = 0;
-      while (attempts < 10 && !rc.canMove(mydir)) {
-        mydir = RobotUtils.randomDirection();
-        ++attempts;
-      }
-      if (rc.canMove(mydir)) {
-        rc.move(mydir);
-      }
-    }
+    BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
+    RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
   }
 
   public static void checkNearbyLumbersAndMove() throws GameActionException {
     //Note: this assumes all nearby robots chasing the enemy are lumberjacks
-    if (rc.canSenseRobot(target.ID)) {
-      target = rc.senseRobot(target.ID);
-      RobotInfo[] attackingLumbers = siftForLumbers(rc.senseNearbyRobots(target.location, 4f, us));
-      Direction toMe = target.location.directionTo(here);
+    if (rc.canSenseRobot(target.getID())) {
+      target = rc.senseRobot(target.getID());
+      MapLocation targetLoc = target.getLocation();
+      RobotInfo[] attackingLumbers = siftForLumbers(rc.senseNearbyRobots(targetLoc, GameConstants.INTERACTION_DIST_FROM_EDGE + 2 * RobotType.LUMBERJACK.bodyRadius, us));
+      Direction toMe = targetLoc.directionTo(here);
       boolean isInRangeOfFriendlies = false;
       //int rotateAmt = 0;
-      MapLocation closestPoint = target.location.add(toMe, target.getRadius() + 1.1f);
+      MapLocation closestPoint = targetLoc.add(toMe, target.getRadius() + 1.1f);
       for (RobotInfo r : attackingLumbers) {
         //System.out.println(r.ID);
         //System.out.println(r.location.distanceTo(closestPoint));
-        if (r.location.isWithinDistance(closestPoint, RobotType.LUMBERJACK.bodyRadius
-            + RobotType.LUMBERJACK.strideRadius + r.type.bodyRadius)) {
+        // FIXME is this calculation redundant with senseNearbyRobots?
+        if (r.getLocation().isWithinDistance(closestPoint, 2 * RobotType.LUMBERJACK.bodyRadius
+            + GameConstants.INTERACTION_DIST_FROM_EDGE)) {
           isInRangeOfFriendlies = true;
           break;
         }
@@ -152,9 +149,8 @@ public class Lumberjack extends Globals {
 
   public static TreeInfo reachable(RobotInfo target) {
     Direction toThere = here.directionTo(target.location);
-    TreeInfo[] nearbyTrees = getAllTrees();
     float distToTarget = here.distanceTo(target.location) - target.getRadius();
-    for (TreeInfo t : nearbyTrees) {
+    for (TreeInfo t : allNearbyTrees) {
       Direction toTree = here.directionTo(t.getLocation());
       if (Math.abs(toThere.degreesBetween(toTree)) < 90) {
         float distToTree = here.distanceTo(t.location) - t.getRadius();
@@ -193,6 +189,7 @@ public class Lumberjack extends Globals {
   }
 
   public static void tryChop() throws GameActionException {
+    System.out.println("Trying to chop: " + targetTree.getID());
     if (rc.canSenseTree(targetTree.ID)) {
       targetTree = rc.senseTree(targetTree.ID);
       float distanceBetween = here.distanceTo(targetTree.location);
@@ -273,7 +270,7 @@ public class Lumberjack extends Globals {
       else {
         mode = NEUTRAL;
       }
-      mydir = new Direction((float) (rand.nextFloat() * 2 * Math.PI));
+      targetDirection = RobotUtils.randomDirection();
     } catch (Exception e) {
       e.printStackTrace();
       Clock.yield();
@@ -281,6 +278,7 @@ public class Lumberjack extends Globals {
     while (true) {
       try {
         Globals.update();
+        allNearbyTrees = getAllTrees();
         // Consider targets that are behind trees
         if (target != null) {
           TreeInfo closerTree = reachable(target);
@@ -316,12 +314,11 @@ public class Lumberjack extends Globals {
             }
           }
           else {
-            TreeInfo[] trees = getAllTrees();
-            if (trees.length != 0) {
+            if (allNearbyTrees.length != 0) {
               TreeInfo closestTree = null;
               float minDist = 9999f;
-              for (TreeInfo ti : trees) {
-                float treeDist = ti.location.distanceTo(here);
+              for (TreeInfo ti : allNearbyTrees) {
+                float treeDist = ti.getLocation().distanceTo(here);
                 if (treeDist < minDist) {
                   closestTree = ti;
                   minDist = treeDist;

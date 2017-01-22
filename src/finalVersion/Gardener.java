@@ -350,8 +350,7 @@ public class Gardener extends Globals {
                   nearbyEnemyThreat = true;
                 }
                 else if (ri.getType() == RobotType.LUMBERJACK
-                    // TODO add GameConstants.INTERACT_DISTANCE_FROM_EDGE
-                    && ri.getLocation().isWithinDistance(here, RobotType.LUMBERJACK.strideRadius
+                    && ri.getLocation().isWithinDistance(here, GameConstants.INTERACTION_DIST_FROM_EDGE + RobotType.LUMBERJACK.strideRadius
                         + RobotType.LUMBERJACK.bodyRadius + RobotType.GARDENER.bodyRadius)) {
                   nearbyEnemyThreat = true;
                 }
