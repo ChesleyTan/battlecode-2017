@@ -183,15 +183,17 @@ public class Soldier extends Globals {
     if (rc.canFireTriadShot() && TargetingUtils.clearShot(here, target)){
       Direction towardsEnemy = here.directionTo(target.location);
       float distanceEnemy = here.distanceTo(target.location);
-      if (distanceEnemy <= 3.5 && rc.canFirePentadShot() && rc.getTeamBullets() > 200){
-        rc.firePentadShot(towardsEnemy);
-      }
-      else{
-        if (rc.canFireTriadShot() && rc.getTeamBullets() > 50){
-          rc.fireTriadShot(towardsEnemy);
+      if (TargetingUtils.clearShot(here, target)){
+        if (distanceEnemy <= 3.5 && rc.canFirePentadShot() && rc.getTeamBullets() > 200){
+          rc.firePentadShot(towardsEnemy);
         }
-        else if (rc.canFireSingleShot()){
-          rc.fireSingleShot(towardsEnemy);
+        else{
+          if (rc.canFireTriadShot() && rc.getTeamBullets() > 50){
+            rc.fireTriadShot(towardsEnemy);
+          }
+          else if (rc.canFireSingleShot()){
+            rc.fireSingleShot(towardsEnemy);
+          }
         }
       }
     }
