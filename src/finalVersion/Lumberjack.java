@@ -13,6 +13,8 @@ public class Lumberjack extends Globals {
   private static final int DEFENSE = 1;
   private static int mode;
   private static TreeInfo[] allNearbyTrees;
+  private static int targetBlacklist;
+  private static int targetBlacklistRound;
 
   public static TreeInfo[] getAllTrees() {
     TreeInfo[] union;
@@ -50,13 +52,17 @@ public class Lumberjack extends Globals {
   }
 
   public static void roam() throws GameActionException {
+    System.out.println("Roaming");
+    System.out.println(targetDirection);
     if (!rc.onTheMap(here.add(targetDirection,
         1 + RobotType.LUMBERJACK.strideRadius + RobotType.LUMBERJACK.bodyRadius))) {
       // Change direction when hitting border
       targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
     }
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
-    RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3);
+    if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, (rand.nextFloat() * 10 + 20), 3)) {
+      targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
+    }
   }
 
   public static void checkNearbyLumbersAndMove() throws GameActionException {
@@ -116,7 +122,9 @@ public class Lumberjack extends Globals {
       //System.out.println(target.ID);
       if (!isInRangeOfFriendlies) {
         boolean canMove = RobotUtils.tryMoveIfSafe(principleDirection, nearbyBullets, 15, 6);
-        if (!canMove) {
+        if (!canMove && !RobotUtils.tryMove(principleDirection, 15, 6)) {
+          targetBlacklist = target.getID();
+          targetBlacklistRound = currentRoundNum;
           target = null;
         }
       }
@@ -201,8 +209,8 @@ public class Lumberjack extends Globals {
       targetTree = rc.senseTree(targetTree.ID);
       MapLocation treeLoc = targetTree.getLocation();
       float distanceBetween = here.distanceTo(treeLoc);
-      if (distanceBetween > RobotType.LUMBERJACK.bodyRadius
-          + targetTree.getRadius() + GameConstants.INTERACTION_DIST_FROM_EDGE) {
+      if (distanceBetween > RobotType.LUMBERJACK.bodyRadius + targetTree.getRadius()
+          + GameConstants.INTERACTION_DIST_FROM_EDGE) {
         Direction towardsTree = here.directionTo(treeLoc);
         BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
         boolean moved = RobotUtils.tryMoveIfSafe(towardsTree, nearbyBullets, 15, 6);
@@ -243,6 +251,9 @@ public class Lumberjack extends Globals {
     int currvalue = 0;
     for (RobotInfo r : enemies) {
       int value = 0;
+      if (r.getID() == targetBlacklist && currentRoundNum - targetBlacklistRound < 30) {
+        continue;
+      }
       switch (r.getType()) {
         case GARDENER:
           value = 4;
@@ -289,6 +300,31 @@ public class Lumberjack extends Globals {
       try {
         Globals.update();
         allNearbyTrees = getAllTrees();
+        /*
+        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(-1, them);
+        RobotInfo nearestEnemy = priority(nearbyEnemies);
+        float minEnemyDist = nearestEnemy == null ? 9999f : nearestEnemy.getLocation().distanceTo(here);
+        TreeInfo nearestTree = null;
+        float minTreeDist = 9999f;
+        for (TreeInfo ti : allNearbyTrees) {
+          float treeDist = ti.getLocation().distanceTo(here);
+          if (treeDist < minTreeDist) {
+            nearestTree = ti;
+            minTreeDist = treeDist;
+          }
+        }
+        if (nearestEnemy != null && (nearestTree == null || minEnemyDist <= minTreeDist)) {
+          target = nearestEnemy;
+          chase();
+        }
+        else if (nearestTree != null && (nearestEnemy == null || minEnemyDist > minTreeDist)) {
+          targetTree = nearestTree;
+          tryChop();
+        }
+        else {
+          roam();
+        }
+        */
         // Consider targets that are behind trees
         if (target != null) {
           System.out.println("Target: " + target);
@@ -314,8 +350,8 @@ public class Lumberjack extends Globals {
         }
         else {
           RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
-          if (enemies.length != 0) {
-            target = priority(enemies);
+          target = priority(enemies);
+          if (target != null) {
             TreeInfo closerTree = reachable(target);
             if (closerTree == null) {
               chase();

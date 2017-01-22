@@ -232,10 +232,6 @@ public strictfp class EvasiveArchon extends Globals {
       if (lastMoveAngleIndex >= 0) {
         directionWeights[lastMoveAngleIndex] += 5000;
       }
-        for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
-          System.out
-              .println("Angle: " + (angleIndex * 30) + ", Weight: " + directionWeights[angleIndex]);
-        }
       /*
       if (DEBUG) {
         for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
