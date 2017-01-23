@@ -40,17 +40,19 @@ public class Lumberjack extends Globals {
     return union;
   }
 
-  public static RobotInfo[] siftForLumbers(RobotInfo[] sample) {
+  public static RobotInfo[] siftForAttackers(RobotInfo[] sample) {
     RobotInfo[] result;
     int count = 0;
     for (RobotInfo ri : sample) {
-      if (ri.type == RobotType.LUMBERJACK) {
+      RobotType type = ri.getType();
+      if (type == RobotType.LUMBERJACK || type == RobotType.SOLDIER || type == RobotType.TANK) {
         ++count;
       }
     }
     result = new RobotInfo[count];
     for (RobotInfo ri : sample) {
-      if (ri.type == RobotType.LUMBERJACK) {
+      RobotType type = ri.getType();
+      if (type == RobotType.LUMBERJACK || type == RobotType.SOLDIER || type == RobotType.TANK) {
         result[--count] = ri;
       }
     }
@@ -77,15 +79,15 @@ public class Lumberjack extends Globals {
     if (rc.canSenseRobot(target.getID())) {
       target = rc.senseRobot(target.getID());
       MapLocation targetLoc = target.getLocation();
-      RobotInfo[] attackingLumbers = siftForLumbers(rc.senseNearbyRobots(targetLoc,
-          GameConstants.LUMBERJACK_STRIKE_RADIUS + 2 * RobotType.LUMBERJACK.bodyRadius, us));
+      RobotInfo[] attackingFriendlies = siftForAttackers(rc.senseNearbyRobots(targetLoc,
+          GameConstants.LUMBERJACK_STRIKE_RADIUS + RobotType.LUMBERJACK.bodyRadius, us));
       BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
       Direction toMe = targetLoc.directionTo(here);
       boolean isInRangeOfFriendlies = false;
       //int rotateAmt = 0;
       MapLocation closestPoint = targetLoc.add(toMe,
           target.getRadius() + RobotType.LUMBERJACK.bodyRadius + 0.1f);
-      for (RobotInfo r : attackingLumbers) {
+      for (RobotInfo r : attackingFriendlies) {
         //System.out.println(r.ID);
         //System.out.println(r.location.distanceTo(closestPoint));
         if (r.getLocation().isWithinDistance(closestPoint,
