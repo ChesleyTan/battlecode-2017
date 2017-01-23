@@ -17,6 +17,8 @@ public class Globals {
   public static Random rand;
   public static final float MIN_ROBOT_RADIUS = 1f;
   public static final int DIRECTIVE_START_CHANNEL = 0;
+  /** Number of maximum directives active */
+  public static final int DIRECTIVE_NUM = 8;
   public static final int EARLY_UNITS_CHANNEL = 5;
   public static final int PRODUCED_GARDENERS_CHANNEL = 50;
   public static final int PRODUCTION_GARDENERS_CHANNEL = 101;

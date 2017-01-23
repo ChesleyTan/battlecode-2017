@@ -10,16 +10,11 @@ import static utils.Globals.rc;
  */
 public class BroadcastUtils extends Globals {
 
-  /** Number of maximum directives active */
-  public static final int DIRECTIVE_NUM = 8;
-
-
-
-  private static int hashID(int id) {
+  /*private static int hashID(int id) {
     //IDs start at 10000 and go in 4096 size blocks.
     //256 as modulus base because unlikely that collisions will occur with 256 possibilities.
     return MathUtils.clamp(0,255,  (id-10000)%256  );
-  }
+  }*/
 
   /*public static int[] getSquadMemberHashes(int squadID) {
 
@@ -61,7 +56,7 @@ public class BroadcastUtils extends Globals {
     //this leaves the 3 LSB to allow for decay counter. They will start at 0, and can go up to 7 inclusive
     //if they are told to decay but are already at the maximum age (7), the directive gets set to null
     rc.broadcast(DIRECTIVE_START_CHANNEL + priority, packedDirective);
-    directiveCache[priority] = new Directive(directive, x, y, radius, 0);
+    directiveCache[priority] = new Directive(directive, priority, x, y, radius, 0);
   }
 
   /**
@@ -72,6 +67,14 @@ public class BroadcastUtils extends Globals {
    */
   public static Directive[] getRegionDirectives(MapLocation location) throws GameActionException {
     return getRegionDirectives((int)location.x, (int)location.y);
+  }
+
+  public static void removeRegionDirective(int priority)
+  throws GameActionException {
+    if (!MathUtils.isInRange(0,DIRECTIVE_NUM-1,priority))
+    throw new IllegalArgumentException("Priority must be between 0 and "+(DIRECTIVE_NUM-1)+", inclusive");
+    rc.broadcast(DIRECTIVE_START_CHANNEL + priority, 0);
+    directiveCache[priority] = null;
   }
 
   /**
@@ -89,7 +92,7 @@ public class BroadcastUtils extends Globals {
         int y = (packedDirective    &              0b1111111111000000000) >>> 9;
         int x = (packedDirective    &    0b11111111110000000000000000000) >>> 19;
         int type = (packedDirective & 0b11100000000000000000000000000000) >>> 29;
-        Directive d = new Directive(type, x, y, radius, age);
+        Directive d = new Directive(type, i, x, y, radius, age);
         directiveCache[i] = d;
       }
       areDirectivesValid = true;
@@ -119,17 +122,19 @@ public class BroadcastUtils extends Globals {
     public static final int FORTIFY = 6;
     public static final int CUT = 7;
 
-    public final int type, x, y, radius, age;
+    public final int type, priority, x, y, radius, age;
 
     /**
      * Represents a region directive.
      * @param type The type of the directive. Use BroadcastUtils.Directives class to get the ID.
+     * @param priority The priority of the directive. Can also be thought as its unique identifier.
      * @param x The x location of the directive. Must be from 0 to 1024 (exclusive)
      * @param y The y location of the directive. Must be from 0 to 1024 (exclusive)
      * @param radius The radius of the directive. Must be from 0 to 64 (exclusive)
      */
-    private Directive(int type, int x, int y, int radius, int age) {
+    private Directive(int type, int priority, int x, int y, int radius, int age) {
       this.type = type;
+      this.priority = priority;
       this.x = x;
       this.y = y;
       this.radius = radius;
