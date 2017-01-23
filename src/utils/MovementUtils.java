@@ -88,7 +88,7 @@ public class MovementUtils {
     return here.distanceTo(center) >= (radius + Globals.myType.bodyRadius);
   }
 
-  public static void setMoveTarget(MapLocation target) {
+  /*public static void setMoveTarget(MapLocation target) {
     MovementUtils.target = target;
   }
 
@@ -110,6 +110,6 @@ public class MovementUtils {
 
     }
 
-  }
+  }*/
 
 }
