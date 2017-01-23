@@ -8,8 +8,8 @@ public class EvasiveScout extends Globals {
   // Change to RobotType enums
   static Direction[] angleDirections = new Direction[8];
   static final int EDGE_BIAS_RADIUS = 8;
-  static final int BULLET_DETECT_RADIUS = 6;
-  static final int ENEMY_DETECT_RADIUS = 6;
+  static final int BULLET_DETECT_RADIUS = 8;
+  static final int ENEMY_DETECT_RADIUS = 7;
   static final float EVASION_STRIDE_RADIUS = RobotType.SCOUT.strideRadius;
   private static MapLocation[] moveLocations = new MapLocation[8];
 

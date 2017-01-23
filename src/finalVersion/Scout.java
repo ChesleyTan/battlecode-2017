@@ -305,7 +305,7 @@ public class Scout extends Globals {
       float absolute_dist = (float) here.distanceTo(targetRobot.getLocation());
       if (absolute_dist > KEEPAWAY_RADIUS + RobotType.SCOUT.strideRadius) {
         shouldShoot = false;
-        if (RobotUtils.tryMoveIfSafe(direction, nearbyBullets, 30, 3)) {
+        if (RobotUtils.tryMoveIfSafe(direction, nearbyBullets, rand.nextFloat() * 10 + 30, 3)) {
           isPerchedInTree = false;
         }
       }
@@ -599,7 +599,7 @@ public class Scout extends Globals {
               if (SCOUT_DEBUG) {
                 System.out.println("Moving towards target");
               }
-              if (RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+              if (RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, rand.nextFloat() * 10 + 30, 3)) {
                 isPerchedInTree = false;
               }
             }
@@ -731,7 +731,7 @@ public class Scout extends Globals {
               else {
                 targetDirection = here.directionTo(targetLoc);
                 if (!rc.hasMoved()) {
-                  if (RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, 30, 3)) {
+                  if (RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, rand.nextFloat() * 10 + 30, 3)) {
                     isPerchedInTree = false;
                   }
                 }
