@@ -19,12 +19,35 @@ public class RobotUtils extends Globals {
     bugState = BUG;
     bugStartDirection = here.directionTo(finalLoc);
     bugDestinationLocation = finalLoc;
-    if (bugStartDirection.getDeltaX(1) * bugStartDirection.getDeltaY(1) > 0){
+    Direction leftDir = bugStartDirection;
+    Direction rightDir = bugStartDirection;
+    int attempts = 0;
+    while(!rc.canMove(leftDir) && attempts < 18){
+      leftDir = leftDir.rotateLeftDegrees(10);
+      attempts ++;
+    }
+    attempts = 0;
+    while (!rc.canMove(rightDir) && attempts < 18){
+      rightDir = rightDir.rotateRightDegrees(10);
+      attempts ++;
+    }
+    if (!rc.canMove(leftDir)){
+      wallSideLeft = false;
+    }
+    else if (!rc.canMove(rightDir)){
+      wallSideLeft = true;
+    }
+    else{
+      float distanceLeft = here.add(leftDir, rc.getType().strideRadius).distanceTo(finalLoc);
+      float distanceRight = here.add(rightDir, rc.getType().strideRadius).distanceTo(finalLoc);
+      wallSideLeft = distanceLeft < distanceRight;
+    }
+    /*if (bugStartDirection.getDeltaX(1) * bugStartDirection.getDeltaY(1) > 0){
       wallSideLeft = false;
     }
     else{
       wallSideLeft = true;
-    }
+    }*/
   }
   
   public static boolean bugMove() throws GameActionException{
