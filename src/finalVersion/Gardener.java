@@ -19,6 +19,8 @@ public class Gardener extends Globals {
   private static boolean spawnedLumberjack = false;
   private static boolean reportedTrees = false;
   private static boolean withinArchonRange = false;
+  private static final boolean GARDENER_DEBUG = false;
+
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
     float sumX = 0;
@@ -127,7 +129,9 @@ public class Gardener extends Globals {
    * Checks that there is enough space around the unit to begin planting
    */
   public static void checkspace() throws GameActionException {
-    System.out.println("Calling checkspace()");
+    if (GARDENER_DEBUG) {
+      System.out.println("Calling checkspace()");
+    }
     if (rc.hasMoved()) {
       return;
     }
@@ -148,11 +152,13 @@ public class Gardener extends Globals {
       /*if (r.getTeam() == us) {
         theirDistance = theirDistance / 2;
       }*/
-      if (r.getType() == RobotType.GARDENER){
+      if (r.getType() == RobotType.GARDENER) {
         theirDistance = theirDistance * 2;
       }
-      //System.out.println(r);
-      //System.out.println(theirDistance);
+      if (GARDENER_DEBUG) {
+        System.out.println(r);
+        System.out.println(theirDistance);
+      }
       sumX += theirDirection.getDeltaX(theirDistance);
       sumY += theirDirection.getDeltaY(theirDistance);
     }
@@ -166,8 +172,10 @@ public class Gardener extends Globals {
           ((treeMaxDistance
               - (here.distanceTo(t.location) - t.getRadius() - RobotType.GARDENER.bodyRadius)) / 3),
           2);
-      //System.out.println(t);
-      //System.out.println(theirDistance);
+      if (GARDENER_DEBUG) {
+        System.out.println(t);
+        System.out.println(theirDistance);
+      }
       sumX += theirDirection.getDeltaX(theirDistance);
       sumY += theirDirection.getDeltaY(theirDistance);
     }
@@ -177,22 +185,30 @@ public class Gardener extends Globals {
     float sensorRadius = RobotType.GARDENER.sensorRadius - 1;
     if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sensorRadius, here.y))) {
       float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.x - minX), 2);
-      //System.out.println("minX: " + weightedDistance);
+      if (GARDENER_DEBUG) {
+        System.out.println("minX: " + weightedDistance);
+      }
       sumX += weightedDistance;
     }
     if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sensorRadius, here.y))) {
       float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxX - here.x), 2);
-      //System.out.println("maxX: " + weightedDistance);
+      if (GARDENER_DEBUG) {
+        System.out.println("maxX: " + weightedDistance);
+      }
       sumX -= weightedDistance;
     }
     if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sensorRadius))) {
       float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.y - minY), 2);
-      //System.out.println("minY: " + weightedDistance);
+      if (GARDENER_DEBUG) {
+        System.out.println("minY: " + weightedDistance);
+      }
       sumY += weightedDistance;
     }
     if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sensorRadius))) {
       float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxY - here.y), 2);
-      //System.out.println("maxY: " + weightedDistance);
+      if (GARDENER_DEBUG) {
+        System.out.println("maxY: " + weightedDistance);
+      }
       sumY -= weightedDistance;
     }
 
@@ -201,7 +217,7 @@ public class Gardener extends Globals {
     rc.setIndicatorLine(here.add(finalDir, 1.75f), here.add(finalDir, 2f), 0, 0, 0);
     RobotUtils.tryMove(finalDir, 5, 3);
   }
-  
+
   private static Direction scoutOppDir(RobotInfo[] enemies, TreeInfo[] trees) {
     for (RobotInfo r : enemies) {
       if (r.getType() != RobotType.SCOUT) {
@@ -218,7 +234,8 @@ public class Gardener extends Globals {
     return null;
   }
 
-  private static void move(RobotInfo[] nearbyEnemies, TreeInfo[] nearbyTrees) throws GameActionException{
+  private static void move(RobotInfo[] nearbyEnemies, TreeInfo[] nearbyTrees)
+      throws GameActionException {
     if (production_gardener) {
       // TODO production gardener evasion
       checkspace();
@@ -232,8 +249,7 @@ public class Gardener extends Globals {
         //System.out.println(openLoc);
         BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveGardener.BULLET_DETECT_RADIUS);
         if (!rc.hasMoved()) {
-          EvasiveGardener.move(bullets, nearbyEnemies,
-              nearbyTrees);
+          EvasiveGardener.move(bullets, nearbyEnemies, nearbyTrees);
           here = rc.getLocation();
         }
         /*
@@ -254,11 +270,9 @@ public class Gardener extends Globals {
               1 + RobotType.GARDENER.bodyRadius + ri.getRadius())) {
             nearbyEnemyThreat = true;
           }
-          else if (ri.getType() == RobotType.LUMBERJACK
-              && ri.getLocation()
-                  .isWithinDistance(here, GameConstants.INTERACTION_DIST_FROM_EDGE
-                      + RobotType.LUMBERJACK.strideRadius + RobotType.LUMBERJACK.bodyRadius
-                      + RobotType.GARDENER.bodyRadius)) {
+          else if (ri.getType() == RobotType.LUMBERJACK && ri.getLocation().isWithinDistance(here,
+              GameConstants.INTERACTION_DIST_FROM_EDGE + RobotType.LUMBERJACK.strideRadius
+                  + RobotType.LUMBERJACK.bodyRadius + RobotType.GARDENER.bodyRadius)) {
             nearbyEnemyThreat = true;
           }
         }
@@ -271,7 +285,9 @@ public class Gardener extends Globals {
               break;
             }
             if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)) {
-              System.out.println("in danger");
+              if (GARDENER_DEBUG) {
+                System.out.println("in danger");
+              }
               willGetHitByBullet = true;
               break;
             }
@@ -280,16 +296,19 @@ public class Gardener extends Globals {
         if (nearbyEnemyThreat || willGetHitByBullet) {
           shouldPlant = false;
           numCheckSpaces = 0;
-          System.out.println("dodging");
+          if (GARDENER_DEBUG) {
+            System.out.println("dodging");
+          }
           //dodge(bullets, robots);
-          EvasiveGardener.move(bullets, nearbyEnemies,
-              nearbyTrees);
+          EvasiveGardener.move(bullets, nearbyEnemies, nearbyTrees);
           here = rc.getLocation();
         }
         else {
           if (!shouldPlant) {
             boolean clearSpace = !rc.isCircleOccupiedExceptByThisRobot(here, detectRadius);
-            System.out.println("Clear space: " + clearSpace);
+            if (GARDENER_DEBUG) {
+              System.out.println("Clear space: " + clearSpace);
+            }
             if (!clearSpace || !rc.onTheMap(here, detectRadius)) {
               checkspace();
               ++numCheckSpaces;
@@ -302,6 +321,7 @@ public class Gardener extends Globals {
       }
     }
   }
+
   private static boolean scoutInTree(RobotInfo[] enemies, TreeInfo tree) {
     for (RobotInfo r : enemies) {
       if (r.getType() != RobotType.SCOUT) {
@@ -335,7 +355,7 @@ public class Gardener extends Globals {
   }
 
   private static boolean spawnRobot(RobotType t) throws GameActionException {
-    if (rc.getBuildCooldownTurns() > 0){
+    if (rc.getBuildCooldownTurns() > 0) {
       return false;
     }
     Direction randomDir = RobotUtils.randomDirection();
@@ -442,12 +462,12 @@ public class Gardener extends Globals {
         else {
           TreeInfo[] trees = rc.senseNearbyTrees(6, Team.NEUTRAL);
           if (trees.length > 2) {
-            if (!reportedTrees){
+            if (!reportedTrees) {
               BroadcastUtils.addRegionDirective(7, 1, here, 6);
               reportedTrees = true;
             }
             if (!spawnedLumberjack) {
-              if (spawnRobot(RobotType.LUMBERJACK)){
+              if (spawnRobot(RobotType.LUMBERJACK)) {
                 spawnedLumberjack = true;
               }
             }
@@ -470,8 +490,7 @@ public class Gardener extends Globals {
           else {
             int division_factor = (int) (154 / (rc.getTreeCount() + 1));
             if (currentRoundNum % division_factor == 0) {
-              if (freeSpaces[0] != null
-                  && rc.canBuildRobot(RobotType.LUMBERJACK, freeSpaces[0])) {
+              if (freeSpaces[0] != null && rc.canBuildRobot(RobotType.LUMBERJACK, freeSpaces[0])) {
                 rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
               }
               else {
@@ -480,7 +499,7 @@ public class Gardener extends Globals {
             }
           }
         }
-          // Water nearby trees
+        // Water nearby trees
         if (nearbyTrees.length != 0) {
           TreeInfo minWaterable = null;
           float minWaterableHp = 9999f;

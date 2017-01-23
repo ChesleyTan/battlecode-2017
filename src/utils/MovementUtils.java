@@ -88,11 +88,12 @@ public class MovementUtils {
     return here.distanceTo(center) >= (radius + Globals.myType.bodyRadius);
   }
 
+
   /*public static void setMoveTarget(MapLocation target) {
     MovementUtils.target = target;
   }
 
-  public static void simpleMove() throws GameActionException {
+  /*public static void simpleMove() throws GameActionException {
     Direction targetDirection = here.directionTo(target);
     if (targetDirection == null) return; //We are already at the target, so do nothing
     if (rc.canMove(target)) { //Short circuit the move algorithm

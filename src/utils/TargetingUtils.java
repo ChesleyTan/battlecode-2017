@@ -17,7 +17,7 @@ public class TargetingUtils extends Globals {
    * friendlies or trees.
    */
   public static boolean clearShot(MapLocation shooterLoc, RobotInfo target) {
-    if (shooterLoc.equals(target)) {
+    if (shooterLoc.equals(target.getLocation())) {
       return false;
     }
     MapLocation targetLoc = target.getLocation();
@@ -62,6 +62,39 @@ public class TargetingUtils extends Globals {
           t.getRadius()) && here.distanceTo(t.getLocation()) - t.getRadius() < distanceTarget - target.getRadius()) {
           return false;
         }
+      }
+    }
+    return true;
+  }
+
+  public static boolean clearShot(MapLocation shooterLoc, MapLocation targetLoc, float targetRadius) {
+    if (shooterLoc.equals(targetLoc)) {
+      return false;
+    }
+    Direction targetDir = shooterLoc.directionTo(targetLoc);
+    if (targetDir == null) {
+      return false;
+    }
+    float distanceTarget = shooterLoc.distanceTo(targetLoc);
+    MapLocation outerEdge = shooterLoc.add(targetDir, myType.bodyRadius + 0.1f);
+    RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
+    for (RobotInfo r : friendlies) {
+      if (Clock.getBytecodesLeft() < 2000) {
+        return false;
+      }
+      if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, r.getLocation(),
+          r.getRadius())) {
+        return false;
+      }
+    }
+    TreeInfo[] trees = rc.senseNearbyTrees(distanceTarget);
+    for (TreeInfo t : trees) {
+      if (Clock.getBytecodesLeft() < 2000) {
+        return false;
+      }
+      if ((RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.getLocation(),
+        t.getRadius()) && here.distanceTo(t.getLocation()) - t.getRadius() < distanceTarget - targetRadius)) {
+        return false;
       }
     }
     return true;

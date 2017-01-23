@@ -75,8 +75,8 @@ public class Archon extends Globals {
         else {
           producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
-          if (producedGardeners < 3 || producedGardeners < currentRoundNum / 60
-              || productionGardeners < requiredProductionGardeners) {
+          if ((producedGardeners < 3 || producedGardeners < currentRoundNum / 60
+              || productionGardeners < requiredProductionGardeners) && rc.senseNearbyRobots(3, us).length < 2) {
             trySpawnGardener(producedGardeners);
           }
           EvasiveArchon.move();
