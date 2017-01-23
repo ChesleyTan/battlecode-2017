@@ -71,7 +71,7 @@ public class BroadcastUtils extends Globals {
    * Intelligently caches directives. Only reads broadcast when caches are invalid.
    */
   public static Directive[] getRegionDirectives(MapLocation location) throws GameActionException {
-    getRegionDirectives((int)location.x, (int)location.y);
+    return getRegionDirectives((int)location.x, (int)location.y);
   }
 
   /**
