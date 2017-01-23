@@ -356,6 +356,7 @@ public class Lumberjack extends Globals {
           }
         }
         else {
+          System.out.println("sensing nearby robots");
           RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
           target = priority(enemies);
           if (target != null) {
@@ -369,22 +370,27 @@ public class Lumberjack extends Globals {
             }
           }
           else {
+            System.out.println("looking for region directives");
             Directive[] directives = BroadcastUtils.getRegionDirectives((int)here.x, (int)here.y);
             for(Directive d: directives){
               // CUT
-              if (d.type == 7){
-                MapLocation center = new MapLocation(d.x, d.y);
-                TreeInfo[] trees = rc.senseNearbyTrees(center, d.radius, Team.NEUTRAL);
-                if (trees.length > 0){
-                  targetTree = trees[0];
-                  break;
-                }
-                else{
-                  BroadcastUtils.addRegionDirective(0, 0, 0, 0, 0);
+              if (d != null){
+                if (d.type == 7){
+                  MapLocation center = new MapLocation(d.x, d.y);
+                  TreeInfo[] trees = rc.senseNearbyTrees(center, d.radius, Team.NEUTRAL);
+                  System.out.println("Center of region directive: " + center);
+                  if (trees.length > 0){
+                    targetTree = trees[0];
+                    break;
+                  }
+                  else{
+                    BroadcastUtils.addRegionDirective(0, 0, 0, 0, 0);
+                  }
                 }
               }
             }
             if (targetTree == null){
+              System.out.println("sensing nearby trees");
               if (allNearbyTrees.length != 0) {
                 TreeInfo closestTree = null;
                 float minDist = 9999f;
@@ -406,9 +412,9 @@ public class Lumberjack extends Globals {
                   chase();
                 }
               }
-            }
-            else {
-              roam();
+              else {
+                roam();
+              }
             }
           }
         }
