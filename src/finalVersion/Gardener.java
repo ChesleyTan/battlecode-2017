@@ -18,7 +18,7 @@ public class Gardener extends Globals {
   private static boolean spawnedEarlyScout = false;
   private static boolean spawnedLumberjack = false;
   private static boolean reportedTrees = false;
-
+  private static boolean withinArchonRange = false;
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
     float sumX = 0;
@@ -397,6 +397,14 @@ public class Gardener extends Globals {
         if (!rc.hasMoved()) {
           move(nearbyEnemies, nearbyTrees);
         }
+        RobotInfo[] friendlies = rc.senseNearbyRobots(3, us);
+        withinArchonRange = false;
+        for (RobotInfo r: friendlies){
+          if(r.getType() == RobotType.ARCHON){
+            withinArchonRange = true;
+            break;
+          }
+        }
         // Either plant a tree or produce a unit
         // Initial setup moves to a clear spot and spawns 3 scouts
         if (currentRoundNum < 100) {
@@ -419,6 +427,14 @@ public class Gardener extends Globals {
               spawnedEarlyScout = true;
             }
           }
+        }
+        else if (withinArchonRange){
+          if (!spawnedLumberjack){
+            if (spawnRobot(RobotType.LUMBERJACK)){
+              spawnedLumberjack = true;
+            }
+          }
+          continue;
         }
         else if (production_gardener) {
           spawnRobot(RobotType.SOLDIER);
