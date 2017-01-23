@@ -524,6 +524,8 @@ public class Soldier extends Globals {
         }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
+        trackEnemyGardeners();
+        RobotUtils.notifyBytecodeLimitBreach();
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

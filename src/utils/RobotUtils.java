@@ -3,7 +3,7 @@ package utils;
 import battlecode.common.*;
 
 public class RobotUtils extends Globals {
-  
+
   private static final int BUG = 1;
   private static final int DIRECT = 0;
   private static MapLocation bugStartLocation;
@@ -12,9 +12,8 @@ public class RobotUtils extends Globals {
   private static boolean wallSideLeft;
   private static Direction bugStartDirection;
   private static Direction lastDirection;
-  
-  
-  public static void bugStart(MapLocation finalLoc){
+
+  public static void bugStart(MapLocation finalLoc) {
     bugStartLocation = here;
     bugState = BUG;
     bugStartDirection = here.directionTo(finalLoc);
@@ -22,22 +21,22 @@ public class RobotUtils extends Globals {
     Direction leftDir = bugStartDirection;
     Direction rightDir = bugStartDirection;
     int attempts = 0;
-    while(!rc.canMove(leftDir) && attempts < 18){
+    while (!rc.canMove(leftDir) && attempts < 18) {
       leftDir = leftDir.rotateLeftDegrees(10);
-      attempts ++;
+      attempts++;
     }
     attempts = 0;
-    while (!rc.canMove(rightDir) && attempts < 18){
+    while (!rc.canMove(rightDir) && attempts < 18) {
       rightDir = rightDir.rotateRightDegrees(10);
-      attempts ++;
+      attempts++;
     }
-    if (!rc.canMove(leftDir)){
+    if (!rc.canMove(leftDir)) {
       wallSideLeft = false;
     }
-    else if (!rc.canMove(rightDir)){
+    else if (!rc.canMove(rightDir)) {
       wallSideLeft = true;
     }
-    else{
+    else {
       float distanceLeft = here.add(leftDir, rc.getType().strideRadius).distanceTo(finalLoc);
       float distanceRight = here.add(rightDir, rc.getType().strideRadius).distanceTo(finalLoc);
       wallSideLeft = distanceLeft < distanceRight;
@@ -49,12 +48,12 @@ public class RobotUtils extends Globals {
       wallSideLeft = true;
     }*/
   }
-  
-  public static boolean bugMove() throws GameActionException{
+
+  public static boolean bugMove() throws GameActionException {
     System.out.println("bugging");
     bugStartDirection = here.directionTo(bugDestinationLocation);
     System.out.println("start direction: " + bugStartDirection.getAngleDegrees());
-    if (rc.canMove(here.directionTo(bugDestinationLocation))){
+    if (rc.canMove(here.directionTo(bugDestinationLocation))) {
       rc.move(bugStartDirection);
       bugStartLocation = null;
       bugState = DIRECT;
@@ -62,30 +61,31 @@ public class RobotUtils extends Globals {
       return true;
     }
     Direction startDir = bugStartDirection;
-    int rotationAmount = wallSideLeft? 10 : -10;
+    int rotationAmount = wallSideLeft ? 10 : -10;
     int attempts = 0;
-    while(!rc.canMove(startDir) && attempts < 18){
+    while (!rc.canMove(startDir) && attempts < 18) {
       startDir = startDir.rotateLeftDegrees(rotationAmount);
       attempts++;
     }
-    if (!rc.canMove(startDir)){
+    if (!rc.canMove(startDir)) {
       attempts = 0;
       startDir = bugStartDirection;
       wallSideLeft = !wallSideLeft;
-      while(!rc.canMove(startDir) && attempts < 18){
+      while (!rc.canMove(startDir) && attempts < 18) {
         startDir = startDir.rotateRightDegrees(rotationAmount);
-        attempts ++;
+        attempts++;
       }
     }
-    if (rc.canMove(startDir)){
+    if (rc.canMove(startDir)) {
       rc.move(startDir);
       return true;
     }
-    else{
+    else {
       System.out.println("Stuck");
       return false;
     }
   }
+
   /**
    * Returns a random Direction
    * @return a random Direction
@@ -116,11 +116,10 @@ public class RobotUtils extends Globals {
     }
   }
 
-
   public static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
       throws GameActionException {
-    
-    if (bugState == BUG){
+
+    if (bugState == BUG) {
       return bugMove();
     }
     // First, try intended direction
@@ -155,9 +154,9 @@ public class RobotUtils extends Globals {
     // A move never happened, so return false.
     return false;
   }
-  
-  public static boolean tryMoveIfSafe(Direction dir, BulletInfo[] nearbyBullets,
-      float degreeOffset, int checksPerSide) throws GameActionException {
+
+  public static boolean tryMoveIfSafe(Direction dir, BulletInfo[] nearbyBullets, float degreeOffset,
+      int checksPerSide) throws GameActionException {
     // First, try intended direction
     //System.out.println("Called tryMove");
     MapLocation newLoc = here.add(dir, myType.strideRadius);
@@ -219,36 +218,36 @@ public class RobotUtils extends Globals {
     return true;
   }
 
-  public static void endBug(){
+  public static void endBug() {
     bugStartDirection = null;
     bugDestinationLocation = null;
     bugStartLocation = null;
     bugState = DIRECT;
   }
-  
-  public static boolean tryMoveDestination(MapLocation target) throws GameActionException{
+
+  public static boolean tryMoveDestination(MapLocation target) throws GameActionException {
     System.out.println("tryMoveDestination");
     //System.out.println(target.x);
     //System.out.println(target.y);
     bugStartDirection = here.directionTo(target);
-    if(rc.canMove(bugStartDirection)){
+    if (rc.canMove(bugStartDirection)) {
       rc.move(bugStartDirection);
-      if (bugState == BUG){
+      if (bugState == BUG) {
         endBug();
       }
     }
-    else{
-      if (bugState == BUG){
+    else {
+      if (bugState == BUG) {
         bugDestinationLocation = target;
       }
-      else{
+      else {
         bugStart(target);
       }
       bugMove();
     }
-    return bugState==BUG;
+    return bugState == BUG;
   }
-  
+
   public static boolean tryMoveDist(Direction dir, float distance, float degreeOffset,
       int checksPerSide) throws GameActionException {
 
@@ -351,5 +350,11 @@ public class RobotUtils extends Globals {
       }
     }
     return false;
+  }
+
+  public static void notifyBytecodeLimitBreach() {
+    if (rc.getRoundNum() != currentRoundNum) {
+      rc.setIndicatorDot(rc.getLocation(), 102, 0, 102);
+    }
   }
 }

@@ -864,6 +864,7 @@ public class Scout extends Globals {
         if (gardenerOnlyMode) {
           rc.setIndicatorDot(rc.getLocation(), 0, 0, 255);
         }
+        RobotUtils.notifyBytecodeLimitBreach();
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

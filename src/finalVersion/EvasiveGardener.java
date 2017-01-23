@@ -37,6 +37,9 @@ public class EvasiveGardener extends Globals {
 
       for (RobotInfo ri : nearbyRobots) {
         if (ri.getType().canAttack()) {
+          if (Clock.getBytecodesLeft() < 3000) {
+            break;
+          }
           MapLocation enemyLoc = ri.getLocation();
           Direction enemyAngle = here.directionTo(enemyLoc);
           /*
@@ -141,6 +144,9 @@ public class EvasiveGardener extends Globals {
         //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
       }
       for (TreeInfo ti : nearbyTrees) {
+        if (Clock.getBytecodesLeft() < 2000) {
+          break;
+        }
         Direction treeAngle = here.directionTo(ti.getLocation());
         /*
         if (DEBUG) {
