@@ -685,7 +685,7 @@ public class Scout extends Globals {
               MapLocation targetLoc = new MapLocation(xLoc, yLoc);
               System.out.println("Moving towards target: " + targetLoc);
               float distToTarget = here.distanceTo(targetLoc);
-              if (distToTarget < RobotType.ARCHON.sensorRadius && !rc.canSenseRobot(attackTarget)) {
+              if (distToTarget < RobotType.ARCHON.sensorRadius + MIN_ROBOT_RADIUS && !rc.canSenseRobot(attackTarget)) {
                 System.out.println("Could not find target at last known location");
                 rc.broadcast(squad_channel + 1, -1);
               }
