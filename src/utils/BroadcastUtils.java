@@ -7,6 +7,8 @@ import static utils.Globals.rc;
 
 /**
  * Class that enables bots to easily read and write to the broadcast array.
+ * NOTE: This class cache's its broadcast reads. To prevent out of date data,
+ * call the invalidateDirectives() method at the start of each turn once.
  */
 public class BroadcastUtils extends Globals {
 
@@ -24,12 +26,32 @@ public class BroadcastUtils extends Globals {
   private static Directive[] directiveCache = new Directive[DIRECTIVE_NUM];
 
   /**
-   * Invalidates the Region Directive cache. Should be called at the start of each turn.
+   * Invalidates the Region Directive cache. Should be called once at the start of each turn.
    */
   public static void invalidateDirectives() {
     areDirectivesValid = false;
   }
 
+  /**
+   * Removes the directive with the specified priority
+   */
+  public static void removeRegionDirective(int priority)
+    throws GameActionException {
+    if (!MathUtils.isInRange(0,DIRECTIVE_NUM-1,priority))
+      throw new IllegalArgumentException("Priority must be between 0 and "+(DIRECTIVE_NUM-1)+", inclusive");
+    rc.broadcast(DIRECTIVE_START_CHANNEL + priority, 0);
+    directiveCache[priority] = null;
+  }
+
+  /**
+   * Adds a region directive to the broadcast channels.
+   * @param directive The ID of the directive. Use BroadcastUtils.Directives class to get the ID.
+   * @param priority The priority of the directive. Values closer to 0 have higher priority.
+   *                 Should be in the range of 0 to DIRECTIVE_NUM (exclusive)
+   * @param center The location of the directive.
+   * @param radius The radius of the directive. Must be from 0 to 64 (exclusive)
+   * @throws GameActionException If the broadcast failed
+   */
   public static void addRegionDirective(int directive, int priority, MapLocation center, float radius)
   throws GameActionException {
     addRegionDirective(directive, priority, (int)center.x, (int)center.y, (int)radius);
@@ -60,6 +82,19 @@ public class BroadcastUtils extends Globals {
   }
 
   /**
+   * Gets all of the current region directives, sorted by priority.
+   * NOTE: DO NOT MODIFY THIS ARRAY! This array is a direct reference to the internal
+   * cache of directives used in this Class. Modifying this array will cause unexpected behavior.
+   * If you want to mess with the array, clone it first!
+   * @return An array of the Directive objects
+   * @throws GameActionException
+   */
+  public static Directive[] getAllRegionDirectives() throws GameActionException {
+    updateDirectiveCache();
+    return directiveCache;
+  }
+
+  /**
    * Gets all directives active at the coordinates given.
    * The index of the array corresponds to the directive priority.
    * Null elements of the array correspond to the absence of a directive for a given priority.
@@ -69,14 +104,6 @@ public class BroadcastUtils extends Globals {
     return getRegionDirectives((int)location.x, (int)location.y);
   }
 
-  public static void removeRegionDirective(int priority)
-  throws GameActionException {
-    if (!MathUtils.isInRange(0,DIRECTIVE_NUM-1,priority))
-    throw new IllegalArgumentException("Priority must be between 0 and "+(DIRECTIVE_NUM-1)+", inclusive");
-    rc.broadcast(DIRECTIVE_START_CHANNEL + priority, 0);
-    directiveCache[priority] = null;
-  }
-
   /**
    * Gets all directives active at the coordinates given.
    * The index of the array corresponds to the directive priority.
@@ -84,6 +111,18 @@ public class BroadcastUtils extends Globals {
    * Intelligently caches directives. Only reads broadcast when caches are invalid.
    */
   public static Directive[] getRegionDirectives(int xCoordinate, int yCoordinate) throws GameActionException {
+    updateDirectiveCache();
+    Directive[] results = new Directive[DIRECTIVE_NUM];
+    for (int i=0; i<DIRECTIVE_NUM;i++) {
+      Directive d = directiveCache[i];
+      int dx = d.x-xCoordinate;
+      int dy = d.y-yCoordinate;
+      if (dx*dx + dy*dy <= d.radius*d.radius) results[i] = d;
+    }
+    return results;
+  }
+
+  private static void updateDirectiveCache() throws GameActionException {
     if (!areDirectivesValid) {
       for (int i=0; i<DIRECTIVE_NUM; i++) {
         int packedDirective = rc.readBroadcast(DIRECTIVE_START_CHANNEL + i);
@@ -97,15 +136,6 @@ public class BroadcastUtils extends Globals {
       }
       areDirectivesValid = true;
     }
-
-    Directive[] results = new Directive[DIRECTIVE_NUM];
-    for (int i=0; i<DIRECTIVE_NUM;i++) {
-      Directive d = directiveCache[i];
-      int dx = d.x-xCoordinate;
-      int dy = d.y-yCoordinate;
-      if (dx*dx + dy*dy <= d.radius*d.radius) results[i] = d;
-    }
-    return results;
   }
 
   /**
