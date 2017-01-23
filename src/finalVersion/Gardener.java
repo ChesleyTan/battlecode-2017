@@ -419,10 +419,12 @@ public class Gardener extends Globals {
         }
         RobotInfo[] friendlies = rc.senseNearbyRobots(3, us);
         withinArchonRange = false;
-        for (RobotInfo r: friendlies){
-          if(r.getType() == RobotType.ARCHON){
-            withinArchonRange = true;
-            break;
+        if (!spawnedLumberjack) {
+          for (RobotInfo r : friendlies) {
+            if (r.getType() == RobotType.ARCHON) {
+              withinArchonRange = true;
+              break;
+            }
           }
         }
         // Either plant a tree or produce a unit
@@ -448,11 +450,9 @@ public class Gardener extends Globals {
             }
           }
         }
-        else if (withinArchonRange){
-          if (!spawnedLumberjack){
-            if (spawnRobot(RobotType.LUMBERJACK)){
-              spawnedLumberjack = true;
-            }
+        else if (!spawnedLumberjack && withinArchonRange) {
+          if (spawnRobot(RobotType.LUMBERJACK)) {
+            spawnedLumberjack = true;
           }
           continue;
         }

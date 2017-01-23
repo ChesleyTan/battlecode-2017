@@ -301,6 +301,27 @@ public class Lumberjack extends Globals {
     return result;
   }
 
+  public static TreeInfo getTreeTarget(TreeInfo[] nearbyTrees) {
+    TreeInfo closestTree = null;
+    float minDist = 9999f;
+    boolean minDistTreeContainsRobot = false;
+    for (TreeInfo ti : nearbyTrees) {
+      if (ti.getID() == treeBlacklist && currentRoundNum - treeBlacklistRound < 30) {
+        continue;
+      }
+      MapLocation treeLoc = ti.getLocation();
+      boolean containsRobot = ti.containedRobot != null;
+      float treeDist = treeLoc.distanceTo(here);
+      if ((treeDist < minDist || (!minDistTreeContainsRobot && containsRobot)) && TargetingUtils.clearShot(here, treeLoc, ti.getRadius())) {
+        closestTree = ti;
+        minDist = treeDist;
+        minDistTreeContainsRobot = containsRobot;
+      }
+    }
+    targetTree = closestTree;
+    return targetTree;
+  }
+
   public static void loop() throws GameActionException {
     try {
       if (currentRoundNum < 500) {
@@ -401,17 +422,7 @@ public class Lumberjack extends Globals {
                     System.out.println("Center of region directive: " + center);
                   }
                   if (trees.length > 0) {
-                    for (TreeInfo ti : trees) {
-                      if (ti.getID() == treeBlacklist
-                          && currentRoundNum - treeBlacklistRound < 30) {
-                        continue;
-                      }
-                      if (!TargetingUtils.clearShot(here, ti.getLocation(), ti.getRadius())) {
-                        continue;
-                      }
-                      targetTree = ti;
-                      break;
-                    }
+                    targetTree = getTreeTarget(trees);
                     break;
                   }
                   else {
@@ -425,21 +436,10 @@ public class Lumberjack extends Globals {
                 System.out.println("sensing nearby trees");
               }
               if (allNearbyTrees.length != 0) {
-                TreeInfo closestTree = null;
-                float minDist = 9999f;
-                for (TreeInfo ti : allNearbyTrees) {
-                  if (ti.getID() == treeBlacklist && currentRoundNum - treeBlacklistRound < 30) {
-                    continue;
-                  }
-                  MapLocation treeLoc = ti.getLocation();
-                  float treeDist = treeLoc.distanceTo(here);
-                  if (treeDist < minDist && TargetingUtils.clearShot(here, treeLoc, ti.getRadius())) {
-                    closestTree = ti;
-                    minDist = treeDist;
-                  }
+                targetTree = getTreeTarget(allNearbyTrees);
+                if (LUMBERJACK_DEBUG) {
+                  System.out.println(targetTree);
                 }
-                targetTree = closestTree;
-                //System.out.println(closestTree);
                 if (targetTree != null) {
                   RobotInfo closerRobot = reachable(targetTree);
                   if (closerRobot == null) {
