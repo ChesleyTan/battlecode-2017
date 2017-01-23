@@ -775,7 +775,7 @@ public class Scout extends Globals {
               }
               else {
                 System.out.println("Trying to move towards tree");
-                if (RobotUtils.tryMoveIfSafe(here.directionTo(preferredTree.getLocation()), nearbyBullets, 30, 4)) {
+                if (RobotUtils.tryMoveIfSafe(here.directionTo(preferredTree.getLocation()), nearbyBullets, rand.nextFloat() * 10 + 30, 3)) {
                   isPerchedInTree = false;
                 }
               }

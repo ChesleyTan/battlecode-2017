@@ -2,6 +2,7 @@ package finalVersion;
 
 import battlecode.common.*;
 import utils.RobotUtils;
+import utils.TargetingUtils;
 import utils.BroadcastUtils;
 import utils.BroadcastUtils.Directive;
 import utils.Globals;
@@ -17,12 +18,10 @@ public class Lumberjack extends Globals {
   private static TreeInfo[] allNearbyTrees;
   private static int targetBlacklist;
   private static int targetBlacklistRound;
-  private static int queuedTree = 0;
+  private static int treeBlacklist;
+  private static int treeBlacklistRound;
   private static MapLocation destination;
-  
-  
 
-  
   public static TreeInfo[] getAllTrees() {
     TreeInfo[] union;
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees(-1);
@@ -67,7 +66,8 @@ public class Lumberjack extends Globals {
       targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
     }
     BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
-    if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, (rand.nextFloat() * 10 + 20), 3)) {
+    if (!RobotUtils.tryMoveIfSafe(targetDirection, nearbyBullets, (rand.nextFloat() * 10 + 20),
+        3)) {
       targetDirection = targetDirection.rotateRightRads((float) (rand.nextFloat() * Math.PI));
     }
   }
@@ -223,6 +223,8 @@ public class Lumberjack extends Globals {
         boolean moved = RobotUtils.tryMoveIfSafe(towardsTree, nearbyBullets, 15, 6);
         if (!moved) {
           System.out.println("Could not move towards tree. Disengaging");
+          treeBlacklist = targetTree.getID();
+          treeBlacklistRound = currentRoundNum;
           targetTree = null;
         }
         /*if (rc.canMove(towardsTree)){
@@ -371,45 +373,64 @@ public class Lumberjack extends Globals {
           }
           else {
             System.out.println("looking for region directives");
-            Directive[] directives = BroadcastUtils.getRegionDirectives((int)here.x, (int)here.y);
-            for(Directive d: directives){
+            Directive[] directives = BroadcastUtils.getRegionDirectives((int) here.x, (int) here.y);
+            for (Directive d : directives) {
               // CUT
-              if (d != null){
-                if (d.type == 7){
+              if (d != null) {
+                if (d.type == 7) {
                   MapLocation center = new MapLocation(d.x, d.y);
                   TreeInfo[] trees = rc.senseNearbyTrees(center, d.radius, Team.NEUTRAL);
                   System.out.println("Center of region directive: " + center);
-                  if (trees.length > 0){
-                    targetTree = trees[0];
+                  if (trees.length > 0) {
+                    for (TreeInfo ti : trees) {
+                      if (ti.getID() == treeBlacklist
+                          && currentRoundNum - treeBlacklistRound < 30) {
+                        continue;
+                      }
+                      if (!TargetingUtils.clearShot(here, ti.getLocation(), ti.getRadius())) {
+                        continue;
+                      }
+                      targetTree = ti;
+                      break;
+                    }
                     break;
                   }
-                  else{
+                  else {
                     BroadcastUtils.addRegionDirective(0, 0, 0, 0, 0);
                   }
                 }
               }
             }
-            if (targetTree == null){
+            if (targetTree == null) {
               System.out.println("sensing nearby trees");
               if (allNearbyTrees.length != 0) {
                 TreeInfo closestTree = null;
                 float minDist = 9999f;
                 for (TreeInfo ti : allNearbyTrees) {
-                  float treeDist = ti.getLocation().distanceTo(here);
-                  if (treeDist < minDist) {
+                  if (ti.getID() == treeBlacklist && currentRoundNum - treeBlacklistRound < 30) {
+                    continue;
+                  }
+                  MapLocation treeLoc = ti.getLocation();
+                  float treeDist = treeLoc.distanceTo(here);
+                  if (treeDist < minDist && TargetingUtils.clearShot(here, treeLoc, ti.getRadius())) {
                     closestTree = ti;
                     minDist = treeDist;
                   }
                 }
                 targetTree = closestTree;
                 //System.out.println(closestTree);
-                RobotInfo closerRobot = reachable(targetTree);
-                if (closerRobot == null) {
-                  tryChop();
+                if (targetTree != null) {
+                  RobotInfo closerRobot = reachable(targetTree);
+                  if (closerRobot == null) {
+                    tryChop();
+                  }
+                  else {
+                    switchTarget(closerRobot);
+                    chase();
+                  }
                 }
                 else {
-                  switchTarget(closerRobot);
-                  chase();
+                  roam();
                 }
               }
               else {
