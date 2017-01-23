@@ -15,7 +15,7 @@ public class Soldier extends Globals {
   private static Direction mydir;
   private static RobotInfo target;
   private static MapLocation enemyArchonLocation;
-  private static final boolean SOLDIER_DEBUG = false;
+  private static final boolean SOLDIER_DEBUG = true;
 
   /*
   private static void dodge(BulletInfo[] bullets, RobotInfo[] robots, MapLocation targetLocation)
@@ -389,7 +389,7 @@ public class Soldier extends Globals {
       }
       switch (enemies[i].getType()) {
         case GARDENER:
-          value = 4;
+          value = 2;
           break;
         case SCOUT:
           value = 3;
@@ -398,10 +398,10 @@ public class Soldier extends Globals {
           value = 0;
           break;
         case SOLDIER:
-          value = 1;
+          value = 4;
           break;
         case LUMBERJACK:
-          value = 3;
+          value = 4;
           break;
         case TANK:
           value = 0;
