@@ -18,11 +18,6 @@ public class Archon extends Globals {
         break;
       }
     }
-    float distance = here.distanceTo(enemyArchons[me]);
-    int currDistance = rc.readBroadcast(DISTANCE_BETWEEN_ARCHONS_CHANNEL);
-    if (currDistance == 0 || distance < currDistance) {
-      rc.broadcast(DISTANCE_BETWEEN_ARCHONS_CHANNEL, (int) distance);
-    }
   }
 
   private static void trySpawnGardener(int producedGardeners) throws GameActionException {
@@ -58,6 +53,7 @@ public class Archon extends Globals {
       rc.disintegrate();
       */
       EvasiveArchon.init();
+      
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
       if (producedGardeners == 0) {
         trySpawnGardener(producedGardeners);
@@ -79,7 +75,7 @@ public class Archon extends Globals {
         else {
           producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
-          if (producedGardeners < 3 || producedGardeners < currentRoundNum / 40
+          if (producedGardeners < 3 || producedGardeners < currentRoundNum / 60
               || productionGardeners < requiredProductionGardeners) {
             trySpawnGardener(producedGardeners);
           }
