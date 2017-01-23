@@ -70,6 +70,16 @@ public class BroadcastUtils extends Globals {
    * Null elements of the array correspond to the absence of a directive for a given priority.
    * Intelligently caches directives. Only reads broadcast when caches are invalid.
    */
+  public static Directive[] getRegionDirectives(MapLocation location) throws GameActionException {
+    getRegionDirectives((int)location.x, (int)location.y);
+  }
+
+  /**
+   * Gets all directives active at the coordinates given.
+   * The index of the array corresponds to the directive priority.
+   * Null elements of the array correspond to the absence of a directive for a given priority.
+   * Intelligently caches directives. Only reads broadcast when caches are invalid.
+   */
   public static Directive[] getRegionDirectives(int xCoordinate, int yCoordinate) throws GameActionException {
     if (!areDirectivesValid) {
       for (int i=0; i<DIRECTIVE_NUM; i++) {
