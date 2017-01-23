@@ -2,6 +2,8 @@ package finalVersion;
 
 import battlecode.common.*;
 import utils.RobotUtils;
+import utils.BroadcastUtils;
+import utils.BroadcastUtils.Directive;
 import utils.Globals;
 
 public class Lumberjack extends Globals {
@@ -15,7 +17,12 @@ public class Lumberjack extends Globals {
   private static TreeInfo[] allNearbyTrees;
   private static int targetBlacklist;
   private static int targetBlacklistRound;
+  private static int queuedTree = 0;
+  private static MapLocation destination;
+  
+  
 
+  
   public static TreeInfo[] getAllTrees() {
     TreeInfo[] union;
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees(-1);
@@ -362,25 +369,42 @@ public class Lumberjack extends Globals {
             }
           }
           else {
-            if (allNearbyTrees.length != 0) {
-              TreeInfo closestTree = null;
-              float minDist = 9999f;
-              for (TreeInfo ti : allNearbyTrees) {
-                float treeDist = ti.getLocation().distanceTo(here);
-                if (treeDist < minDist) {
-                  closestTree = ti;
-                  minDist = treeDist;
+            Directive[] directives = BroadcastUtils.getRegionDirectives((int)here.x, (int)here.y);
+            for(Directive d: directives){
+              // CUT
+              if (d.type == 7){
+                MapLocation center = new MapLocation(d.x, d.y);
+                TreeInfo[] trees = rc.senseNearbyTrees(center, d.radius, Team.NEUTRAL);
+                if (trees.length > 0){
+                  targetTree = trees[0];
+                  break;
+                }
+                else{
+                  BroadcastUtils.addRegionDirective(0, 0, 0, 0, 0);
                 }
               }
-              targetTree = closestTree;
-              System.out.println(closestTree);
-              RobotInfo closerRobot = reachable(targetTree);
-              if (closerRobot == null) {
-                tryChop();
-              }
-              else {
-                switchTarget(closerRobot);
-                chase();
+            }
+            if (targetTree == null){
+              if (allNearbyTrees.length != 0) {
+                TreeInfo closestTree = null;
+                float minDist = 9999f;
+                for (TreeInfo ti : allNearbyTrees) {
+                  float treeDist = ti.getLocation().distanceTo(here);
+                  if (treeDist < minDist) {
+                    closestTree = ti;
+                    minDist = treeDist;
+                  }
+                }
+                targetTree = closestTree;
+                //System.out.println(closestTree);
+                RobotInfo closerRobot = reachable(targetTree);
+                if (closerRobot == null) {
+                  tryChop();
+                }
+                else {
+                  switchTarget(closerRobot);
+                  chase();
+                }
               }
             }
             else {
