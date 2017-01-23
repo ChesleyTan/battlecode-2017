@@ -454,7 +454,6 @@ public class Gardener extends Globals {
           if (spawnRobot(RobotType.LUMBERJACK)) {
             spawnedLumberjack = true;
           }
-          continue;
         }
         else if (production_gardener) {
           spawnRobot(RobotType.SOLDIER);

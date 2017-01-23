@@ -192,7 +192,7 @@ public class Soldier extends Globals {
     if (rc.canFireTriadShot() && TargetingUtils.clearShot(here, target)) {
       Direction towardsEnemy = here.directionTo(targetLocation);
       float distanceEnemy = here.distanceTo(targetLocation);
-      if (TargetingUtils.clearShot(here, target)) {
+      if (TargetingUtils.clearShot(here, target) || (target.getType() == RobotType.GARDENER && rc.getOpponentVictoryPoints() >= 10)) {
         if (distanceEnemy <= 3.5 && rc.canFirePentadShot() && rc.getTeamBullets() > 200) {
           rc.firePentadShot(towardsEnemy);
         }
