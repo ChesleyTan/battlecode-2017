@@ -18,7 +18,7 @@ public class Gardener extends Globals {
   private static boolean spawnedEarlyScout = false;
   private static boolean spawnedLumberjack = false;
   private static boolean reportedTrees = false;
-  private static boolean GARDENER_DEBUG = false;
+  private static final boolean GARDENER_DEBUG = false;
 
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
