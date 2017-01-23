@@ -21,6 +21,7 @@ public class Lumberjack extends Globals {
   private static int treeBlacklist;
   private static int treeBlacklistRound;
   private static MapLocation destination;
+  private static final boolean LUMBERJACK_DEBUG = false;
 
   public static TreeInfo[] getAllTrees() {
     TreeInfo[] union;
@@ -60,8 +61,10 @@ public class Lumberjack extends Globals {
   }
 
   public static void roam() throws GameActionException {
-    System.out.println("Roaming");
-    System.out.println(targetDirection);
+    if (LUMBERJACK_DEBUG) {
+      System.out.println("Roaming");
+      System.out.println(targetDirection);
+    }
     if (!rc.onTheMap(here.add(targetDirection,
         1 + RobotType.LUMBERJACK.strideRadius + RobotType.LUMBERJACK.bodyRadius))) {
       // Change direction when hitting border
@@ -213,7 +216,9 @@ public class Lumberjack extends Globals {
   }
 
   public static void tryChop() throws GameActionException {
-    System.out.println("Trying to chop: " + targetTree.getID());
+    if (LUMBERJACK_DEBUG) {
+      System.out.println("Trying to chop: " + targetTree.getID());
+    }
     if (rc.canSenseTree(targetTree.ID)) {
       targetTree = rc.senseTree(targetTree.ID);
       MapLocation treeLoc = targetTree.getLocation();
@@ -224,7 +229,9 @@ public class Lumberjack extends Globals {
         BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
         boolean moved = RobotUtils.tryMoveIfSafe(towardsTree, nearbyBullets, 15, 6);
         if (!moved) {
-          System.out.println("Could not move towards tree. Disengaging");
+          if (LUMBERJACK_DEBUG) {
+            System.out.println("Could not move towards tree. Disengaging");
+          }
           treeBlacklist = targetTree.getID();
           treeBlacklistRound = currentRoundNum;
           targetTree = null;
@@ -338,7 +345,9 @@ public class Lumberjack extends Globals {
         */
         // Consider targets that are behind trees
         if (target != null) {
-          System.out.println("Target: " + target);
+          if (LUMBERJACK_DEBUG) {
+            System.out.println("Target: " + target);
+          }
           TreeInfo closerTree = reachable(target);
           if (closerTree == null) {
             chase();
@@ -349,7 +358,9 @@ public class Lumberjack extends Globals {
           }
         }
         else if (targetTree != null) {
-          System.out.println("Target tree: " + targetTree);
+          if (LUMBERJACK_DEBUG) {
+            System.out.println("Target tree: " + targetTree);
+          }
           RobotInfo closerRobot = reachable(targetTree);
           if (closerRobot == null) {
             tryChop();
@@ -360,7 +371,9 @@ public class Lumberjack extends Globals {
           }
         }
         else {
-          System.out.println("sensing nearby robots");
+          if (LUMBERJACK_DEBUG) {
+            System.out.println("sensing nearby robots");
+          }
           RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
           target = priority(enemies);
           if (target != null) {
@@ -374,7 +387,9 @@ public class Lumberjack extends Globals {
             }
           }
           else {
-            System.out.println("looking for region directives");
+            if (LUMBERJACK_DEBUG) {
+              System.out.println("looking for region directives");
+            }
             Directive[] directives = BroadcastUtils.getRegionDirectives((int) here.x, (int) here.y);
             for (Directive d : directives) {
               // CUT
@@ -382,7 +397,9 @@ public class Lumberjack extends Globals {
                 if (d.type == 7) {
                   MapLocation center = new MapLocation(d.x, d.y);
                   TreeInfo[] trees = rc.senseNearbyTrees(center, d.radius, Team.NEUTRAL);
-                  System.out.println("Center of region directive: " + center);
+                  if (LUMBERJACK_DEBUG) {
+                    System.out.println("Center of region directive: " + center);
+                  }
                   if (trees.length > 0) {
                     for (TreeInfo ti : trees) {
                       if (ti.getID() == treeBlacklist
@@ -404,7 +421,9 @@ public class Lumberjack extends Globals {
               }
             }
             if (targetTree == null) {
-              System.out.println("sensing nearby trees");
+              if (LUMBERJACK_DEBUG) {
+                System.out.println("sensing nearby trees");
+              }
               if (allNearbyTrees.length != 0) {
                 TreeInfo closestTree = null;
                 float minDist = 9999f;
