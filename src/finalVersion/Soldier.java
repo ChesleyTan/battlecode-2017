@@ -14,11 +14,9 @@ public class Soldier extends Globals {
   private static int mode;
   private static Direction mydir;
   private static RobotInfo target;
-  private static boolean isMovingAroundTree = false;
-  private static TreeInfo tree = null;
-  private static MapLocation targetAroundTreeDestination = null;
-  private static MapLocation enemyLocation = rc.getInitialArchonLocations(them)[0];
+  private static MapLocation enemyArchonLocation;
 
+  /*
   private static void dodge(BulletInfo[] bullets, RobotInfo[] robots, MapLocation targetLocation)
       throws GameActionException {
     float sumX = 0;
@@ -116,6 +114,7 @@ public class Soldier extends Globals {
     Direction finalDir = new Direction(sumX, sumY);
     RobotUtils.tryMove(finalDir, 10, 6);
   }
+  */
 
   private static void findSquad() throws GameActionException {
     int i = DEFENSE_START_CHANNEL;
@@ -407,13 +406,13 @@ public class Soldier extends Globals {
   public static void loop() {
     try {
       //Start out and join a squad
+      enemyArchonLocation = rc.getInitialArchonLocations(them)[0];
       findSquad();
       if (rc.getRoundNum() < 100) {
-        MapLocation enemy = rc.getInitialArchonLocations(them)[0];
         rc.broadcast(squad_channel + 1, 0);
-        rc.broadcast(squad_channel + 2, (int) enemy.x);
-        rc.broadcast(squad_channel + 3, (int) enemy.y);
-        mydir = here.directionTo(enemy);
+        rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
+        rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
+        mydir = here.directionTo(enemyArchonLocation);
         mode = ATTACK;
       }
       else {
@@ -442,6 +441,7 @@ public class Soldier extends Globals {
               int xCor = rc.readBroadcast(squad_channel + 2);
               int yCor = rc.readBroadcast(squad_channel + 3);
               MapLocation destination = new MapLocation(xCor, yCor);
+              System.out.println(destination);
               if (here.distanceTo(destination) <= RobotType.SOLDIER.sensorRadius
                   + MIN_ROBOT_RADIUS) {
                 // Disengage, because target could not be found at last known location
