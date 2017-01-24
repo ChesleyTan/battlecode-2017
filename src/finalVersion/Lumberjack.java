@@ -16,6 +16,7 @@ public class Lumberjack extends Globals {
   private static final int DEFENSE = 1;
   private static int mode;
   private static TreeInfo[] allNearbyTrees;
+  private static RobotInfo[] nearbyEnemies;
   private static int targetBlacklist;
   private static int targetBlacklistRound;
   private static int treeBlacklist;
@@ -157,8 +158,8 @@ public class Lumberjack extends Globals {
       if (!isInRangeOfFriendlies) {
         Direction principleDirection = here.directionTo(closestPoint);
         rc.setIndicatorLine(here, here.add(principleDirection, 1f), 255, 0, 0);
-        rc.setIndicatorLine(here.add(principleDirection, 1f), here.add(principleDirection, 1.25f), 0,
-            0, 0);
+        rc.setIndicatorLine(here.add(principleDirection, 1f), here.add(principleDirection, 1.25f),
+            0, 0, 0);
         boolean canMove = RobotUtils.tryMoveIfSafe(principleDirection, nearbyBullets, 15, 6);
         if (!canMove && !RobotUtils.tryMove(principleDirection, 15, 6)) {
           targetBlacklist = target.getID();
@@ -216,11 +217,10 @@ public class Lumberjack extends Globals {
   public static RobotInfo reachable(TreeInfo target) {
     MapLocation targetLoc = target.getLocation();
     Direction toThere = here.directionTo(targetLoc);
-    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
     float distToTarget = here.distanceTo(targetLoc) - target.getRadius();
     float minDistRobotDist = 9999f;
     RobotInfo minDistRobot = null;
-    for (RobotInfo r : nearbyRobots) {
+    for (RobotInfo r : nearbyEnemies) {
       if (r.getID() == targetBlacklist && currentRoundNum - targetBlacklistRound < 30) {
         continue;
       }
@@ -296,34 +296,33 @@ public class Lumberjack extends Globals {
     }
   }
 
+  public static int priorityOf(RobotType t) {
+    switch (t) {
+      case GARDENER:
+        return 4;
+      case SCOUT:
+        return 3;
+      case ARCHON:
+        return 2;
+      case SOLDIER:
+        return 1;
+      case LUMBERJACK:
+        return 1;
+      case TANK:
+        return 1;
+      default:
+        return 0;
+    }
+  }
+
   public static RobotInfo priority(RobotInfo[] enemies) {
     RobotInfo result = null;
     int currvalue = 0;
     for (RobotInfo r : enemies) {
-      int value = 0;
       if (r.getID() == targetBlacklist && currentRoundNum - targetBlacklistRound < 30) {
         continue;
       }
-      switch (r.getType()) {
-        case GARDENER:
-          value = 4;
-          break;
-        case SCOUT:
-          value = 3;
-          break;
-        case ARCHON:
-          value = 2;
-          break;
-        case SOLDIER:
-          value = 1;
-          break;
-        case LUMBERJACK:
-          value = 1;
-          break;
-        case TANK:
-          value = 1;
-          break;
-      }
+      int value = priorityOf(r.getType());
       //System.out.println("Value: " + value);
       if (value > currvalue) {
         currvalue = value;
@@ -351,8 +350,28 @@ public class Lumberjack extends Globals {
         minDistTreeContainsRobot = containsRobot;
       }
     }
-    targetTree = closestTree;
-    return targetTree;
+    return closestTree;
+  }
+
+  public static RobotInfo getEnemyTarget() {
+    RobotInfo closestRobot = null;
+    float minDist = 9999f;
+    int minDistRobotPriority = -1;
+    for (RobotInfo ri : nearbyEnemies) {
+      if (ri.getID() == targetBlacklist && currentRoundNum - targetBlacklistRound < 30) {
+        continue;
+      }
+      MapLocation robotLoc = ri.getLocation();
+      int priority = priorityOf(ri.getType());
+      float robotDist = robotLoc.distanceTo(here);
+      if ((robotDist < minDist || (priority > minDistRobotPriority))
+          && TargetingUtils.clearShot(here, robotLoc, ri.getRadius())) {
+        closestRobot = ri;
+        minDist = robotDist;
+        minDistRobotPriority = priority;
+      }
+    }
+    return closestRobot;
   }
 
   public static void loop() throws GameActionException {
@@ -373,6 +392,7 @@ public class Lumberjack extends Globals {
       try {
         Globals.update();
         allNearbyTrees = getAllTrees();
+        nearbyEnemies = rc.senseNearbyRobots(-1, them);
         /*
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(-1, them);
         RobotInfo nearestEnemy = priority(nearbyEnemies);
@@ -429,8 +449,7 @@ public class Lumberjack extends Globals {
           if (LUMBERJACK_DEBUG) {
             System.out.println("sensing nearby robots");
           }
-          RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
-          target = priority(enemies);
+          target = priority(nearbyEnemies);
           if (target != null) {
             TreeInfo closerTree = reachable(target);
             if (closerTree == null) {
