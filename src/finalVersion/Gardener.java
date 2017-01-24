@@ -560,7 +560,7 @@ public class Gardener extends Globals {
               if (Clock.getBytecodesLeft() < 1000) {
                 break;
               }
-              if (rc.readBroadcast(channel) != 0 && rc.readBroadcast(channel + 1) == 0) {
+              if (rc.readBroadcast(channel) != 0 && rc.readBroadcast(channel + 1) == -1) {
                 rc.broadcast(channel + 1, attacker.getID());
                 rc.broadcast(channel + 2, (int) attacker.getLocation().x);
                 rc.broadcast(channel + 3, (int) attacker.getLocation().y);

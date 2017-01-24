@@ -11,6 +11,7 @@ public class RobotUtils extends Globals {
   private static int bugState = DIRECT;
   private static boolean wallSideLeft;
   private static Direction bugStartDirection;
+  private static int bugCount;
   private static Direction lastDirection;
 
   public static void bugStart(MapLocation finalLoc) {
@@ -18,6 +19,7 @@ public class RobotUtils extends Globals {
     bugState = BUG;
     bugStartDirection = here.directionTo(finalLoc);
     bugDestinationLocation = finalLoc;
+    bugCount = 0;
     Direction leftDir = bugStartDirection;
     Direction rightDir = bugStartDirection;
     int attempts = 0;
@@ -53,11 +55,9 @@ public class RobotUtils extends Globals {
     System.out.println("bugging");
     bugStartDirection = here.directionTo(bugDestinationLocation);
     System.out.println("start direction: " + bugStartDirection.getAngleDegrees());
-    if (rc.canMove(here.directionTo(bugDestinationLocation))) {
+    if (rc.canMove(here.directionTo(bugDestinationLocation)) && bugCount > 1) {
       rc.move(bugStartDirection);
-      bugStartLocation = null;
-      bugState = DIRECT;
-      bugStartDirection = null;
+      endBug();
       return true;
     }
     Direction startDir = bugStartDirection;
@@ -78,6 +78,7 @@ public class RobotUtils extends Globals {
     }
     if (rc.canMove(startDir)) {
       rc.move(startDir);
+      bugCount ++;
       return true;
     }
     else {
@@ -223,6 +224,7 @@ public class RobotUtils extends Globals {
     bugDestinationLocation = null;
     bugStartLocation = null;
     bugState = DIRECT;
+    bugCount = 0;
   }
 
   public static boolean tryMoveDestination(MapLocation target) throws GameActionException {

@@ -121,15 +121,16 @@ public class Soldier extends Globals {
     int i = DEFENSE_START_CHANNEL;
     while (i < DEFENSE_END_CHANNEL) {
       int squad_count = rc.readBroadcast(i);
-      if (SOLDIER_DEBUG) {
+      /*if (SOLDIER_DEBUG) {
         System.out.println(squad_count);
-      }
+      }*/
       if (squad_count == 0) {
         // Clear out target field
         rc.broadcast(i + 1, -1);
       }
       if (squad_count < 3) {
         squad_channel = i;
+        System.out.println("Squad channel: " + i);
         rc.broadcast(i, squad_count + 1);
         return;
       }
