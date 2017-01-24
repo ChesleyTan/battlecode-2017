@@ -200,6 +200,16 @@ public class Globals {
       return;
     }
     RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(-1, them);
+    boolean hasGardener = false;
+    for (RobotInfo ri : nearbyEnemies) {
+      if (ri.getType() == RobotType.GARDENER) {
+        hasGardener = true;
+        break;
+      }
+    }
+    if (!hasGardener) {
+      return;
+    }
     int[] targets = new int[(ATTACK_END_CHANNEL - ATTACK_START_CHANNEL) / ATTACK_BLOCK_WIDTH + (DEFENSE_END_CHANNEL - DEFENSE_START_CHANNEL) / DEFENSE_BLOCK_WIDTH];
     int i = 0;
     for (int channel = ATTACK_START_CHANNEL; channel < ATTACK_END_CHANNEL; channel += ATTACK_BLOCK_WIDTH) {
