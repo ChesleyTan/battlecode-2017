@@ -11,7 +11,7 @@ public class Tank extends Globals {
 
       // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
       try {
-        MapLocation myLocation = rc.getLocation();
+        Globals.update();
 
         // See if there are any nearby enemy robots
         RobotInfo[] robots = rc.senseNearbyRobots(-1, them);

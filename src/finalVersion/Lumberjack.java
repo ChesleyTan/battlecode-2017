@@ -324,6 +324,7 @@ public class Lumberjack extends Globals {
 
   public static void loop() throws GameActionException {
     try {
+      EvasiveLumberjack.init();
       if (currentRoundNum < 500) {
         mode = DEFENSE;
       }
@@ -458,6 +459,12 @@ public class Lumberjack extends Globals {
                 roam();
               }
             }
+          }
+        }
+        if (!rc.hasMoved()) {
+          BulletInfo[] nearbyBullets = rc.senseNearbyBullets(EvasiveLumberjack.BULLET_DETECT_RADIUS);
+          if (nearbyBullets.length != 0) {
+            EvasiveLumberjack.move(nearbyBullets);
           }
         }
         RobotUtils.donateEverythingAtTheEnd();
