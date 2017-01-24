@@ -57,8 +57,9 @@ public class Archon extends Globals {
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
       if (producedGardeners == 0) {
         trySpawnGardener(producedGardeners);
+        determineMapSymmetry(myArchons, enemyArchons);
       }
-      calculateDistanceBetweenArchons();
+      //calculateDistanceBetweenArchons();
     } catch (Exception e) {
       e.printStackTrace();
     }
