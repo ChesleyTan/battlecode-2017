@@ -19,7 +19,7 @@ public class Gardener extends Globals {
   private static boolean spawnedLumberjack = false;
   private static boolean reportedTrees = false;
   private static boolean withinArchonRange = false;
-  private static final boolean GARDENER_DEBUG = false;
+  private static final boolean GARDENER_DEBUG = true;
 
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
@@ -278,17 +278,19 @@ public class Gardener extends Globals {
         BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveGardener.BULLET_DETECT_RADIUS);
         boolean nearbyEnemyThreat = false;
         for (RobotInfo ri : nearbyEnemies) {
-          if (Clock.getBytecodesLeft() < 2000) {
+          if (Clock.getBytecodesLeft() < 8000) {
             break;
           }
           if (ri.getType().bulletSpeed > 0 && ri.getLocation().isWithinDistance(here,
               1 + RobotType.GARDENER.bodyRadius + ri.getRadius())) {
             nearbyEnemyThreat = true;
+            break;
           }
           else if (ri.getType() == RobotType.LUMBERJACK && ri.getLocation().isWithinDistance(here,
-              GameConstants.INTERACTION_DIST_FROM_EDGE + RobotType.LUMBERJACK.strideRadius
+              GameConstants.LUMBERJACK_STRIKE_RADIUS + RobotType.LUMBERJACK.strideRadius
                   + RobotType.LUMBERJACK.bodyRadius + RobotType.GARDENER.bodyRadius)) {
             nearbyEnemyThreat = true;
+            break;
           }
         }
         boolean willGetHitByBullet = false;
@@ -296,7 +298,7 @@ public class Gardener extends Globals {
           TreeInfo[] trees = rc.senseNearbyTrees();
           for (BulletInfo i : bullets) {
             //System.out.println(i);
-            if (Clock.getBytecodesLeft() < 2000) {
+            if (Clock.getBytecodesLeft() < 6000) {
               break;
             }
             if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)) {
@@ -313,6 +315,7 @@ public class Gardener extends Globals {
           numCheckSpaces = 0;
           if (GARDENER_DEBUG) {
             System.out.println("dodging");
+            System.out.println(Clock.getBytecodesLeft());
           }
           //dodge(bullets, robots);
           EvasiveGardener.move(bullets, nearbyEnemies, nearbyTrees);
@@ -436,7 +439,13 @@ public class Gardener extends Globals {
           queuedMove = null;
         }
         if (!rc.hasMoved()) {
+          if (GARDENER_DEBUG) {
+            System.out.println("Before: " + Clock.getBytecodesLeft());
+          }
           move(nearbyEnemies, nearbyTrees);
+          if (GARDENER_DEBUG) {
+            System.out.println("After: " + Clock.getBytecodesLeft());
+          }
         }
         RobotInfo[] friendlies = rc.senseNearbyRobots(3, us);
         withinArchonRange = false;
