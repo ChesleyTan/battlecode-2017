@@ -196,16 +196,20 @@ public class Globals {
   }
 
   public static void trackEnemyGardeners() throws GameActionException {
-    if (Clock.getBytecodesLeft() < 1000) {
+    if (Clock.getBytecodesLeft() < 2000) {
       return;
     }
     RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(-1, them);
-    int[] targets = new int[(ATTACK_END_CHANNEL - ATTACK_START_CHANNEL) / ATTACK_BLOCK_WIDTH];
-    for (int channel = ATTACK_START_CHANNEL, i = 0; channel < ATTACK_END_CHANNEL; channel += ATTACK_BLOCK_WIDTH, ++i) {
-      targets[i] = rc.readBroadcast(channel + 1);
+    int[] targets = new int[(ATTACK_END_CHANNEL - ATTACK_START_CHANNEL) / ATTACK_BLOCK_WIDTH + (DEFENSE_END_CHANNEL - DEFENSE_START_CHANNEL) / DEFENSE_BLOCK_WIDTH];
+    int i = 0;
+    for (int channel = ATTACK_START_CHANNEL; channel < ATTACK_END_CHANNEL; channel += ATTACK_BLOCK_WIDTH) {
+      targets[i++] = rc.readBroadcast(channel + 1);
+    }
+    for (int channel = DEFENSE_START_CHANNEL; channel < DEFENSE_END_CHANNEL; channel += DEFENSE_BLOCK_WIDTH) {
+      targets[i++] = rc.readBroadcast(channel + 1);
     }
     outer: for (RobotInfo ri : nearbyEnemies) {
-      if (Clock.getBytecodesLeft() < 200) {
+      if (Clock.getBytecodesLeft() < 500) {
         return;
       }
       if (ri.getType() == RobotType.GARDENER) {
