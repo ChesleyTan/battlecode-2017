@@ -60,7 +60,7 @@ public class Soldier extends Globals {
         sumY += away.getDeltaY(weighted);
       }
     }
-
+  
     for (RobotInfo r : robots) {
       Direction their_direction = r.location.directionTo(here);
       float their_distance = ((RobotType.SOLDIER.sensorRadius - here.distanceTo(r.location)
@@ -73,7 +73,7 @@ public class Soldier extends Globals {
       sumX += their_direction.getDeltaX(their_distance);
       sumY += their_direction.getDeltaY(their_distance);
     }
-
+  
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees(GameConstants.NEUTRAL_TREE_MAX_RADIUS);
     if (nearbyTrees.length <= 10) {
       for (TreeInfo t : nearbyTrees) {
@@ -85,7 +85,7 @@ public class Soldier extends Globals {
         sumY += their_direction.getDeltaY(their_distance);
       }
     }
-
+  
     if (Clock.getBytecodesLeft() >= 2000) {
       float sightRadius = RobotType.SOLDIER.sensorRadius - 1;
       updateMapBoundaries();
@@ -111,7 +111,7 @@ public class Soldier extends Globals {
       }
     }
     //float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
-
+  
     Direction finalDir = new Direction(sumX, sumY);
     RobotUtils.tryMove(finalDir, 10, 6);
   }
@@ -189,20 +189,21 @@ public class Soldier extends Globals {
     MapLocation targetLocation = target.getLocation();
     move(bullets, robots, targetLocation);
     //RobotUtils.tryMoveDestination(targetLocation);
-    if (rc.canFireTriadShot() && TargetingUtils.clearShot(here, target)) {
+    if (TargetingUtils.clearShot(here, target) || (rc.getType() == RobotType.GARDENER && rc.getOpponentVictoryPoints() > 10)) {
+      if (SOLDIER_DEBUG) {
+        System.out.println("clearShot to target");
+      }
       Direction towardsEnemy = here.directionTo(targetLocation);
       float distanceEnemy = here.distanceTo(targetLocation);
-      if (TargetingUtils.clearShot(here, target) || (target.getType() == RobotType.GARDENER && rc.getOpponentVictoryPoints() >= 10)) {
-        if (distanceEnemy <= 3.5 && rc.canFirePentadShot() && rc.getTeamBullets() > 200) {
-          rc.firePentadShot(towardsEnemy);
+      if (distanceEnemy <= 3.5 && rc.canFirePentadShot() && rc.getTeamBullets() > 200) {
+        rc.firePentadShot(towardsEnemy);
+      }
+      else {
+        if (rc.canFireTriadShot() && rc.getTeamBullets() > 50) {
+          rc.fireTriadShot(towardsEnemy);
         }
-        else {
-          if (rc.canFireTriadShot() && rc.getTeamBullets() > 50) {
-            rc.fireTriadShot(towardsEnemy);
-          }
-          else if (rc.canFireSingleShot()) {
-            rc.fireSingleShot(towardsEnemy);
-          }
+        else if (rc.canFireSingleShot()) {
+          rc.fireSingleShot(towardsEnemy);
         }
       }
     }
@@ -251,14 +252,33 @@ public class Soldier extends Globals {
         attack(target);
       }
       else {
-        if (!rc.hasMoved()) {
-          int attempts = 0;
-          while (!rc.canMove(mydir) && attempts < 20) {
-            mydir = RobotUtils.randomDirection();
-            attempts++;
+        int cacheTarget = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL);
+        if (cacheTarget != 0) {
+          if (SOLDIER_DEBUG) {
+            System.out.println("Using target from gardener cache: " + cacheTarget);
           }
-          if (rc.canMove(mydir)) {
-            rc.move(mydir);
+          int data = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL + 1);
+          int cacheTargetX = readGardenerCacheX(data);
+          int cacheTargetY = readGardenerCacheY(data);
+          rc.broadcast(squad_channel + 1, cacheTarget);
+          rc.broadcast(squad_channel + 2, cacheTargetX);
+          rc.broadcast(squad_channel + 3, cacheTargetY);
+          rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL, 0);
+          moveToAttack(new MapLocation(cacheTargetX, cacheTargetY));
+        }
+        else {
+          if (!rc.hasMoved()) {
+            int attempts = 0;
+            while (!rc.canMove(mydir) && attempts < 20) {
+              if (Clock.getBytecodesLeft() < 2000) {
+                break;
+              }
+              mydir = RobotUtils.randomDirection();
+              attempts++;
+            }
+            if (rc.canMove(mydir)) {
+              rc.move(mydir);
+            }
           }
         }
       }
@@ -524,6 +544,8 @@ public class Soldier extends Globals {
         }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
+        trackEnemyGardeners();
+        RobotUtils.notifyBytecodeLimitBreach();
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

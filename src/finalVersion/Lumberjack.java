@@ -99,6 +99,32 @@ public class Lumberjack extends Globals {
           break;
         }
       }
+      if (isInRangeOfFriendlies) {
+        closestPoint = targetLoc.add(toMe.rotateLeftDegrees(30),
+            target.getRadius() + RobotType.LUMBERJACK.bodyRadius + 0.1f);
+        for (RobotInfo r : attackingFriendlies) {
+          //System.out.println(r.ID);
+          //System.out.println(r.location.distanceTo(closestPoint));
+          if (r.getLocation().isWithinDistance(closestPoint,
+              2 * RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS)) {
+            isInRangeOfFriendlies = true;
+            break;
+          }
+        }
+      }
+      if (isInRangeOfFriendlies) {
+        closestPoint = targetLoc.add(toMe.rotateRightDegrees(30),
+            target.getRadius() + RobotType.LUMBERJACK.bodyRadius + 0.1f);
+        for (RobotInfo r : attackingFriendlies) {
+          //System.out.println(r.ID);
+          //System.out.println(r.location.distanceTo(closestPoint));
+          if (r.getLocation().isWithinDistance(closestPoint,
+              2 * RobotType.LUMBERJACK.bodyRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS)) {
+            isInRangeOfFriendlies = true;
+            break;
+          }
+        }
+      }
       // Code to make them more aggressive but also towards each other
       /*while(isInRangeOfFriendlies && rotateAmt < 9){
         Direction newDir = toMe.rotateLeftDegrees(10 * (rotateAmt + 1));
@@ -127,12 +153,12 @@ public class Lumberjack extends Globals {
         }
         rotateAmt ++;
       }*/
-      Direction principleDirection = toMe.opposite();
-      rc.setIndicatorLine(here, here.add(principleDirection, 1f), 255, 0, 0);
-      rc.setIndicatorLine(here.add(principleDirection, 1f), here.add(principleDirection, 1.25f), 0,
-          0, 0);
       //System.out.println(target.ID);
       if (!isInRangeOfFriendlies) {
+        Direction principleDirection = here.directionTo(closestPoint);
+        rc.setIndicatorLine(here, here.add(principleDirection, 1f), 255, 0, 0);
+        rc.setIndicatorLine(here.add(principleDirection, 1f), here.add(principleDirection, 1.25f), 0,
+            0, 0);
         boolean canMove = RobotUtils.tryMoveIfSafe(principleDirection, nearbyBullets, 15, 6);
         if (!canMove && !RobotUtils.tryMove(principleDirection, 15, 6)) {
           targetBlacklist = target.getID();
@@ -171,6 +197,9 @@ public class Lumberjack extends Globals {
     float minDistTreeDist = 9999f;
     TreeInfo minDistTree = null;
     for (TreeInfo t : allNearbyTrees) {
+      if (t.getID() == treeBlacklist && currentRoundNum - treeBlacklistRound < 30) {
+        continue;
+      }
       MapLocation treeLoc = t.getLocation();
       Direction toTree = here.directionTo(treeLoc);
       if (Math.abs(toThere.degreesBetween(toTree)) < 90) {
@@ -192,6 +221,9 @@ public class Lumberjack extends Globals {
     float minDistRobotDist = 9999f;
     RobotInfo minDistRobot = null;
     for (RobotInfo r : nearbyRobots) {
+      if (r.getID() == targetBlacklist && currentRoundNum - targetBlacklistRound < 30) {
+        continue;
+      }
       MapLocation robotLoc = r.getLocation();
       Direction toRobot = here.directionTo(robotLoc);
       if (Math.abs(toThere.degreesBetween(toRobot)) < 90) {
@@ -312,7 +344,8 @@ public class Lumberjack extends Globals {
       MapLocation treeLoc = ti.getLocation();
       boolean containsRobot = ti.containedRobot != null;
       float treeDist = treeLoc.distanceTo(here);
-      if ((treeDist < minDist || (!minDistTreeContainsRobot && containsRobot)) && TargetingUtils.clearShot(here, treeLoc, ti.getRadius())) {
+      if ((treeDist < minDist || (!minDistTreeContainsRobot && containsRobot))
+          && TargetingUtils.clearShot(here, treeLoc, ti.getRadius())) {
         closestTree = ti;
         minDist = treeDist;
         minDistTreeContainsRobot = containsRobot;
@@ -324,6 +357,7 @@ public class Lumberjack extends Globals {
 
   public static void loop() throws GameActionException {
     try {
+      EvasiveLumberjack.init();
       if (currentRoundNum < 500) {
         mode = DEFENSE;
       }
@@ -460,9 +494,17 @@ public class Lumberjack extends Globals {
             }
           }
         }
+        if (!rc.hasMoved()) {
+          BulletInfo[] nearbyBullets = rc
+              .senseNearbyBullets(EvasiveLumberjack.BULLET_DETECT_RADIUS);
+          if (nearbyBullets.length != 0) {
+            EvasiveLumberjack.move(nearbyBullets);
+          }
+        }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
         trackEnemyGardeners();
+        RobotUtils.notifyBytecodeLimitBreach();
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

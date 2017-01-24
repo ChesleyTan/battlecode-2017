@@ -19,7 +19,7 @@ public class Gardener extends Globals {
   private static boolean spawnedLumberjack = false;
   private static boolean reportedTrees = false;
   private static boolean withinArchonRange = false;
-  private static final boolean GARDENER_DEBUG = false;
+  private static final boolean GARDENER_DEBUG = true;
 
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
@@ -142,13 +142,16 @@ public class Gardener extends Globals {
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(5f);
     float robotMaxDistance = RobotType.GARDENER.sensorRadius + GameConstants.MAX_ROBOT_RADIUS;
     for (RobotInfo r : nearbyRobots) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        break;
+      }
       Direction theirDirection = r.getLocation().directionTo(here);
       float theirDistance = (float) Math
           .pow(
               (robotMaxDistance
                   - (here.distanceTo(r.location) - r.getRadius() - RobotType.GARDENER.bodyRadius)),
               2);
-      rc.setIndicatorDot(here.add(theirDirection, theirDistance), 255, 51, 153);
+      //rc.setIndicatorDot(here.add(theirDirection, theirDistance), 255, 51, 153);
       /*if (r.getTeam() == us) {
         theirDistance = theirDistance / 2;
       }*/
@@ -167,6 +170,9 @@ public class Gardener extends Globals {
     TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5f);
     float treeMaxDistance = RobotType.GARDENER.sensorRadius + GameConstants.NEUTRAL_TREE_MAX_RADIUS;
     for (TreeInfo t : nearbyTrees) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        break;
+      }
       Direction theirDirection = t.location.directionTo(here);
       float theirDistance = (float) Math.pow(
           ((treeMaxDistance
@@ -220,11 +226,17 @@ public class Gardener extends Globals {
 
   private static Direction scoutOppDir(RobotInfo[] enemies, TreeInfo[] trees) {
     for (RobotInfo r : enemies) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        return null;
+      }
       if (r.getType() != RobotType.SCOUT) {
         continue;
       }
       else {
         for (TreeInfo t : trees) {
+          if (Clock.getBytecodesLeft() < 3000) {
+            return null;
+          }
           if (r.getLocation().isWithinDistance(t.getLocation(), t.getRadius())) {
             return r.location.directionTo(here);
           }
@@ -266,14 +278,19 @@ public class Gardener extends Globals {
         BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveGardener.BULLET_DETECT_RADIUS);
         boolean nearbyEnemyThreat = false;
         for (RobotInfo ri : nearbyEnemies) {
+          if (Clock.getBytecodesLeft() < 8000) {
+            break;
+          }
           if (ri.getType().bulletSpeed > 0 && ri.getLocation().isWithinDistance(here,
               1 + RobotType.GARDENER.bodyRadius + ri.getRadius())) {
             nearbyEnemyThreat = true;
+            break;
           }
           else if (ri.getType() == RobotType.LUMBERJACK && ri.getLocation().isWithinDistance(here,
-              GameConstants.INTERACTION_DIST_FROM_EDGE + RobotType.LUMBERJACK.strideRadius
+              GameConstants.LUMBERJACK_STRIKE_RADIUS + RobotType.LUMBERJACK.strideRadius
                   + RobotType.LUMBERJACK.bodyRadius + RobotType.GARDENER.bodyRadius)) {
             nearbyEnemyThreat = true;
+            break;
           }
         }
         boolean willGetHitByBullet = false;
@@ -281,7 +298,7 @@ public class Gardener extends Globals {
           TreeInfo[] trees = rc.senseNearbyTrees();
           for (BulletInfo i : bullets) {
             //System.out.println(i);
-            if (Clock.getBytecodesLeft() < 2000) {
+            if (Clock.getBytecodesLeft() < 6000) {
               break;
             }
             if (RobotUtils.willCollideWithMe(i) && !blockedByTree(i, trees)) {
@@ -298,6 +315,7 @@ public class Gardener extends Globals {
           numCheckSpaces = 0;
           if (GARDENER_DEBUG) {
             System.out.println("dodging");
+            System.out.println(Clock.getBytecodesLeft());
           }
           //dodge(bullets, robots);
           EvasiveGardener.move(bullets, nearbyEnemies, nearbyTrees);
@@ -324,6 +342,9 @@ public class Gardener extends Globals {
 
   private static boolean scoutInTree(RobotInfo[] enemies, TreeInfo tree) {
     for (RobotInfo r : enemies) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        return true;
+      }
       if (r.getType() != RobotType.SCOUT) {
         continue;
       }
@@ -340,6 +361,9 @@ public class Gardener extends Globals {
     Direction base = here.directionTo(i.location);
     float baseDistance = here.distanceTo(i.location);
     for (TreeInfo tree : trees) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        return false;
+      }
       MapLocation treeLoc = tree.getLocation();
       if (i.location.distanceTo(treeLoc) > baseDistance) {
         continue;
@@ -405,7 +429,7 @@ public class Gardener extends Globals {
       try {
         Globals.update();
         int unitCount = rc.readBroadcast(EARLY_UNITS_CHANNEL);
-        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(5, them);
+        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(6, them);
         TreeInfo[] nearbyTrees = rc.senseNearbyTrees(3, us);
         if (queuedMove != null) {
           if (!rc.hasMoved() && rc.canMove(queuedMove)) {
@@ -415,7 +439,13 @@ public class Gardener extends Globals {
           queuedMove = null;
         }
         if (!rc.hasMoved()) {
+          if (GARDENER_DEBUG) {
+            System.out.println("Before: " + Clock.getBytecodesLeft());
+          }
           move(nearbyEnemies, nearbyTrees);
+          if (GARDENER_DEBUG) {
+            System.out.println("After: " + Clock.getBytecodesLeft());
+          }
         }
         RobotInfo[] friendlies = rc.senseNearbyRobots(3, us);
         withinArchonRange = false;
@@ -527,6 +557,9 @@ public class Gardener extends Globals {
             rc.setIndicatorDot(here, 255, 255, 255);
             boolean calledForBackup = false;
             for (int channel = DEFENSE_START_CHANNEL; channel < DEFENSE_END_CHANNEL; channel += DEFENSE_BLOCK_WIDTH) {
+              if (Clock.getBytecodesLeft() < 1000) {
+                break;
+              }
               if (rc.readBroadcast(channel) != 0 && rc.readBroadcast(channel + 1) == 0) {
                 rc.broadcast(channel + 1, attacker.getID());
                 rc.broadcast(channel + 2, (int) attacker.getLocation().x);
@@ -555,6 +588,7 @@ public class Gardener extends Globals {
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
         trackEnemyGardeners();
+        RobotUtils.notifyBytecodeLimitBreach();
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();

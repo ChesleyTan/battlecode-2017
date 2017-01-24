@@ -6,17 +6,17 @@ import utils.Globals;
 
 public class EvasiveGardener extends Globals {
   // Change to RobotType enums
-  static Direction[] angleDirections = new Direction[12];
+  static Direction[] angleDirections = new Direction[8];
   static final int EDGE_BIAS_RADIUS = 5;
   static final int BULLET_DETECT_RADIUS = 6;
   static final int ENEMY_DETECT_RADIUS = 6;
   static final int TREE_DETECT_RADIUS = 5;
   static final float EVASION_STRIDE_RADIUS = RobotType.GARDENER.strideRadius;
-  private static MapLocation[] moveLocations = new MapLocation[12];
+  private static MapLocation[] moveLocations = new MapLocation[8];
 
   static void init() {
-    for (int angle = 0; angle < 12; ++angle) {
-      angleDirections[angle] = new Direction((float) (angle * Math.PI / 6));
+    for (int angle = 0; angle < 8; ++angle) {
+      angleDirections[angle] = new Direction((float) (angle * Math.PI / 4));
     }
   }
 
@@ -30,13 +30,26 @@ public class EvasiveGardener extends Globals {
         System.out.println(here);
       }
       */
-      for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+      for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {
         moveLocations[angleIndex] = here.add(angleDirections[angleIndex], EVASION_STRIDE_RADIUS);
       }
-      float[] directionWeights = new float[12];
+      boolean canMove = false;
+      for (MapLocation moveLoc : moveLocations) {
+        if (rc.canMove(moveLoc)) {
+          canMove = true;
+          break;
+        }
+      }
+      if (!canMove) {
+        return false;
+      }
+      float[] directionWeights = new float[8];
 
       for (RobotInfo ri : nearbyRobots) {
         if (ri.getType().canAttack()) {
+          if (Clock.getBytecodesLeft() < 4000) {
+            break;
+          }
           MapLocation enemyLoc = ri.getLocation();
           Direction enemyAngle = here.directionTo(enemyLoc);
           /*
@@ -44,7 +57,7 @@ public class EvasiveGardener extends Globals {
             System.out.println("Enemy angle: " + enemyAngle.getAngleDegrees());
           }
           */
-          for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+          for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {
             float angleDelta = Math.abs(enemyAngle.degreesBetween(angleDirections[angleIndex]));
             if (angleDelta > 90) {
               continue;
@@ -86,7 +99,7 @@ public class EvasiveGardener extends Globals {
         }
       }
       for (int i = 0; i < nearbyBullets.length; ++i) {
-        if (Clock.getBytecodesLeft() < 2000) {
+        if (Clock.getBytecodesLeft() < 3000) {
           break;
         }
         //int startBytecodes = Clock.getBytecodeNum();
@@ -100,7 +113,7 @@ public class EvasiveGardener extends Globals {
         }
         */
         //System.out.println(bi);
-        for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+        for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {
           // Calculate bullet relations to this robot
           boolean willCollide = false;
           float distToRobot = bulletLocation.distanceTo(moveLocations[angleIndex]);
@@ -127,13 +140,13 @@ public class EvasiveGardener extends Globals {
                 + 1000 * (EVASION_STRIDE_RADIUS + BULLET_DETECT_RADIUS - distToRobot)
                 + 1000 * (bi.damage * bi.damage));
             /*
-            System.out.println("Angle: " + (angleIndex * 30) + ", Weight: " + (10000
+            System.out.println("Angle: " + (angleIndex * 45) + ", Weight: " + (10000
                 + 1000 * (EVASION_STRIDE_RADIUS + BULLET_DETECT_RADIUS - distToRobot)
                 + 1000 * (bi.damage * bi.damage)));
             */
             /*
             if (DEBUG) {
-              System.out.println("Angle " + (angleIndex * 30) + " is unsafe.");
+              System.out.println("Angle " + (angleIndex * 45) + " is unsafe.");
             }
             */
           }
@@ -141,23 +154,26 @@ public class EvasiveGardener extends Globals {
         //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
       }
       for (TreeInfo ti : nearbyTrees) {
+        if (Clock.getBytecodesLeft() < 3000) {
+          break;
+        }
         Direction treeAngle = here.directionTo(ti.getLocation());
         /*
         if (DEBUG) {
           System.out.println("Tree angle: " + treeAngle.getAngleDegrees());
         }
         */
-        int nearestAngle = (int) treeAngle.getAngleDegrees() / 30;
+        int nearestAngle = (int) treeAngle.getAngleDegrees() / 45;
         float treeDistance = here.distanceTo(ti.getLocation()) - RobotType.GARDENER.bodyRadius - ti.getRadius();
         for (int angleIndexOffset = 0; angleIndexOffset < 2; ++angleIndexOffset) {
-          float weightOffset = (140 * (30 - angleIndexOffset * 30)) + Math.max(0, 500 * (TREE_DETECT_RADIUS - RobotType.GARDENER.bodyRadius - treeDistance));
+          float weightOffset = (100 * (45 - angleIndexOffset * 45)) + Math.max(0, 500 * (TREE_DETECT_RADIUS - RobotType.GARDENER.bodyRadius - treeDistance));
           //int startBytecodes = Clock.getBytecodeNum();
-          //System.out.println("Angle: " + (Math.floorMod(nearestAngle + angleIndexOffset, 12) * 30));
-          //System.out.println("Angle: " + (Math.floorMod(nearestAngle - angleIndexOffset, 12) * 30));
+          //System.out.println("Angle: " + (Math.floorMod(nearestAngle + angleIndexOffset, 8) * 45));
+          //System.out.println("Angle: " + (Math.floorMod(nearestAngle - angleIndexOffset, 8) * 45));
           //System.out.println("Weight: " + weightOffset);
-          directionWeights[Math.floorMod(nearestAngle + angleIndexOffset, 12)] -= weightOffset;
+          directionWeights[Math.floorMod(nearestAngle + angleIndexOffset, 8)] -= weightOffset;
           if (angleIndexOffset != 0) {
-            directionWeights[Math.floorMod(nearestAngle - angleIndexOffset, 12)] -= weightOffset;
+            directionWeights[Math.floorMod(nearestAngle - angleIndexOffset, 8)] -= weightOffset;
           }
           //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
         }
@@ -205,9 +221,9 @@ public class EvasiveGardener extends Globals {
         directionWeights[5] -= weightOffset;
       }
       /*
-      for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+      for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {
         System.out
-            .println("Angle: " + (angleIndex * 30) + ", Weight: " + directionWeights[angleIndex]);
+            .println("Angle: " + (angleIndex * 45) + ", Weight: " + directionWeights[angleIndex]);
       }
       */
       int moveAngleIndex = 0;
@@ -217,9 +233,9 @@ public class EvasiveGardener extends Globals {
       int movementBiasSeed = Math.abs(rand.nextInt());
       do {
         // Prevent clockwise bias in movement angle starting from 0 degrees
-        moveAngleIndex = movementBiasSeed % 12;
-        movementBiasSeed /= 12;
-        for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+        moveAngleIndex = movementBiasSeed % 8;
+        movementBiasSeed /= 8;
+        for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {
           if (angleIndex == moveAngleIndex) {
             continue;
           }
@@ -236,7 +252,7 @@ public class EvasiveGardener extends Globals {
           rc.setIndicatorLine(here.add(angleDirections[moveAngleIndex], 1),
               here.add(angleDirections[moveAngleIndex], 1.5f), 255, 0, 0);
           rc.setIndicatorDot(here, 0, 0, 0);
-          for (int angleIndex = 0; angleIndex < 12; ++angleIndex) {
+          for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {
             rc.setIndicatorDot(here.add(angleDirections[angleIndex], 2),
                 (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
                 (int) Math.max(-25500, directionWeights[angleIndex]) / (-100),
@@ -245,7 +261,7 @@ public class EvasiveGardener extends Globals {
         }
         */
         directionWeights[moveAngleIndex] -= 999999;
-      } while (!moved && ++attempts <= 9);
+      } while (!moved && ++attempts <= 8);
       return moved;
       /*
       if (DEBUG) {
