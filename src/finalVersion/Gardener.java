@@ -20,6 +20,7 @@ public class Gardener extends Globals {
   private static boolean reportedTrees = false;
   private static boolean withinArchonRange = false;
   private static final boolean GARDENER_DEBUG = true;
+  private static int producedUnits = 0;
 
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
@@ -325,15 +326,19 @@ public class Gardener extends Globals {
           here = rc.getLocation();
         }
         else {
-          boolean clearSpace = !rc.isCircleOccupiedExceptByThisRobot(here, detectRadius);
-          if (GARDENER_DEBUG) {
-            System.out.println("Clear space: " + clearSpace);
+          if (!shouldPlant){
+            boolean clearSpace = !rc.isCircleOccupiedExceptByThisRobot(here, detectRadius);
+            if (GARDENER_DEBUG) {
+              System.out.println("Clear space: " + clearSpace);
+            }
+            if (!clearSpace || !rc.onTheMap(here, detectRadius)) {
+              checkspace();
+              ++numCheckSpaces;
+            }
+            else if (clearSpace){
+              shouldPlant = true;
+            }
           }
-          if (!clearSpace || !rc.onTheMap(here, detectRadius)) {
-            checkspace();
-            ++numCheckSpaces;
-          }
-          shouldPlant = clearSpace;
         }
       }
     }
@@ -392,6 +397,10 @@ public class Gardener extends Globals {
       if (t == RobotType.SOLDIER){
         int soldier_count = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
         rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldier_count + 1);
+      }
+      if (t == RobotType.LUMBERJACK){
+        int lumber_count = rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL);
+        rc.broadcast(LUMBERJACK_PRODUCTION_CHANNEL, lumber_count + 1);
       }
       return true;
     }
@@ -541,10 +550,16 @@ public class Gardener extends Globals {
             int division_factor = (int) (154 / (rc.getTreeCount() + 1));
             if (currentRoundNum % division_factor == 0) {
               if (freeSpaces[0] != null && rc.canBuildRobot(RobotType.LUMBERJACK, freeSpaces[0])) {
-                rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
+                if (producedUnits % 10 == 0){
+                  rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
+                }
+                else{
+                  rc.buildRobot(RobotType.SOLDIER, freeSpaces[0]);
+                }
+                producedUnits++;
               }
               else {
-                spawnRobot(RobotType.LUMBERJACK);
+                spawnRobot(RobotType.SOLDIER);
               }
             }
           }

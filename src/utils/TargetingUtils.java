@@ -38,6 +38,17 @@ public class TargetingUtils extends Globals{
         return false;
       }
     }
+    MapLocation closest = target.getLocation().add(targetDir.opposite(), target.getRadius());
+    TreeInfo overlap = null;
+    Globals.update();
+    if (here.distanceTo(closest) < myType.sensorRadius){
+      overlap = rc.senseTreeAtLocation(closest);
+    }
+    if (overlap != null){
+      if (shooterLoc.distanceTo(overlap.location) - overlap.getRadius() < distanceTarget - 1){
+        return false;
+      }
+    }
     TreeInfo[] trees = rc.senseNearbyTrees(distanceTarget);
     if (target.getType() == RobotType.SCOUT) {
       for (TreeInfo t : trees) {
@@ -45,10 +56,8 @@ public class TargetingUtils extends Globals{
         if (Clock.getBytecodesLeft() < 2000) {
           return false;
         }
-        if (t.location.compareTo(rc.senseTreeAtLocation(target.getLocation()).location) == 0) {
-          if (shooterLoc.distanceTo(t.location) - t.getRadius() < distanceTarget - 1){
-            return false;
-          }
+        if (t.equals(overlap)){
+          continue;
         }
         else if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.getLocation(),
             t.getRadius())) {

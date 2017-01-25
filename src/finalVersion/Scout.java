@@ -739,6 +739,7 @@ public class Scout extends Globals {
                   // We had to evade, so we couldn't move towards the target
                   if (nearbyRobots.length != 0) {
                     RobotInfo targetRobot = nearbyRobots[0];
+                    MapLocation enemyLoc = targetRobot.getLocation();
                     if (rc.canFireSingleShot() && clearShot(here, targetRobot)) {
                       MapLocation obstacleLocation = targetRobot.getLocation();
                       rc.fireSingleShot(here.directionTo(obstacleLocation));

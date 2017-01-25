@@ -2,6 +2,7 @@ package v1;
 
 import battlecode.common.*;
 import utils.Globals;
+import finalVersion.Scout;
 
 public class RobotPlayer extends Globals {
 

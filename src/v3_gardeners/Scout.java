@@ -246,6 +246,7 @@ public class Scout extends Globals {
         rc.broadcast(squad_channel + 1, enemy.getID());
         writeTargetXY((int) (enemyLoc.x), (int) (enemyLoc.y));
         targetDirection = here.directionTo(enemyLoc);
+        TreeInfo overlap = rc.senseTreeAtLocation(enemyLoc);
         if (rc.canFireSingleShot() && clearShot(here, enemy)) {
           rc.fireSingleShot(targetDirection);
         }
@@ -407,6 +408,7 @@ public class Scout extends Globals {
           float optimalDist = 9999f;
           if (targetRobot.type != RobotType.LUMBERJACK) {
             TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5f);
+            TreeInfo overlap = rc.senseTreeAtLocation(targetRobot.location);
             for (TreeInfo ti : nearbyTrees) {
               if (Clock.getBytecodesLeft() < 2000) {
                 break;
@@ -445,6 +447,7 @@ public class Scout extends Globals {
             }
           }
           else {
+            TreeInfo overlap = rc.senseTreeAtLocation(targetRobot.location);
             boolean currentlyHasClearShot = clearShot(here, targetRobot);
             Direction rotated30 = direction.opposite().rotateLeftDegrees(30);
             MapLocation newLoc = targetRobot.getLocation().add(rotated30, KEEPAWAY_RADIUS);
@@ -478,6 +481,7 @@ public class Scout extends Globals {
     }
     Globals.update();
     direction = here.directionTo(targetRobot.getLocation());
+    TreeInfo overlap = rc.senseTreeAtLocation(targetRobot.getLocation());
     if (shouldShoot && rc.canFireSingleShot() && clearShot(here, targetRobot)) {
       rc.fireSingleShot(direction);
       if (DEBUG) {
@@ -739,6 +743,7 @@ public class Scout extends Globals {
                   // We had to evade, so we couldn't move towards the target
                   if (nearbyRobots.length != 0) {
                     RobotInfo targetRobot = nearbyRobots[0];
+                    TreeInfo overlap = rc.senseTreeAtLocation(targetRobot.location);
                     if (rc.canFireSingleShot() && clearShot(here, targetRobot)) {
                       MapLocation obstacleLocation = targetRobot.getLocation();
                       rc.fireSingleShot(here.directionTo(obstacleLocation));

@@ -189,6 +189,15 @@ public class Soldier extends Globals {
     BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
     RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS);
     MapLocation targetLocation = target.getLocation();
+    TreeInfo overlap = null;
+    try{
+      if (target.getType() == RobotType.SCOUT){
+        overlap = rc.senseTreeAtLocation(targetLocation.add(targetLocation.directionTo(here), target.getRadius()));
+      }
+    }catch(Exception e){
+      //System.out.println("caught");
+      e.printStackTrace();
+    }
     move(bullets, robots, targetLocation);
     //RobotUtils.tryMoveDestination(targetLocation);
     if (TargetingUtils.clearShot(here, target) || (rc.getType() == RobotType.GARDENER && rc.getOpponentVictoryPoints() > 10)) {
