@@ -19,7 +19,7 @@ public class EvasiveScout extends Globals {
     }
   }
 
-  static boolean move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots) {
+  static boolean move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots, boolean avoidScouts) {
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
@@ -38,6 +38,9 @@ public class EvasiveScout extends Globals {
       for (RobotInfo ri : nearbyRobots) {
         // Only avoid lumberjacks if within strike distance
         RobotType enemyType = ri.getType();
+        if (enemyType == RobotType.SCOUT && !avoidScouts) {
+          continue;
+        }
         MapLocation enemyLoc = ri.getLocation();
         if (enemyType.canAttack() && ((enemyType != RobotType.LUMBERJACK) || (here.distanceTo(enemyLoc) < RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + RobotType.LUMBERJACK.strideRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS))) {
           unsafeFromUnit = true;
