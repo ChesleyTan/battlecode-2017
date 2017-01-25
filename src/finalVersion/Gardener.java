@@ -19,7 +19,7 @@ public class Gardener extends Globals {
   private static boolean spawnedLumberjack = false;
   private static boolean reportedTrees = false;
   private static boolean withinArchonRange = false;
-  private static final boolean GARDENER_DEBUG = true;
+  private static final boolean GARDENER_DEBUG = false;
   private static int producedUnits = 0;
   private static int calledForBackupRound = -9999;
 

@@ -52,9 +52,13 @@ public class RobotUtils extends Globals {
   }
 
   public static boolean bugMove() throws GameActionException {
-    System.out.println("bugging");
+    if (DEBUG) {
+      System.out.println("bugging");
+    }
     bugStartDirection = here.directionTo(bugDestinationLocation);
-    System.out.println("start direction: " + bugStartDirection.getAngleDegrees());
+    if (DEBUG) {
+      System.out.println("start direction: " + bugStartDirection.getAngleDegrees());
+    }
     if (rc.canMove(here.directionTo(bugDestinationLocation)) && bugCount > 1) {
       rc.move(bugStartDirection);
       endBug();
@@ -82,7 +86,9 @@ public class RobotUtils extends Globals {
       return true;
     }
     else {
-      System.out.println("Stuck");
+      if (DEBUG) {
+        System.out.println("Stuck");
+      }
       return false;
     }
   }
@@ -228,7 +234,9 @@ public class RobotUtils extends Globals {
   }
 
   public static boolean tryMoveDestination(MapLocation target) throws GameActionException {
-    System.out.println("tryMoveDestination");
+    if (DEBUG) {
+      System.out.println("tryMoveDestination");
+    }
     //System.out.println(target.x);
     //System.out.println(target.y);
     bugStartDirection = here.directionTo(target);

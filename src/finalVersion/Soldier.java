@@ -131,7 +131,9 @@ public class Soldier extends Globals {
       }
       if (squad_count < 3) {
         squad_channel = i;
-        System.out.println("Squad channel: " + i);
+        if (SOLDIER_DEBUG) {
+          System.out.println("Squad channel: " + i);
+        }
         rc.broadcast(i, squad_count + 1);
         return;
       }
