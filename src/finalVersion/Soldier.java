@@ -15,7 +15,8 @@ public class Soldier extends Globals {
   private static Direction mydir;
   private static RobotInfo target;
   private static MapLocation enemyArchonLocation;
-  private static final boolean SOLDIER_DEBUG = true;
+  private static final boolean SOLDIER_DEBUG = false;
+  private static boolean hasReportedDeath = false;
 
   /*
   private static void dodge(BulletInfo[] bullets, RobotInfo[] robots, MapLocation targetLocation)
@@ -196,7 +197,7 @@ public class Soldier extends Globals {
       }
       Direction towardsEnemy = here.directionTo(targetLocation);
       float distanceEnemy = here.distanceTo(targetLocation);
-      if (distanceEnemy <= 3.5 && rc.canFirePentadShot() && rc.getTeamBullets() > 200) {
+      if (distanceEnemy <= 3.5 && rc.canFirePentadShot() && (rc.getTeamBullets() > 200 || target.getType() == RobotType.SOLDIER)) {
         rc.firePentadShot(towardsEnemy);
       }
       else {
@@ -542,6 +543,12 @@ public class Soldier extends Globals {
         else if (mode == ROAM) {
           roam();
           // check defense every turn, if so then head to defend target
+        }
+        float myHP = rc.getHealth();
+        if (!hasReportedDeath && myHP < 3) {
+          int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
+          hasReportedDeath = true;
+          rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldiers - 1);
         }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();

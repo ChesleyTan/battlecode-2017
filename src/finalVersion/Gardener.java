@@ -390,6 +390,10 @@ public class Gardener extends Globals {
     }
     if (rc.canBuildRobot(t, randomDir)) {
       rc.buildRobot(t, randomDir);
+      if (t == RobotType.SOLDIER){
+        int soldier_count = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
+        rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldier_count + 1);
+      }
       return true;
     }
     return false;
@@ -483,6 +487,10 @@ public class Gardener extends Globals {
               spawnedEarlyScout = true;
             }
           }
+        }
+        int soldierCount = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
+        if (soldierCount == 0){
+          spawnRobot(RobotType.SOLDIER);
         }
         else if (!spawnedLumberjack && withinArchonRange) {
           if (spawnRobot(RobotType.LUMBERJACK)) {

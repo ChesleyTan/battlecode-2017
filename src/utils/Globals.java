@@ -37,6 +37,7 @@ public class Globals {
   public static final int MAP_Y_BOUNDS_CHANNEL = 901;
   public static final int MAP_SYMMETRY_CHANNEL = 902;
   public static final int UNITS_BIAS_PRODUCTION_CHANNEL = 1002;
+  public static final int SOLDIER_PRODUCTION_CHANNEL = 1003;
   public static Direction NORTH, SOUTH, EAST, WEST;
   public static final int UNKNOWN = Integer.MIN_VALUE;
   public static int minX = UNKNOWN;

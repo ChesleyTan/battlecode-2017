@@ -190,35 +190,27 @@ public class EvasiveGardener extends Globals {
       // Avoid corners and edges
       if (minX != UNKNOWN && here.x - minX < EDGE_BIAS_RADIUS) {
         float weightOffset = 1500 * (EDGE_BIAS_RADIUS - (here.x - minX));
+        directionWeights[3] -= weightOffset;
         directionWeights[4] -= weightOffset;
         directionWeights[5] -= weightOffset;
-        directionWeights[6] -= weightOffset;
-        directionWeights[7] -= weightOffset;
-        directionWeights[8] -= weightOffset;
       }
       if (minY != UNKNOWN && here.y - minY < EDGE_BIAS_RADIUS) {
         float weightOffset = 1500 * (EDGE_BIAS_RADIUS - (here.y - minY));
+        directionWeights[5] -= weightOffset;
+        directionWeights[6] -= weightOffset;
         directionWeights[7] -= weightOffset;
-        directionWeights[8] -= weightOffset;
-        directionWeights[9] -= weightOffset;
-        directionWeights[10] -= weightOffset;
-        directionWeights[11] -= weightOffset;
       }
       if (maxX != UNKNOWN && maxX - here.x < EDGE_BIAS_RADIUS) {
         float weightOffset = 1500 * (EDGE_BIAS_RADIUS - (maxX - here.x));
         directionWeights[0] -= weightOffset;
         directionWeights[1] -= weightOffset;
-        directionWeights[2] -= weightOffset;
-        directionWeights[10] -= weightOffset;
-        directionWeights[11] -= weightOffset;
+        directionWeights[7] -= weightOffset;
       }
       if (maxY != UNKNOWN && maxY - here.y < EDGE_BIAS_RADIUS) {
         float weightOffset = 1500 * (EDGE_BIAS_RADIUS - (maxY - here.y));
         directionWeights[1] -= weightOffset;
         directionWeights[2] -= weightOffset;
         directionWeights[3] -= weightOffset;
-        directionWeights[4] -= weightOffset;
-        directionWeights[5] -= weightOffset;
       }
       /*
       for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {

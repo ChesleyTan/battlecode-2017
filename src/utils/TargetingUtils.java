@@ -6,17 +6,18 @@ import battlecode.common.MapLocation;
 import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import battlecode.common.TreeInfo;
+import battlecode.common.GameActionException;
 
 /**
  * Targeting utilities to be used throughout the codebase.
  */
-public class TargetingUtils extends Globals {
+public class TargetingUtils extends Globals{
 
   /**
    * Determines if the shooter can shoot the target location without hitting
    * friendlies or trees.
    */
-  public static boolean clearShot(MapLocation shooterLoc, RobotInfo target) {
+  public static boolean clearShot(MapLocation shooterLoc, RobotInfo target) throws GameActionException{
     if (shooterLoc.equals(target.getLocation())) {
       return false;
     }
@@ -44,8 +45,10 @@ public class TargetingUtils extends Globals {
         if (Clock.getBytecodesLeft() < 2000) {
           return false;
         }
-        if (t.getLocation().isWithinDistance(targetLoc, 1f)) {
-          continue;
+        if (t.location.compareTo(rc.senseTreeAtLocation(target.getLocation()).location) == 0) {
+          if (shooterLoc.distanceTo(t.location) - t.getRadius() < distanceTarget - 1){
+            return false;
+          }
         }
         else if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.getLocation(),
             t.getRadius())) {
@@ -67,7 +70,7 @@ public class TargetingUtils extends Globals {
     return true;
   }
 
-  public static boolean clearShot(MapLocation shooterLoc, MapLocation targetLoc, float targetRadius) {
+  public static boolean clearShot(MapLocation shooterLoc, MapLocation targetLoc, float targetRadius){
     if (shooterLoc.equals(targetLoc)) {
       return false;
     }
@@ -101,7 +104,7 @@ public class TargetingUtils extends Globals {
   }
 
   public static MapLocation getLinearTargetPoint(MData target, MapLocation shooter,
-      double bulletSpeed) {
+      double bulletSpeed){
     //LINEAR TARGETING ALGORITHM//////
     double targetBearing = target.getAngle();
     double targetSpeed = target.getSpeed();
