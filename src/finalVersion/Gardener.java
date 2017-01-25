@@ -139,7 +139,7 @@ public class Gardener extends Globals {
     float sumY = 0;
 
     // Opposing forces created by Robots
-    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(5f);
+    RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1);
     float robotMaxDistance = RobotType.GARDENER.sensorRadius + GameConstants.MAX_ROBOT_RADIUS;
     for (RobotInfo r : nearbyRobots) {
       if (Clock.getBytecodesLeft() < 3000) {
@@ -155,8 +155,11 @@ public class Gardener extends Globals {
       /*if (r.getTeam() == us) {
         theirDistance = theirDistance / 2;
       }*/
-      if (r.getType() == RobotType.GARDENER) {
-        theirDistance = theirDistance * 2;
+      if (r.getTeam() == us) {
+        RobotType type = r.getType();
+        if (type == RobotType.GARDENER || type == RobotType.ARCHON) {
+          theirDistance = theirDistance * 2;
+        }
       }
       if (GARDENER_DEBUG) {
         System.out.println(r);
@@ -167,7 +170,7 @@ public class Gardener extends Globals {
     }
 
     // Opposing forces created by Trees
-    TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5f);
+    TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5f, Team.NEUTRAL);
     float treeMaxDistance = RobotType.GARDENER.sensorRadius + GameConstants.NEUTRAL_TREE_MAX_RADIUS;
     for (TreeInfo t : nearbyTrees) {
       if (Clock.getBytecodesLeft() < 3000) {
@@ -190,28 +193,28 @@ public class Gardener extends Globals {
     updateMapBoundaries();
     float sensorRadius = RobotType.GARDENER.sensorRadius - 1;
     if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sensorRadius, here.y))) {
-      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.x - minX), 2);
+      float weightedDistance = 10 * (float) Math.pow(sensorRadius - (here.x - minX), 2);
       if (GARDENER_DEBUG) {
         System.out.println("minX: " + weightedDistance);
       }
       sumX += weightedDistance;
     }
     if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sensorRadius, here.y))) {
-      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxX - here.x), 2);
+      float weightedDistance = 10 * (float) Math.pow(sensorRadius - (maxX - here.x), 2);
       if (GARDENER_DEBUG) {
         System.out.println("maxX: " + weightedDistance);
       }
       sumX -= weightedDistance;
     }
     if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sensorRadius))) {
-      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (here.y - minY), 2);
+      float weightedDistance = 10 * (float) Math.pow(sensorRadius - (here.y - minY), 2);
       if (GARDENER_DEBUG) {
         System.out.println("minY: " + weightedDistance);
       }
       sumY += weightedDistance;
     }
     if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sensorRadius))) {
-      float weightedDistance = 5 * (float) Math.pow(sensorRadius - (maxY - here.y), 2);
+      float weightedDistance = 10 * (float) Math.pow(sensorRadius - (maxY - here.y), 2);
       if (GARDENER_DEBUG) {
         System.out.println("maxY: " + weightedDistance);
       }
@@ -221,7 +224,7 @@ public class Gardener extends Globals {
     Direction finalDir = new Direction(sumX, sumY);
     rc.setIndicatorLine(here, here.add(finalDir, 1.75f), 255, 51, 153);
     rc.setIndicatorLine(here.add(finalDir, 1.75f), here.add(finalDir, 2f), 0, 0, 0);
-    RobotUtils.tryMove(finalDir, 5, 3);
+    RobotUtils.tryMove(finalDir, 10 + 10 * rand.nextFloat(), 3);
   }
 
   private static Direction scoutOppDir(RobotInfo[] enemies, TreeInfo[] trees) {
@@ -322,19 +325,15 @@ public class Gardener extends Globals {
           here = rc.getLocation();
         }
         else {
-          if (!shouldPlant) {
-            boolean clearSpace = !rc.isCircleOccupiedExceptByThisRobot(here, detectRadius);
-            if (GARDENER_DEBUG) {
-              System.out.println("Clear space: " + clearSpace);
-            }
-            if (!clearSpace || !rc.onTheMap(here, detectRadius)) {
-              checkspace();
-              ++numCheckSpaces;
-            }
-            else if (clearSpace) {
-              shouldPlant = true;
-            }
+          boolean clearSpace = !rc.isCircleOccupiedExceptByThisRobot(here, detectRadius);
+          if (GARDENER_DEBUG) {
+            System.out.println("Clear space: " + clearSpace);
           }
+          if (!clearSpace || !rc.onTheMap(here, detectRadius)) {
+            checkspace();
+            ++numCheckSpaces;
+          }
+          shouldPlant = clearSpace;
         }
       }
     }
@@ -408,6 +407,16 @@ public class Gardener extends Globals {
       rotateAmt++;
     }
     return freeSpaces;
+  }
+
+  private static boolean noNearbyGardeners() {
+    RobotInfo[] nearbyFriendlies = rc.senseNearbyRobots(-1, us);
+    for (RobotInfo ri : nearbyFriendlies) {
+      if (ri.getType() == RobotType.GARDENER) {
+        return false;
+      }
+    }
+    return true;
   }
 
   public static void loop() {
@@ -502,7 +511,7 @@ public class Gardener extends Globals {
             }
           }
           Direction[] freeSpaces = possibleTrees();
-          if ((shouldPlant || numCheckSpaces > 25) && freeSpaces[1] != null
+          if (((shouldPlant || numCheckSpaces > 25) && noNearbyGardeners()) && freeSpaces[1] != null
               && rc.canPlantTree(freeSpaces[1])) {
             /*
             if (!rc.hasMoved() && rc.canMove(freeSpaces[1], 0.3f)) {
