@@ -100,7 +100,7 @@ public class MathUtils {
    * Checks if two Direction objects are similar enough to each other to be considered equal.
    * Useful to avoid floating point errors.
    */
-  public static boolean isNear(Direction a, Direction b) {
-    return isNear(a.getAngleDegrees(), b.getAngleDegrees());
+  public static boolean isNear(Direction a, Direction b, float epsilonDegrees) {
+    return Math.abs(a.degreesBetween(b)) < epsilonDegrees;
   }
 }

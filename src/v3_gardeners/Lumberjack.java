@@ -1,4 +1,4 @@
-package finalVersion;
+package v3_gardeners;
 
 import battlecode.common.*;
 import utils.RobotUtils;

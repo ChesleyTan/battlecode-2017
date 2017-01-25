@@ -74,6 +74,12 @@ public class Globals {
     WEST = Direction.getWest();
     penultimateRound = rc.getRoundLimit() - 1;
     currentRoundNum = rc.getRoundNum();
+    try {
+      readMapSymmetry();
+    }
+    catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   public static void update() {

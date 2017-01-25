@@ -1,4 +1,4 @@
-package finalVersion;
+package v3_gardeners;
 
 import battlecode.common.*;
 import utils.Globals;
@@ -68,7 +68,8 @@ public class Archon extends Globals {
       try {
         Globals.update();
         int producedEarlyUnits = rc.readBroadcast(EARLY_UNITS_CHANNEL);
-        int requiredProductionGardeners = (int) (rc.getTreeCount() / 15);
+        int producedTrees = rc.getTreeCount();
+        int requiredProductionGardeners = (int) (producedTrees / 15);
         rc.broadcast(PRODUCTION_GARDENERS_CHANNEL, requiredProductionGardeners);
         if (producedEarlyUnits < 3 && currentRoundNum < 55) {
           EvasiveArchon.move();
@@ -76,7 +77,7 @@ public class Archon extends Globals {
         else {
           producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
-          if ((producedGardeners < 3 || producedGardeners < currentRoundNum / 60
+          if (((producedGardeners - productionGardeners) < (1 + producedTrees / 4)
               || productionGardeners < requiredProductionGardeners) && rc.senseNearbyRobots(3, us).length < 2) {
             trySpawnGardener(producedGardeners);
           }
