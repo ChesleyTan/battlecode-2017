@@ -16,6 +16,7 @@
 *.ipr
 *.iws
 /.idea/
+battlecode-player-upload.jar
 
 
 # User-specific stuff:
