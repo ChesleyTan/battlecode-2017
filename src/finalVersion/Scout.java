@@ -158,7 +158,7 @@ public class Scout extends Globals {
     RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
     if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
         && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
-      if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+      if (EvasiveScout.move(nearbyBullets, nearbyRobots, true)) {
         isPerchedInTree = false;
         here = rc.getLocation();
       }
@@ -293,7 +293,7 @@ public class Scout extends Globals {
     }
     if (!rc.hasMoved() && (nearbyBullets.length != 0 || nearbyRobots.length != 0)
         && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
-      if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+      if (EvasiveScout.move(nearbyBullets, nearbyRobots, true)) {
         isPerchedInTree = false;
         here = rc.getLocation();
       }
@@ -553,7 +553,7 @@ public class Scout extends Globals {
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(KEEPAWAY_RADIUS, them);
             if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
                 && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
-              if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+              if (EvasiveScout.move(nearbyBullets, nearbyRobots, true)) {
                 isPerchedInTree = false;
                 here = rc.getLocation();
               }
@@ -668,7 +668,7 @@ public class Scout extends Globals {
             RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
             if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
                 && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
-              if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+              if (EvasiveScout.move(nearbyBullets, nearbyRobots, true)) {
                 isPerchedInTree = false;
                 here = rc.getLocation();
               }
@@ -781,7 +781,7 @@ public class Scout extends Globals {
           RobotInfo[] nearbyRobots = rc.senseNearbyRobots(EvasiveScout.ENEMY_DETECT_RADIUS, them);
           if ((nearbyBullets.length != 0 || nearbyRobots.length != 0)
               && (!isPerchedInTree || shouldUnperch(nearbyRobots))) {
-            if (EvasiveScout.move(nearbyBullets, nearbyRobots)) {
+            if (EvasiveScout.move(nearbyBullets, nearbyRobots, false)) {
               isPerchedInTree = false;
               here = rc.getLocation();
             }
