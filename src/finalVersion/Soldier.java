@@ -15,7 +15,7 @@ public class Soldier extends Globals {
   private static Direction mydir;
   private static RobotInfo target;
   private static MapLocation enemyArchonLocation;
-  private static final boolean SOLDIER_DEBUG = false;
+  private static final boolean SOLDIER_DEBUG = true;
   private static boolean hasReportedDeath = false;
 
   /*
@@ -187,17 +187,8 @@ public class Soldier extends Globals {
       System.out.println("attacking");
     }
     BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
-    RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS);
+    RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS, them);
     MapLocation targetLocation = target.getLocation();
-    TreeInfo overlap = null;
-    try{
-      if (target.getType() == RobotType.SCOUT){
-        overlap = rc.senseTreeAtLocation(targetLocation.add(targetLocation.directionTo(here), target.getRadius()));
-      }
-    }catch(Exception e){
-      //System.out.println("caught");
-      e.printStackTrace();
-    }
     move(bullets, robots, targetLocation);
     //RobotUtils.tryMoveDestination(targetLocation);
     if (TargetingUtils.clearShot(here, target) || (rc.getType() == RobotType.GARDENER && rc.getOpponentVictoryPoints() > 10)) {
@@ -516,6 +507,7 @@ public class Soldier extends Globals {
             if (rc.canSenseRobot(target.ID)) {
               RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
               target = enemies[priority(enemies)];
+              System.out.println("checkpt 1: " + Clock.getBytecodesLeft());
               rc.broadcast(squad_channel + 1, target.ID);
               rc.broadcast(squad_channel + 2, (int) target.location.x);
               rc.broadcast(squad_channel + 3, (int) target.location.y);
