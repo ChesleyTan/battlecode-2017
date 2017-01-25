@@ -21,6 +21,7 @@ public class Gardener extends Globals {
   private static boolean withinArchonRange = false;
   private static final boolean GARDENER_DEBUG = true;
   private static int producedUnits = 0;
+  private static int calledForBackupRound = -9999;
 
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
@@ -456,16 +457,6 @@ public class Gardener extends Globals {
             System.out.println("After: " + Clock.getBytecodesLeft());
           }
         }
-        RobotInfo[] friendlies = rc.senseNearbyRobots(3, us);
-        withinArchonRange = false;
-        if (!spawnedLumberjack) {
-          for (RobotInfo r : friendlies) {
-            if (r.getType() == RobotType.ARCHON) {
-              withinArchonRange = true;
-              break;
-            }
-          }
-        }
         // Either plant a tree or produce a unit
         // Initial setup moves to a clear spot and spawns 3 scouts
         if (!spawnedEarlySoldier || !spawnedEarlyScout) {
@@ -486,6 +477,16 @@ public class Gardener extends Globals {
             if (spawnRobot(RobotType.SCOUT)) {
               rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
               spawnedEarlyScout = true;
+            }
+          }
+        }
+        withinArchonRange = false;
+        if (!spawnedLumberjack) {
+          RobotInfo[] friendlies = rc.senseNearbyRobots(3, us);
+          for (RobotInfo r : friendlies) {
+            if (r.getType() == RobotType.ARCHON) {
+              withinArchonRange = true;
+              break;
             }
           }
         }
@@ -575,7 +576,7 @@ public class Gardener extends Globals {
         // Call for defensive backup
         if (attacker != null) {
           float myHP = rc.getHealth();
-          if (myHP > RobotType.GARDENER.maxHealth / 2) {
+          if (currentRoundNum - calledForBackupRound > 100 && myHP > RobotType.GARDENER.maxHealth / 2) {
             rc.setIndicatorDot(here, 255, 255, 255);
             boolean calledForBackup = false;
             for (int channel = DEFENSE_START_CHANNEL; channel < DEFENSE_END_CHANNEL; channel += DEFENSE_BLOCK_WIDTH) {
@@ -587,6 +588,7 @@ public class Gardener extends Globals {
                 rc.broadcast(channel + 2, (int) attacker.getLocation().x);
                 rc.broadcast(channel + 3, (int) attacker.getLocation().y);
                 calledForBackup = true;
+                calledForBackupRound = currentRoundNum;
                 break;
               }
             }
@@ -595,9 +597,10 @@ public class Gardener extends Globals {
               rc.broadcast(DEFENSE_START_CHANNEL + 2, (int) attacker.getLocation().x);
               rc.broadcast(DEFENSE_START_CHANNEL + 3, (int) attacker.getLocation().y);
               calledForBackup = true;
+              calledForBackupRound = currentRoundNum;
             }
           }
-          else if (!hasReportedDeath && myHP < 3 && attacker != null) {
+          else if (!hasReportedDeath && myHP < 3) {
             int gardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
             hasReportedDeath = true;
             rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners - 1);
