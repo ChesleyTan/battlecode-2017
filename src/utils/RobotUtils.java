@@ -50,6 +50,10 @@ public class RobotUtils extends Globals {
       wallSideLeft = true;
     }*/
   }
+  
+  public static int getBugCount(){
+    return bugCount;
+  }
 
   public static boolean bugMove() throws GameActionException {
     if (DEBUG) {

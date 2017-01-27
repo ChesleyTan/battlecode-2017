@@ -17,6 +17,7 @@ public class Soldier extends Globals {
   private static MapLocation enemyArchonLocation;
   private static final boolean SOLDIER_DEBUG = true;
   private static boolean hasReportedDeath = false;
+  private static boolean visitedEnemyArchon = true;
 
   /*
   private static void dodge(BulletInfo[] bullets, RobotInfo[] robots, MapLocation targetLocation)
@@ -188,18 +189,23 @@ public class Soldier extends Globals {
     if (SOLDIER_DEBUG) {
       System.out.println("attacking");
     }
-    BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
-    RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS, them);
     MapLocation targetLocation = target.getLocation();
-    move(bullets, robots, targetLocation);
+    TreeInfo treeBetween = rc.senseTreeAtLocation(here.add(here.directionTo(targetLocation), myType.bodyRadius + 1));
+    boolean pentadShotGardener = (RobotUtils.getBugCount() > 10 && (treeBetween != null && treeBetween.getTeam() == them));
+    System.out.println("pentadshotgardener: " + pentadShotGardener);
+    if (target.getType() != RobotType.GARDENER || !pentadShotGardener){
+      BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
+      RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS, them);
+      move(bullets, robots, targetLocation);
+    }
     //RobotUtils.tryMoveDestination(targetLocation);
-    if (TargetingUtils.clearShot(here, target) || (rc.getType() == RobotType.GARDENER && rc.getOpponentVictoryPoints() > 10)) {
+    if (TargetingUtils.clearShot(here, target) || pentadShotGardener) {
       if (SOLDIER_DEBUG) {
         System.out.println("clearShot to target");
       }
       Direction towardsEnemy = here.directionTo(targetLocation);
       float distanceEnemy = here.distanceTo(targetLocation);
-      if (distanceEnemy <= 3.5 && rc.canFirePentadShot() && (rc.getTeamBullets() > 200 || target.getType() == RobotType.SOLDIER)) {
+      if (distanceEnemy <= 6 && rc.canFirePentadShot()) {
         rc.firePentadShot(towardsEnemy);
       }
       else {
@@ -220,7 +226,6 @@ public class Soldier extends Globals {
   private static void moveToAttack(MapLocation destination) throws GameActionException {
     BulletInfo[] bullets = rc.senseNearbyBullets();
     RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
-
     if (enemies.length != 0) {
       int index = priority(enemies);
       if (index != -1) {
@@ -451,6 +456,7 @@ public class Soldier extends Globals {
         rc.broadcast(squad_channel + 1, 0);
         rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
         rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
+        visitedEnemyArchon = false;
         mydir = here.directionTo(enemyArchonLocation);
         mode = ATTACK;
       }
@@ -491,10 +497,23 @@ public class Soldier extends Globals {
               }
               if (here.distanceTo(destination) <= RobotType.SOLDIER.sensorRadius
                   + MIN_ROBOT_RADIUS) {
+                System.out.println(visitedEnemyArchon);
+                if (destination.distanceTo(enemyArchonLocation) < 1.5f){
+                  visitedEnemyArchon = true;
+                }
                 // Disengage, because target could not be found at last known location
-                mode = ROAM;
-                rc.broadcast(squad_channel + 1, -1);
-                roam();
+                if (!visitedEnemyArchon){
+                  rc.broadcast(squad_channel + 1, 0);
+                  destination = enemyArchonLocation;
+                  rc.broadcast(squad_channel + 2, (int)enemyArchonLocation.x);
+                  rc.broadcast(squad_channel+ 3, (int)enemyArchonLocation.y);
+                  moveToAttack(destination);
+                }
+                else{
+                  mode = ROAM;
+                  rc.broadcast(squad_channel + 1, -1);
+                  roam();
+                }
               }
               else {
                 moveToAttack(destination);
@@ -509,7 +528,6 @@ public class Soldier extends Globals {
             if (rc.canSenseRobot(target.ID)) {
               RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
               target = enemies[priority(enemies)];
-              System.out.println("checkpt 1: " + Clock.getBytecodesLeft());
               rc.broadcast(squad_channel + 1, target.ID);
               rc.broadcast(squad_channel + 2, (int) target.location.x);
               rc.broadcast(squad_channel + 3, (int) target.location.y);
@@ -521,13 +539,25 @@ public class Soldier extends Globals {
                 int xCor = rc.readBroadcast(squad_channel + 2);
                 int yCor = rc.readBroadcast(squad_channel + 3);
                 MapLocation targetLocation = new MapLocation(xCor, yCor);
-                if (here.distanceTo(targetLocation) <= RobotType.SOLDIER.sensorRadius
-                    + MIN_ROBOT_RADIUS) {
+                if (here.distanceTo(targetLocation) <= RobotType.SOLDIER.sensorRadius) {
                   // Disengage, because target could not be found at last known location
+                  if (targetLocation.equals(enemyArchonLocation)){
+                    visitedEnemyArchon = true;
+                  }
                   target = null;
-                  mode = ROAM;
-                  rc.broadcast(squad_channel + 1, -1);
-                  roam();
+                  if (!visitedEnemyArchon){
+                    mode = ATTACK;
+                    rc.broadcast(squad_channel + 1, 0);
+                    MapLocation destination = enemyArchonLocation;
+                    rc.broadcast(squad_channel + 2, (int)enemyArchonLocation.x);
+                    rc.broadcast(squad_channel+ 3, (int)enemyArchonLocation.y);
+                    moveToAttack(destination);
+                  }
+                  else{
+                    mode = ROAM;
+                    rc.broadcast(squad_channel + 1, -1);
+                    roam();
+                  }
                 }
                 else {
                   moveToAttack(targetLocation);
