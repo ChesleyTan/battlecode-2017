@@ -69,7 +69,7 @@ public class MathUtils {
    * Useful to avoid floating point errors.
    */
   public static boolean isNear(double a, double b) {
-    return (Math.abs(a-b) < 0.000001d) ? true : false;
+    return isNear(a,b,0.000001d);
   }
 
   /**
@@ -77,14 +77,14 @@ public class MathUtils {
    * Useful to avoid floating point errors.
    */
   public static boolean isNear(float a, float b) {
-    return (Math.abs(a-b) < 0.000001f) ? true : false;
+    return isNear(a,b,0.000001);
   }
 
   /**
    * Checks if two numbers are near enough to each other to be considered equal.
    * Useful to avoid floating point errors.
    */
-  public static boolean isNear(float a, float b, float epsilon) {
+  public static boolean isNear(double a, double b, double epsilon) {
     return (Math.abs(a-b) < epsilon) ? true : false;
   }
 

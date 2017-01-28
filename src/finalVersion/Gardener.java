@@ -427,7 +427,7 @@ public class Gardener extends Globals {
         production_gardener = true;
         rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, productionGardeners + 1);
       }
-      if (rc.getRoundNum() > 20) {
+      if (currentRoundNum > 20) {
         spawnedEarlySoldier = true;
         spawnedEarlyScout = true;
       }
@@ -463,19 +463,19 @@ public class Gardener extends Globals {
           if (rc.senseNearbyTrees(6, Team.NEUTRAL).length > 2 && !spawnedLumberjack) {
             if (spawnRobot(RobotType.LUMBERJACK) && unitCount < 3) {
               BroadcastUtils.addRegionDirective(7, 1, here, 6);
-              rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
+              rc.broadcast(EARLY_UNITS_CHANNEL, ++unitCount);
               spawnedLumberjack = true;
             }
           }
           if (!spawnedEarlySoldier && unitCount < 3) {
             if (spawnRobot(RobotType.SOLDIER)) {
-              rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
+              rc.broadcast(EARLY_UNITS_CHANNEL, ++unitCount);
               spawnedEarlySoldier = true;
             }
           }
           else if (!spawnedEarlyScout && unitCount < 3) {
             if (spawnRobot(RobotType.SCOUT)) {
-              rc.broadcast(EARLY_UNITS_CHANNEL, unitCount + 1);
+              rc.broadcast(EARLY_UNITS_CHANNEL, unitCount);
               spawnedEarlyScout = true;
             }
           }
@@ -521,7 +521,7 @@ public class Gardener extends Globals {
             System.out.println("shouldPlant: " + shouldPlant);
             System.out.println("numCheckspaces: " + numCheckSpaces);
           }
-          if (((shouldPlant || numCheckSpaces > 25) && noNearbyGardeners()) && freeSpaces[1] != null
+          if (((spawnedEarlySoldier && spawnedEarlyScout) && (shouldPlant || numCheckSpaces > 25) && noNearbyGardeners()) && freeSpaces[1] != null
               && rc.canPlantTree(freeSpaces[1])) {
             /*
             if (!rc.hasMoved() && rc.canMove(freeSpaces[1], 0.3f)) {
