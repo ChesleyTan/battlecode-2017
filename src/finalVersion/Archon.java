@@ -33,6 +33,26 @@ public class Archon extends Globals {
       attempts++;
     } while (attempts < 36);
   }
+  
+  private static void replaceCount() throws GameActionException{
+    if (currentRoundNum % 10 == 1){
+      int lumberjacks = rc.readBroadcast(LUMBERJACK_REPORT_CHANNEL);
+      int soldiers = rc.readBroadcast(SOLDIER_REPORT_CHANNEL);
+      int gardeners = rc.readBroadcast(GARDENER_REPORT_CHANNEL);
+      if (lumberjacks != 0){
+        rc.broadcast(LUMBERJACK_PRODUCTION_CHANNEL, lumberjacks);
+        rc.broadcast(LUMBERJACK_REPORT_CHANNEL, 0);
+      }
+      if (soldiers != 0){
+        rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldiers);
+        rc.broadcast(SOLDIER_REPORT_CHANNEL, 0);
+      }
+      if (gardeners != 0){
+        rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners);
+        rc.broadcast(GARDENER_REPORT_CHANNEL, 0);
+      }
+    }
+  }
 
   public static void loop() {
     int producedGardeners;
@@ -76,7 +96,7 @@ public class Archon extends Globals {
         else {
           producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
-          if ((producedGardeners < 3 || producedGardeners < currentRoundNum / 60
+          if ((producedGardeners < 3 || currentRoundNum % 80 == 0
               || productionGardeners < requiredProductionGardeners) && rc.senseNearbyRobots(3, us).length < 2) {
             trySpawnGardener(producedGardeners);
           }
@@ -94,6 +114,7 @@ public class Archon extends Globals {
         trackEnemyGardeners();
         RobotUtils.notifyBytecodeLimitBreach();
         Clock.yield();
+        replaceCount();
       } catch (Exception e) {
         e.printStackTrace();
         Clock.yield();

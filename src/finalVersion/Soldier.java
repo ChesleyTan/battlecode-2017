@@ -193,9 +193,9 @@ public class Soldier extends Globals {
     TreeInfo treeBetween = rc.senseTreeAtLocation(here.add(here.directionTo(targetLocation), myType.bodyRadius + 1));
     boolean pentadShotGardener = (RobotUtils.getBugCount() > 10 && (treeBetween != null && treeBetween.getTeam() == them));
     System.out.println("pentadshotgardener: " + pentadShotGardener);
+    RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS, them);
     if (target.getType() != RobotType.GARDENER || !pentadShotGardener){
       BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
-      RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS, them);
       move(bullets, robots, targetLocation);
     }
     //RobotUtils.tryMoveDestination(targetLocation);
@@ -205,7 +205,7 @@ public class Soldier extends Globals {
       }
       Direction towardsEnemy = here.directionTo(targetLocation);
       float distanceEnemy = here.distanceTo(targetLocation);
-      if (distanceEnemy <= 6 && rc.canFirePentadShot()) {
+      if (distanceEnemy <= 6 && rc.canFirePentadShot() || robots.length > 2) {
         rc.firePentadShot(towardsEnemy);
       }
       else {
@@ -241,6 +241,7 @@ public class Soldier extends Globals {
   private static void roam() throws GameActionException {
     int targetID = rc.readBroadcast(squad_channel + 1);
     if (targetID != -1) {
+      System.out.println("target id = -1");
       mode = ATTACK;
       int xCor = rc.readBroadcast(squad_channel + 2);
       int yCor = rc.readBroadcast(squad_channel + 3);
@@ -248,6 +249,7 @@ public class Soldier extends Globals {
       moveToAttack(destination);
     }
     else {
+      System.out.println("sensing nearby enemies");
       RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
       //BulletInfo[] bullets = rc.senseNearbyBullets();
 
@@ -450,8 +452,9 @@ public class Soldier extends Globals {
   public static void loop() {
     try {
       //Start out and join a squad
-      enemyArchonLocation = rc.getInitialArchonLocations(them)[0];
+      MapLocation[] locations = rc.getInitialArchonLocations(them);
       findSquad();
+      enemyArchonLocation = locations[0];
       if (rc.getRoundNum() < 100) {
         rc.broadcast(squad_channel + 1, 0);
         rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
@@ -461,8 +464,20 @@ public class Soldier extends Globals {
         mode = ATTACK;
       }
       else {
-        mydir = RobotUtils.randomDirection();
-        mode = ROAM;
+        if (rc.readBroadcast(squad_channel + 1) == -1){
+          enemyArchonLocation = locations[myID % locations.length];
+          rc.broadcast(squad_channel + 1, 0);
+          rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
+          rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
+          visitedEnemyArchon = false;
+          mydir = here.directionTo(enemyArchonLocation);
+        }
+        else{
+          int x = rc.readBroadcast(squad_channel + 2);
+          int y = rc.readBroadcast(squad_channel + 3);
+          mydir = here.directionTo(new MapLocation(x,y));
+        }
+        mode = ATTACK;
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -497,8 +512,8 @@ public class Soldier extends Globals {
               }
               if (here.distanceTo(destination) <= RobotType.SOLDIER.sensorRadius
                   + MIN_ROBOT_RADIUS) {
-                System.out.println(visitedEnemyArchon);
-                if (destination.distanceTo(enemyArchonLocation) < 1.5f){
+                //System.out.println(visitedEnemyArchon);
+                if (!visitedEnemyArchon && destination.distanceTo(enemyArchonLocation) < 1.5f){
                   visitedEnemyArchon = true;
                 }
                 // Disengage, because target could not be found at last known location
@@ -578,10 +593,13 @@ public class Soldier extends Globals {
           // check defense every turn, if so then head to defend target
         }
         float myHP = rc.getHealth();
-        if (!hasReportedDeath && myHP < 3) {
+        if (!hasReportedDeath && myHP < 6) {
           int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
           hasReportedDeath = true;
           rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldiers - 1);
+        }
+        if (currentRoundNum % 10 == 0){
+          report();
         }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();

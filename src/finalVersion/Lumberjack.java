@@ -520,6 +520,9 @@ public class Lumberjack extends Globals {
             EvasiveLumberjack.move(nearbyBullets);
           }
         }
+        if (currentRoundNum % 10 == 0){
+          report();
+        }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
         trackEnemyGardeners();

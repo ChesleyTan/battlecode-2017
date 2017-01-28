@@ -500,7 +500,9 @@ public class Gardener extends Globals {
           }
         }
         if (production_gardener) {
-          spawnRobot(RobotType.SOLDIER);
+          if (soldierCount < rc.getTreeCount() * 2){
+            spawnRobot(RobotType.SOLDIER);
+          }
         }
         else {
           if ((!reportedTrees || !spawnedLumberjack) && rc.senseNearbyTrees(6, Team.NEUTRAL).length > 2) {
@@ -537,16 +539,22 @@ public class Gardener extends Globals {
             int division_factor = (int) (154 / (rc.getTreeCount() + 1));
             if (currentRoundNum % division_factor == 0) {
               if (freeSpaces[0] != null && rc.canBuildRobot(RobotType.LUMBERJACK, freeSpaces[0])) {
-                if (producedUnits % 10 == 0) {
+                int lumberCount = rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL);
+                if (producedUnits % 10 == 1 && lumberCount < 15) {
                   rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
+                  producedUnits++;
                 }
                 else {
-                  rc.buildRobot(RobotType.SOLDIER, freeSpaces[0]);
+                  if (soldierCount < rc.getTreeCount() * 2){
+                    rc.buildRobot(RobotType.SOLDIER, freeSpaces[0]);
+                  }
+                  producedUnits++;
                 }
-                producedUnits++;
               }
               else {
-                spawnRobot(RobotType.SOLDIER);
+                if (soldierCount < rc.getTreeCount() * 2){
+                  spawnRobot(RobotType.SOLDIER);
+                }
               }
             }
           }
@@ -609,6 +617,9 @@ public class Gardener extends Globals {
               rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, numProductionGardeners - 1);
             }
           }
+        }
+        if (currentRoundNum % 10 == 0){
+          report();
         }
         RobotUtils.donateEverythingAtTheEnd();
         RobotUtils.shakeNearbyTrees();
