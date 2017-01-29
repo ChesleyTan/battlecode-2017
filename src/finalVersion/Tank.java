@@ -39,8 +39,8 @@ public class Tank extends Globals {
     }
     squad_channel = DEFENSE_START_CHANNEL;
   }
-  
-  private static boolean pentadShotGardener(TreeInfo treeBetween, MapLocation gardenerLocation){
+
+  private static boolean pentadShotGardener(TreeInfo treeBetween, MapLocation gardenerLocation) {
     return (treeBetween != null && treeBetween.getTeam() == them);
   }
 
@@ -71,7 +71,8 @@ public class Tank extends Globals {
         System.out.println("clearShot to target");
       }
       float distanceEnemy = here.distanceTo(targetLocation);
-      if ((distanceEnemy <= 6 || robots.length > 2) && rc.canFirePentadShot() && rc.getTreeCount() > 1) {
+      if ((distanceEnemy <= 6 || robots.length > 2) && rc.canFirePentadShot()
+          && rc.getTreeCount() > 1) {
         rc.firePentadShot(towardsEnemy);
       }
       else {
@@ -197,8 +198,7 @@ public class Tank extends Globals {
           int xCor = rc.readBroadcast(squad_channel + 2);
           int yCor = rc.readBroadcast(squad_channel + 3);
           MapLocation targetLocation = new MapLocation(xCor, yCor);
-          if (here.distanceTo(targetLocation) <= RobotType.TANK.sensorRadius
-              + MIN_ROBOT_RADIUS) {
+          if (here.distanceTo(targetLocation) <= RobotType.TANK.sensorRadius + MIN_ROBOT_RADIUS) {
             // he's dead
             rc.broadcast(squad_channel + 1, -1);
             target = null;
@@ -210,7 +210,7 @@ public class Tank extends Globals {
             //BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
             //RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
             //EvasiveTank.move(nearbyBullets, nearbyRobots, here.directionTo(targetLocation), targetLocation);
-            RobotUtils.tryMoveDestinationTank(targetLocation);
+            RobotUtils.tryMoveDestination(targetLocation);
           }
         }
       }
@@ -362,8 +362,7 @@ public class Tank extends Globals {
               if (TANK_DEBUG) {
                 System.out.println(destination);
               }
-              if (here.distanceTo(destination) <= RobotType.TANK.sensorRadius
-                  + MIN_ROBOT_RADIUS) {
+              if (here.distanceTo(destination) <= RobotType.TANK.sensorRadius + MIN_ROBOT_RADIUS) {
                 //System.out.println(visitedEnemyArchon);
                 if (!visitedEnemyArchon && destination.distanceTo(enemyArchonLocation) < 1.5f) {
                   visitedEnemyArchon = true;
