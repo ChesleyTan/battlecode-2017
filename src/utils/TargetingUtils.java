@@ -27,18 +27,18 @@ public class TargetingUtils extends Globals{
       return false;
     }
     float distanceTarget = shooterLoc.distanceTo(targetLoc);
-    System.out.println(distanceTarget);
+    //System.out.println(distanceTarget);
     MapLocation outerEdge = shooterLoc.add(targetDir, myType.bodyRadius + 0.1f);
     RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
     for (RobotInfo r : friendlies) {
-      System.out.println(r);
+      //System.out.println(r);
       if (Clock.getBytecodesLeft() < 2000) {
-        System.out.println("bytecodes 1");
+        //System.out.println("bytecodes 1");
         return false;
       }
       if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, r.getLocation(),
           r.getRadius())) {
-        System.out.println("collide with friendlies");
+        //System.out.println("collide with friendlies");
         return false;
       }
     }
@@ -50,7 +50,7 @@ public class TargetingUtils extends Globals{
     }
     if (overlap != null){
       if (shooterLoc.distanceTo(overlap.location) - overlap.getRadius() < distanceTarget - 1){
-        System.out.println("overlap");
+        //System.out.println("overlap");
         return false;
       }
     }
@@ -77,7 +77,7 @@ public class TargetingUtils extends Globals{
         }
         if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.getLocation(),
           t.getRadius()) && here.distanceTo(t.getLocation()) - t.getRadius() < distanceTarget - target.getRadius()) {
-          System.out.println("collide tree");
+          //System.out.println("collide tree");
           return false;
         }
       }
