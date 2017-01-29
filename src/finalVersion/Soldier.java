@@ -18,6 +18,7 @@ public class Soldier extends Globals {
   private static final boolean SOLDIER_DEBUG = true;
   private static boolean hasReportedDeath = false;
   private static boolean visitedEnemyArchon = true;
+  private static int roamCount = 0;
 
   private static void findSquad() throws GameActionException {
     int i = DEFENSE_START_CHANNEL;
@@ -122,6 +123,7 @@ public class Soldier extends Globals {
         System.out.println("target id = -1");
       }
       mode = ATTACK;
+      roamCount = 0;
       int xCor = rc.readBroadcast(squad_channel + 2);
       int yCor = rc.readBroadcast(squad_channel + 3);
       MapLocation destination = new MapLocation(xCor, yCor);
@@ -141,6 +143,7 @@ public class Soldier extends Globals {
           System.out.println(target.getID());
         }
         mode = ATTACK;
+        roamCount = 0;
         attack(target);
       }
       else {
@@ -156,20 +159,40 @@ public class Soldier extends Globals {
           rc.broadcast(squad_channel + 2, cacheTargetX);
           rc.broadcast(squad_channel + 3, cacheTargetY);
           rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL, 0);
+          roamCount = 0;
           moveToAttack(new MapLocation(cacheTargetX, cacheTargetY));
         }
         else {
           if (!rc.hasMoved()) {
-            int attempts = 0;
-            while (!rc.canMove(myDir) && attempts < 20) {
-              if (Clock.getBytecodesLeft() < 2000) {
-                break;
+            if (roamCount >= 30){
+              int i = DEFENSE_START_CHANNEL;
+              while (i < DEFENSE_END_CHANNEL) {
+                int target = rc.readBroadcast(i + 1);
+                if (target != -1) {
+                  rc.broadcast(squad_channel + 1, target);
+                  int xCor = rc.readBroadcast(squad_channel + 2);
+                  int yCor = rc.readBroadcast(squad_channel + 3);
+                  MapLocation destination = new MapLocation(xCor, yCor);
+                  roamCount = 0;
+                  moveToAttack(destination);
+                  return;
+                }
+                i += DEFENSE_BLOCK_WIDTH;
               }
-              myDir = RobotUtils.randomDirection();
-              attempts++;
             }
-            if (rc.canMove(myDir)) {
-              rc.move(myDir);
+            else{
+              int attempts = 0;
+              while (!rc.canMove(myDir) && attempts < 20) {
+                if (Clock.getBytecodesLeft() < 2000) {
+                  break;
+                }
+                myDir = RobotUtils.randomDirection();
+                attempts++;
+              }
+              if (rc.canMove(myDir)) {
+                rc.move(myDir);
+                roamCount ++;
+              }
             }
           }
         }

@@ -41,18 +41,7 @@ public class Tank extends Globals {
   }
   
   private static boolean pentadShotGardener(TreeInfo treeBetween, MapLocation gardenerLocation){
-    RobotInfo[] friendlies = rc.senseNearbyRobots(gardenerLocation, 5, us);
-    int tankCount = 0;
-    for(RobotInfo r: friendlies){
-      if (r.getType() == RobotType.TANK){
-        tankCount ++;
-        if (tankCount == 3){
-          break;
-        }
-      }
-    }
-    return ((RobotUtils.getBugCount() > 10 || tankCount >= 2)
-        && (treeBetween != null && treeBetween.getTeam() == them));
+    return (treeBetween != null && treeBetween.getTeam() == them);
   }
 
   /*
