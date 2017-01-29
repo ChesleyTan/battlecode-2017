@@ -39,9 +39,11 @@ public class Globals {
   public static final int UNITS_BIAS_PRODUCTION_CHANNEL = 1002;
   public static final int SOLDIER_PRODUCTION_CHANNEL = 1003;
   public static final int LUMBERJACK_PRODUCTION_CHANNEL = 1004;
-  public static final int SOLDIER_REPORT_CHANNEL = 1005;
-  public static final int LUMBERJACK_REPORT_CHANNEL = 1006;
-  public static final int GARDENER_REPORT_CHANNEL = 1007;
+  public static final int TANK_PRODUCTION_CHANNEL = 1005;
+  public static final int SOLDIER_REPORT_CHANNEL = 1006;
+  public static final int LUMBERJACK_REPORT_CHANNEL = 1007;
+  public static final int GARDENER_REPORT_CHANNEL = 1008;
+  public static final int TANK_REPORT_CHANNEL = 1009;
   public static Direction NORTH, SOUTH, EAST, WEST;
   public static final int UNKNOWN = Integer.MIN_VALUE;
   public static int minX = UNKNOWN;

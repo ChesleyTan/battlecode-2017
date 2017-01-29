@@ -12,112 +12,12 @@ public class Tank extends Globals {
   private static final int ROAM = 3;
   private static int squad_channel;
   private static int mode;
-  private static Direction mydir;
+  private static Direction myDir;
   private static RobotInfo target;
   private static MapLocation enemyArchonLocation;
   private static final boolean TANK_DEBUG = true;
   private static boolean hasReportedDeath = false;
   private static boolean visitedEnemyArchon = true;
-
-  /*
-  private static void dodge(BulletInfo[] bullets, RobotInfo[] robots, MapLocation targetLocation)
-      throws GameActionException {
-    float sumX = 0;
-    float sumY = 0;
-    if (targetLocation != null) {
-      Direction toTarget = here.directionTo(targetLocation);
-      float distTarget = here.distanceTo(targetLocation);
-      sumX = toTarget.getDeltaX(distTarget / myType.sensorRadius * myType.strideRadius);
-      sumY = toTarget.getDeltaY(distTarget / myType.sensorRadius * myType.strideRadius);
-    }
-    for (BulletInfo i : bullets) {
-      MapLocation endLocation = i.location.add(i.getDir(), i.getSpeed());
-      float x0 = i.location.x;
-      float y0 = i.location.y;
-      float x1 = endLocation.x;
-      float y1 = endLocation.y;
-      float a = y0 - y1;
-      float b = x1 - x0;
-      if (a == 0 && b == 0) {
-        a = 0.01f;
-      }
-      float c = x0 * y1 - y0 * x1;
-      float distance = (float) (Math.abs(a * here.x + b * here.y + c) / Math.sqrt(a * a + b * b));
-      if (distance <= 2.5) {
-        float x2 = (float) ((b * (b * here.x - a * here.y) - a * c) / (a * a + b * b));
-        float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
-            / (Math.pow(a, 2) + Math.pow(b, 2)));
-        MapLocation destLocation = new MapLocation(x2, y2);
-        Direction away = destLocation.directionTo(here);
-        if (away == null) {
-          away = here.directionTo(i.getLocation()).rotateLeftDegrees(90);
-        }
-        System.out.println("distance: " + distance);
-        float weighted = (float) Math
-            .pow((RobotType.TANK.bulletSightRadius - distance / myType.bulletSightRadius), 2);
-        //float weighted = RobotType.TANK.bulletSightRadius / distance;
-        System.out.println("weighted: " + weighted);
-        rc.setIndicatorDot(here.add(away, 1), 255, 0, 0);
-        sumX += away.getDeltaX(weighted);
-        sumY += away.getDeltaY(weighted);
-      }
-    }
-  
-    for (RobotInfo r : robots) {
-      Direction their_direction = r.location.directionTo(here);
-      float their_distance = ((RobotType.TANK.sensorRadius - here.distanceTo(r.location)
-          + r.getRadius()))
-          * ((RobotType.TANK.sensorRadius - here.distanceTo(r.location) + r.getRadius()));
-      System.out.println(their_distance);
-      if (r.getTeam() == us) {
-        their_distance = their_distance / 2;
-      }
-      sumX += their_direction.getDeltaX(their_distance);
-      sumY += their_direction.getDeltaY(their_distance);
-    }
-  
-    TreeInfo[] nearbyTrees = rc.senseNearbyTrees(GameConstants.NEUTRAL_TREE_MAX_RADIUS);
-    if (nearbyTrees.length <= 10) {
-      for (TreeInfo t : nearbyTrees) {
-        Direction their_direction = t.location.directionTo(here);
-        float baseValue = ((myType.sensorRadius - here.distanceTo(t.location) + t.getRadius()))
-            * ((myType.sensorRadius - here.distanceTo(t.location) + t.getRadius()));
-        float their_distance = baseValue * myType.strideRadius;
-        sumX += their_direction.getDeltaX(their_distance);
-        sumY += their_direction.getDeltaY(their_distance);
-      }
-    }
-  
-    if (Clock.getBytecodesLeft() >= 2000) {
-      float sightRadius = RobotType.TANK.sensorRadius - 1;
-      updateMapBoundaries();
-      if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
-        float distance = (here.x - minX) * (here.x - minX);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
-        sumX += weightedDistance;
-      }
-      if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sightRadius, here.y))) {
-        float distance = (maxX - here.x) * (maxX - here.x);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
-        sumX -= weightedDistance;
-      }
-      if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sightRadius))) {
-        float distance = (here.y - minY) * (here.y - minY);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
-        sumY += weightedDistance;
-      }
-      if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sightRadius))) {
-        float distance = (maxY - here.y) * (maxY - here.y);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
-        sumY -= weightedDistance;
-      }
-    }
-    //float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
-  
-    Direction finalDir = new Direction(sumX, sumY);
-    RobotUtils.tryMove(finalDir, 10, 6);
-  }
-  */
 
   private static void findSquad() throws GameActionException {
     int i = DEFENSE_START_CHANNEL;
@@ -139,43 +39,20 @@ public class Tank extends Globals {
     }
     squad_channel = DEFENSE_START_CHANNEL;
   }
-
-  /*private static void moveAroundTree(RobotInfo target) throws GameActionException{
-    Direction toEnemy = here.directionTo(target.location);
-    if (rc.canMove(toEnemy)){
-      if (!RobotUtils.tryMove(toEnemy, 15, 6)){
-        TreeInfo[] nearbyTrees = rc.senseNearbyTrees(1);
-        if (nearbyTrees.length != 0){
-          MapLocation targetLocation = here.add(toEnemy);
-          for(TreeInfo t: nearbyTrees){
-            if (targetLocation.distanceTo(tree.location) < t.getRadius() + myType.bodyRadius){
-              while()
-            }
-          }
+  
+  private static boolean pentadShotGardener(TreeInfo treeBetween, MapLocation gardenerLocation){
+    RobotInfo[] friendlies = rc.senseNearbyRobots(gardenerLocation, 5, us);
+    int TANKCount = 0;
+    for(RobotInfo r: friendlies){
+      if (r.getType() == RobotType.TANK){
+        TANKCount ++;
+        if (TANKCount == 3){
+          break;
         }
       }
     }
-  }*/
-  private static boolean blockedByTree(BulletInfo i, TreeInfo[] trees) {
-    Direction base = here.directionTo(i.location);
-    float baseDistance = here.distanceTo(i.location);
-    for (TreeInfo tree : trees) {
-      if (i.location.distanceTo(tree.location) > baseDistance) {
-        continue;
-      }
-      Direction t = here.directionTo(tree.location);
-      float radians = Math.abs(t.radiansBetween(base));
-      float dist = (float) Math.sin(radians) * here.distanceTo(tree.location);
-      if (dist < tree.getRadius()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private static void move(BulletInfo[] bullets, RobotInfo[] robots, MapLocation destination)
-      throws GameActionException {
-    EvasiveSoldier.move(bullets, robots, target, destination);
+    return ((RobotUtils.getBugCount() > 10 || TANKCount >= 2)
+        && (treeBetween != null && treeBetween.getTeam() == them));
   }
 
   /*
@@ -187,26 +64,29 @@ public class Tank extends Globals {
       System.out.println("attacking");
     }
     MapLocation targetLocation = target.getLocation();
-    TreeInfo treeBetween = rc.senseTreeAtLocation(here.add(here.directionTo(targetLocation), myType.bodyRadius + 1));
-    boolean pentadShotGardener = (RobotUtils.getBugCount() > 10 && (treeBetween != null && treeBetween.getTeam() == them));
-    System.out.println("pentadshotgardener: " + pentadShotGardener);
+    Direction towardsEnemy = here.directionTo(targetLocation);
+    TreeInfo treeBetween = rc
+        .senseTreeAtLocation(here.add(towardsEnemy, RobotType.SOLDIER.bodyRadius + 1));
+    boolean pentadShotGardener = pentadShotGardener(treeBetween, targetLocation);
+    if (TANK_DEBUG) {
+      System.out.println("pentadshotgardener: " + pentadShotGardener);
+    }
     RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS, them);
-    if (target.getType() != RobotType.GARDENER || !pentadShotGardener){
+    if (target.getType() != RobotType.GARDENER || !pentadShotGardener) {
       BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
-      move(bullets, robots, targetLocation);
+      EvasiveSoldier.move(bullets, robots, target, targetLocation);
     }
     //RobotUtils.tryMoveDestination(targetLocation);
-    if (TargetingUtils.clearShot(here, target) || pentadShotGardener) {
+    if (pentadShotGardener || TargetingUtils.clearShot(here, target)) {
       if (TANK_DEBUG) {
         System.out.println("clearShot to target");
       }
-      Direction towardsEnemy = here.directionTo(targetLocation);
       float distanceEnemy = here.distanceTo(targetLocation);
-      if (distanceEnemy <= 6 && rc.canFirePentadShot() || robots.length > 2) {
+      if ((distanceEnemy <= 6 || robots.length > 2) && rc.canFirePentadShot() && rc.getTreeCount() > 1) {
         rc.firePentadShot(towardsEnemy);
       }
       else {
-        if (rc.canFireTriadShot() && rc.getTeamBullets() > 50) {
+        if (rc.canFireTriadShot()) {
           rc.fireTriadShot(towardsEnemy);
         }
         else if (rc.canFireSingleShot()) {
@@ -217,7 +97,7 @@ public class Tank extends Globals {
   }
 
   /* Moves in the direction of attacking and fires if reasonable
-   * Assumes soldier has neither moved nor attacked
+   * Assumes Tank has neither moved nor attacked
    * Also assumes that there is a target
    */
   private static void moveToAttack(MapLocation destination) throws GameActionException {
@@ -226,19 +106,21 @@ public class Tank extends Globals {
     if (enemies.length != 0) {
       int index = priority(enemies);
       if (index != -1) {
-        target = enemies[priority(enemies)];
+        target = enemies[index];
         attack(target);
       }
     }
     else {
-      move(bullets, enemies, destination);
+      EvasiveSoldier.move(bullets, enemies, target, destination);
     }
   }
 
   private static void roam() throws GameActionException {
     int targetID = rc.readBroadcast(squad_channel + 1);
     if (targetID != -1) {
-      System.out.println("target id = -1");
+      if (TANK_DEBUG) {
+        System.out.println("target id = -1");
+      }
       mode = ATTACK;
       int xCor = rc.readBroadcast(squad_channel + 2);
       int yCor = rc.readBroadcast(squad_channel + 3);
@@ -246,7 +128,9 @@ public class Tank extends Globals {
       moveToAttack(destination);
     }
     else {
-      System.out.println("sensing nearby enemies");
+      if (TANK_DEBUG) {
+        System.out.println("sensing nearby enemies");
+      }
       RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
       //BulletInfo[] bullets = rc.senseNearbyBullets();
 
@@ -254,7 +138,7 @@ public class Tank extends Globals {
       if (priority != -1) {
         target = enemies[priority];
         if (TANK_DEBUG) {
-          System.out.println(target.ID);
+          System.out.println(target.getID());
         }
         mode = ATTACK;
         attack(target);
@@ -277,15 +161,15 @@ public class Tank extends Globals {
         else {
           if (!rc.hasMoved()) {
             int attempts = 0;
-            while (!rc.canMove(mydir) && attempts < 20) {
+            while (!rc.canMove(myDir) && attempts < 20) {
               if (Clock.getBytecodesLeft() < 2000) {
                 break;
               }
-              mydir = RobotUtils.randomDirection();
+              myDir = RobotUtils.randomDirection();
               attempts++;
             }
-            if (rc.canMove(mydir)) {
-              rc.move(mydir);
+            if (rc.canMove(myDir)) {
+              rc.move(myDir);
             }
           }
         }
@@ -293,23 +177,6 @@ public class Tank extends Globals {
     }
   }
 
-  /*private static void survey(RobotInfo target) throws GameActionException{
-    System.out.println("defending target");
-    RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
-    if (enemies.length != 0){
-      int priority = priority(enemies);
-      attack(enemies[priority]);
-    }
-    else{
-      Direction towardsEnemy = target.getLocation().directionTo(enemyLocation);
-      MapLocation destination = target.location.add(towardsEnemy, 5);
-      float distance = here.distanceTo(destination);
-      if (distance < 6){
-        destination = null;
-      }
-      RobotUtils.tryMoveDestination(destination);
-    }
-  }*/
   /*
    * Defend the person who's considered "target"
    */
@@ -452,29 +319,28 @@ public class Tank extends Globals {
       MapLocation[] locations = rc.getInitialArchonLocations(them);
       findSquad();
       enemyArchonLocation = locations[0];
+      mode = ATTACK;
       if (rc.getRoundNum() < 100) {
         rc.broadcast(squad_channel + 1, 0);
         rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
         rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
         visitedEnemyArchon = false;
-        mydir = here.directionTo(enemyArchonLocation);
-        mode = ATTACK;
+        myDir = here.directionTo(enemyArchonLocation);
       }
       else {
-        if (rc.readBroadcast(squad_channel + 1) == -1){
+        if (rc.readBroadcast(squad_channel + 1) == -1) {
           enemyArchonLocation = locations[myID % locations.length];
           rc.broadcast(squad_channel + 1, 0);
           rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
           rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
           visitedEnemyArchon = false;
-          mydir = here.directionTo(enemyArchonLocation);
+          myDir = here.directionTo(enemyArchonLocation);
         }
-        else{
+        else {
           int x = rc.readBroadcast(squad_channel + 2);
           int y = rc.readBroadcast(squad_channel + 3);
-          mydir = here.directionTo(new MapLocation(x,y));
+          myDir = here.directionTo(new MapLocation(x, y));
         }
-        mode = ATTACK;
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -510,18 +376,19 @@ public class Tank extends Globals {
               if (here.distanceTo(destination) <= RobotType.TANK.sensorRadius
                   + MIN_ROBOT_RADIUS) {
                 //System.out.println(visitedEnemyArchon);
-                if (!visitedEnemyArchon && destination.distanceTo(enemyArchonLocation) < 1.5f){
+                if (!visitedEnemyArchon && destination.distanceTo(enemyArchonLocation) < 1.5f) {
                   visitedEnemyArchon = true;
                 }
-                // Disengage, because target could not be found at last known location
-                if (!visitedEnemyArchon){
+                // Keep moving towards archon location
+                if (!visitedEnemyArchon) {
                   rc.broadcast(squad_channel + 1, 0);
                   destination = enemyArchonLocation;
-                  rc.broadcast(squad_channel + 2, (int)enemyArchonLocation.x);
-                  rc.broadcast(squad_channel+ 3, (int)enemyArchonLocation.y);
+                  rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
+                  rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
                   moveToAttack(destination);
                 }
-                else{
+                // Disengage because target not found in last location
+                else {
                   mode = ROAM;
                   rc.broadcast(squad_channel + 1, -1);
                   roam();
@@ -534,38 +401,38 @@ public class Tank extends Globals {
           }
           else {
             if (TANK_DEBUG) {
-              System.out.println("target ID: " + target.ID);
+              System.out.println("target ID: " + target.getID());
             }
             // if target != null
-            if (rc.canSenseRobot(target.ID)) {
+            if (rc.canSenseRobot(target.getID())) {
               RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
               target = enemies[priority(enemies)];
-              rc.broadcast(squad_channel + 1, target.ID);
-              rc.broadcast(squad_channel + 2, (int) target.location.x);
-              rc.broadcast(squad_channel + 3, (int) target.location.y);
+              rc.broadcast(squad_channel + 1, target.getID());
+              rc.broadcast(squad_channel + 2, (int) target.getLocation().x);
+              rc.broadcast(squad_channel + 3, (int) target.getLocation().y);
               attack(target);
             }
             else {
               int ogTarget = rc.readBroadcast(squad_channel + 1);
-              if (target.ID == ogTarget) {
+              if (target.getID() == ogTarget) {
                 int xCor = rc.readBroadcast(squad_channel + 2);
                 int yCor = rc.readBroadcast(squad_channel + 3);
                 MapLocation targetLocation = new MapLocation(xCor, yCor);
                 if (here.distanceTo(targetLocation) <= RobotType.TANK.sensorRadius) {
                   // Disengage, because target could not be found at last known location
-                  if (targetLocation.equals(enemyArchonLocation)){
+                  if (targetLocation.equals(enemyArchonLocation)) {
                     visitedEnemyArchon = true;
                   }
                   target = null;
-                  if (!visitedEnemyArchon){
+                  if (!visitedEnemyArchon) {
                     mode = ATTACK;
                     rc.broadcast(squad_channel + 1, 0);
                     MapLocation destination = enemyArchonLocation;
-                    rc.broadcast(squad_channel + 2, (int)enemyArchonLocation.x);
-                    rc.broadcast(squad_channel+ 3, (int)enemyArchonLocation.y);
+                    rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
+                    rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
                     moveToAttack(destination);
                   }
-                  else{
+                  else {
                     mode = ROAM;
                     rc.broadcast(squad_channel + 1, -1);
                     roam();
@@ -589,13 +456,12 @@ public class Tank extends Globals {
           roam();
           // check defense every turn, if so then head to defend target
         }
-        float myHP = rc.getHealth();
-        if (!hasReportedDeath && myHP < 6) {
-          int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
+        if (!hasReportedDeath && rc.getHealth() < 6) {
+          int tanks = rc.readBroadcast(TANK_PRODUCTION_CHANNEL);
           hasReportedDeath = true;
-          rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldiers - 1);
+          rc.broadcast(TANK_PRODUCTION_CHANNEL, tanks - 1);
         }
-        if (currentRoundNum % 10 == 0){
+        if (currentRoundNum % 10 == 0) {
           report();
         }
         RobotUtils.donateEverythingAtTheEnd();
