@@ -371,4 +371,25 @@ public class RobotUtils extends Globals {
       rc.setIndicatorDot(rc.getLocation(), 102, 0, 102);
     }
   }
+
+  public static boolean tankCanMove(MapLocation destination) throws GameActionException {
+    if (!rc.canMove(destination)) {
+      return false;
+    }
+    float distToDest = here.distanceTo(destination);
+    if (rc.senseTreeAtLocation(here.add(here.directionTo(destination), Math.max(distToDest, RobotType.TANK.strideRadius))) != null) {
+      return false;
+    }
+    return true;
+  }
+
+  public static boolean tankCanMove(Direction direction) throws GameActionException {
+    if (!rc.canMove(direction)) {
+      return false;
+    }
+    if (rc.senseTreeAtLocation(here.add(direction, RobotType.TANK.strideRadius)) != null) {
+      return false;
+    }
+    return true;
+  }
 }
