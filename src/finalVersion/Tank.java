@@ -210,7 +210,7 @@ public class Tank extends Globals {
             //BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
             //RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
             //EvasiveTank.move(nearbyBullets, nearbyRobots, here.directionTo(targetLocation), targetLocation);
-            RobotUtils.tryMoveDestination(targetLocation);
+            RobotUtils.tryMoveDestinationTank(targetLocation);
           }
         }
       }

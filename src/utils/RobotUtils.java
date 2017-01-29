@@ -261,6 +261,31 @@ public class RobotUtils extends Globals {
     }
     return bugState == BUG;
   }
+  
+  public static boolean tryMoveDestinationTank(MapLocation target) throws GameActionException{
+    if (DEBUG) {
+      System.out.println("tryMoveDestination");
+    }
+    //System.out.println(target.x);
+    //System.out.println(target.y);
+    bugStartDirection = here.directionTo(target);
+    if (tankCanMove(bugStartDirection)) {
+      rc.move(bugStartDirection);
+      if (bugState == BUG) {
+        endBug();
+      }
+    }
+    else {
+      if (bugState == BUG) {
+        bugDestinationLocation = target;
+      }
+      else {
+        bugStart(target);
+      }
+      bugMove();
+    }
+    return bugState == BUG;
+  }
 
   public static boolean tryMoveDist(Direction dir, float distance, float degreeOffset,
       int checksPerSide) throws GameActionException {
@@ -377,19 +402,21 @@ public class RobotUtils extends Globals {
       return false;
     }
     float distToDest = here.distanceTo(destination);
-    if (rc.senseTreeAtLocation(here.add(here.directionTo(destination), Math.max(distToDest, RobotType.TANK.strideRadius))) != null) {
-      return false;
+    TreeInfo treeBetween = rc.senseTreeAtLocation(here.add(here.directionTo(destination), Math.min(distToDest, RobotType.TANK.strideRadius) + RobotType.TANK.bodyRadius));
+    if (treeBetween == null || treeBetween.getTeam() != us || (treeBetween.getTeam() == Team.NEUTRAL && treeBetween.getHealth() <= 200)) {
+      return true;
     }
-    return true;
+    return false;
   }
 
   public static boolean tankCanMove(Direction direction) throws GameActionException {
     if (!rc.canMove(direction)) {
       return false;
     }
-    if (rc.senseTreeAtLocation(here.add(direction, RobotType.TANK.strideRadius)) != null) {
-      return false;
+    TreeInfo treeBetween = rc.senseTreeAtLocation(here.add(direction, RobotType.TANK.strideRadius + RobotType.TANK.bodyRadius));
+    if (treeBetween == null || treeBetween.getTeam() != us || (treeBetween.getTeam() == Team.NEUTRAL && treeBetween.getHealth() <= 200)) {
+      return true;
     }
-    return true;
+    return false;
   }
 }
