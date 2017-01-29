@@ -542,7 +542,7 @@ public class Gardener extends Globals {
             if (currentRoundNum % division_factor == 0) {
               if (freeSpaces[0] != null && rc.canBuildRobot(RobotType.LUMBERJACK, freeSpaces[0])) {
                 int lumberCount = rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL);
-                if (producedUnits % 10 == 1 && lumberCount < 15) {
+                if (producedUnits % 10 == 2 && lumberCount < 15) {
                   rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
                   producedUnits++;
                 }
