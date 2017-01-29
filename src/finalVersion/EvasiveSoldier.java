@@ -241,7 +241,7 @@ public class EvasiveSoldier extends Globals {
         return moved;
       }
       else{
-        if (destination != null && here.distanceTo(destination) - myType.bodyRadius > 2){
+        if (destination != null && here.distanceTo(destination) - myType.bodyRadius - target.getType().bodyRadius > 1){
           RobotUtils.tryMoveDestination(destination);
         }
       }

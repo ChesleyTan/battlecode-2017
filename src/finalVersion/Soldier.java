@@ -19,113 +19,10 @@ public class Soldier extends Globals {
   private static boolean hasReportedDeath = false;
   private static boolean visitedEnemyArchon = true;
 
-  /*
-  private static void dodge(BulletInfo[] bullets, RobotInfo[] robots, MapLocation targetLocation)
-      throws GameActionException {
-    float sumX = 0;
-    float sumY = 0;
-    if (targetLocation != null) {
-      Direction toTarget = here.directionTo(targetLocation);
-      float distTarget = here.distanceTo(targetLocation);
-      sumX = toTarget.getDeltaX(distTarget / myType.sensorRadius * myType.strideRadius);
-      sumY = toTarget.getDeltaY(distTarget / myType.sensorRadius * myType.strideRadius);
-    }
-    for (BulletInfo i : bullets) {
-      MapLocation endLocation = i.location.add(i.getDir(), i.getSpeed());
-      float x0 = i.location.x;
-      float y0 = i.location.y;
-      float x1 = endLocation.x;
-      float y1 = endLocation.y;
-      float a = y0 - y1;
-      float b = x1 - x0;
-      if (a == 0 && b == 0) {
-        a = 0.01f;
-      }
-      float c = x0 * y1 - y0 * x1;
-      float distance = (float) (Math.abs(a * here.x + b * here.y + c) / Math.sqrt(a * a + b * b));
-      if (distance <= 2.5) {
-        float x2 = (float) ((b * (b * here.x - a * here.y) - a * c) / (a * a + b * b));
-        float y2 = (float) ((a * (a * here.y - b * here.x) - b * c)
-            / (Math.pow(a, 2) + Math.pow(b, 2)));
-        MapLocation destLocation = new MapLocation(x2, y2);
-        Direction away = destLocation.directionTo(here);
-        if (away == null) {
-          away = here.directionTo(i.getLocation()).rotateLeftDegrees(90);
-        }
-        System.out.println("distance: " + distance);
-        float weighted = (float) Math
-            .pow((RobotType.SOLDIER.bulletSightRadius - distance / myType.bulletSightRadius), 2);
-        //float weighted = RobotType.SOLDIER.bulletSightRadius / distance;
-        System.out.println("weighted: " + weighted);
-        rc.setIndicatorDot(here.add(away, 1), 255, 0, 0);
-        sumX += away.getDeltaX(weighted);
-        sumY += away.getDeltaY(weighted);
-      }
-    }
-  
-    for (RobotInfo r : robots) {
-      Direction their_direction = r.location.directionTo(here);
-      float their_distance = ((RobotType.SOLDIER.sensorRadius - here.distanceTo(r.location)
-          + r.getRadius()))
-          * ((RobotType.SOLDIER.sensorRadius - here.distanceTo(r.location) + r.getRadius()));
-      System.out.println(their_distance);
-      if (r.getTeam() == us) {
-        their_distance = their_distance / 2;
-      }
-      sumX += their_direction.getDeltaX(their_distance);
-      sumY += their_direction.getDeltaY(their_distance);
-    }
-  
-    TreeInfo[] nearbyTrees = rc.senseNearbyTrees(GameConstants.NEUTRAL_TREE_MAX_RADIUS);
-    if (nearbyTrees.length <= 10) {
-      for (TreeInfo t : nearbyTrees) {
-        Direction their_direction = t.location.directionTo(here);
-        float baseValue = ((myType.sensorRadius - here.distanceTo(t.location) + t.getRadius()))
-            * ((myType.sensorRadius - here.distanceTo(t.location) + t.getRadius()));
-        float their_distance = baseValue * myType.strideRadius;
-        sumX += their_direction.getDeltaX(their_distance);
-        sumY += their_direction.getDeltaY(their_distance);
-      }
-    }
-  
-    if (Clock.getBytecodesLeft() >= 2000) {
-      float sightRadius = RobotType.SOLDIER.sensorRadius - 1;
-      updateMapBoundaries();
-      if (minX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x - sightRadius, here.y))) {
-        float distance = (here.x - minX) * (here.x - minX);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
-        sumX += weightedDistance;
-      }
-      if (maxX != UNKNOWN && !rc.onTheMap(new MapLocation(here.x + sightRadius, here.y))) {
-        float distance = (maxX - here.x) * (maxX - here.x);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
-        sumX -= weightedDistance;
-      }
-      if (minY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y - sightRadius))) {
-        float distance = (here.y - minY) * (here.y - minY);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
-        sumY += weightedDistance;
-      }
-      if (maxY != UNKNOWN && !rc.onTheMap(new MapLocation(here.x, here.y + sightRadius))) {
-        float distance = (maxY - here.y) * (maxY - here.y);
-        float weightedDistance = distance / sightRadius * myType.strideRadius;
-        sumY -= weightedDistance;
-      }
-    }
-    //float finaldist = (float) Math.sqrt(sumX * sumX + sumY * sumY);
-  
-    Direction finalDir = new Direction(sumX, sumY);
-    RobotUtils.tryMove(finalDir, 10, 6);
-  }
-  */
-
   private static void findSquad() throws GameActionException {
     int i = DEFENSE_START_CHANNEL;
     while (i < DEFENSE_END_CHANNEL) {
       int squad_count = rc.readBroadcast(i);
-      /*if (SOLDIER_DEBUG) {
-        System.out.println(squad_count);
-      }*/
       if (squad_count == 0) {
         // Clear out target field
         rc.broadcast(i + 1, -1);
@@ -141,39 +38,6 @@ public class Soldier extends Globals {
       i += DEFENSE_BLOCK_WIDTH;
     }
     squad_channel = DEFENSE_START_CHANNEL;
-  }
-
-  /*private static void moveAroundTree(RobotInfo target) throws GameActionException{
-    Direction toEnemy = here.directionTo(target.location);
-    if (rc.canMove(toEnemy)){
-      if (!RobotUtils.tryMove(toEnemy, 15, 6)){
-        TreeInfo[] nearbyTrees = rc.senseNearbyTrees(1);
-        if (nearbyTrees.length != 0){
-          MapLocation targetLocation = here.add(toEnemy);
-          for(TreeInfo t: nearbyTrees){
-            if (targetLocation.distanceTo(tree.location) < t.getRadius() + myType.bodyRadius){
-              while()
-            }
-          }
-        }
-      }
-    }
-  }*/
-  private static boolean blockedByTree(BulletInfo i, TreeInfo[] trees) {
-    Direction base = here.directionTo(i.location);
-    float baseDistance = here.distanceTo(i.location);
-    for (TreeInfo tree : trees) {
-      if (i.location.distanceTo(tree.location) > baseDistance) {
-        continue;
-      }
-      Direction t = here.directionTo(tree.location);
-      float radians = Math.abs(t.radiansBetween(base));
-      float dist = (float) Math.sin(radians) * here.distanceTo(tree.location);
-      if (dist < tree.getRadius()) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private static void move(BulletInfo[] bullets, RobotInfo[] robots, MapLocation destination)
@@ -296,23 +160,6 @@ public class Soldier extends Globals {
     }
   }
 
-  /*private static void survey(RobotInfo target) throws GameActionException{
-    System.out.println("defending target");
-    RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
-    if (enemies.length != 0){
-      int priority = priority(enemies);
-      attack(enemies[priority]);
-    }
-    else{
-      Direction towardsEnemy = target.getLocation().directionTo(enemyLocation);
-      MapLocation destination = target.location.add(towardsEnemy, 5);
-      float distance = here.distanceTo(destination);
-      if (distance < 6){
-        destination = null;
-      }
-      RobotUtils.tryMoveDestination(destination);
-    }
-  }*/
   /*
    * Defend the person who's considered "target"
    */
