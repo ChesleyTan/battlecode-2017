@@ -578,7 +578,7 @@ public class Scout extends Globals {
                 targetDirection = here.directionTo(new MapLocation(cacheTargetX, cacheTargetY));
                 rc.broadcast(squad_channel + 1, cacheTarget);
                 writeTargetXY(cacheTargetX, cacheTargetY);
-                rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL, 0);
+                //rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL, 0);
               }
             }
             if (!rc.hasMoved()) {
