@@ -50,8 +50,8 @@ public class RobotUtils extends Globals {
       wallSideLeft = true;
     }*/
   }
-  
-  public static int getBugCount(){
+
+  public static int getBugCount() {
     return bugCount;
   }
 
@@ -86,7 +86,7 @@ public class RobotUtils extends Globals {
     }
     if (rc.canMove(startDir)) {
       rc.move(startDir);
-      bugCount ++;
+      bugCount++;
       return true;
     }
     else {
@@ -107,7 +107,8 @@ public class RobotUtils extends Globals {
 
   public static void donateEverythingAtTheEnd() throws GameActionException {
     float bullets = rc.getTeamBullets();
-    if (currentRoundNum == penultimateRound || rc.getTeamVictoryPoints() + (bullets / rc.getVictoryPointCost()) >= 1000) {
+    if (currentRoundNum == penultimateRound
+        || rc.getTeamVictoryPoints() + (bullets / rc.getVictoryPointCost()) >= 1000) {
       rc.donate(bullets);
     }
     else if (bullets > 2000) {
@@ -261,8 +262,8 @@ public class RobotUtils extends Globals {
     }
     return bugState == BUG;
   }
-  
-  public static boolean tryMoveDestinationTank(MapLocation target) throws GameActionException{
+
+  public static boolean tryMoveDestinationTank(MapLocation target) throws GameActionException {
     if (DEBUG) {
       System.out.println("tryMoveDestination");
     }
@@ -401,9 +402,18 @@ public class RobotUtils extends Globals {
     if (!rc.canMove(destination)) {
       return false;
     }
+
     float distToDest = here.distanceTo(destination);
-    TreeInfo treeBetween = rc.senseTreeAtLocation(here.add(here.directionTo(destination), Math.min(distToDest, RobotType.TANK.strideRadius) + RobotType.TANK.bodyRadius));
-    if (treeBetween == null || treeBetween.getTeam() != us || (treeBetween.getTeam() == Team.NEUTRAL && treeBetween.getHealth() <= 200)) {
+    MapLocation newLoc = here.add(here.directionTo(destination),
+        Math.min(distToDest, RobotType.TANK.strideRadius));
+    TreeInfo[] friendlyTreesBetween = rc.senseNearbyTrees(newLoc, RobotType.TANK.bodyRadius, us);
+    if (friendlyTreesBetween.length != 0) {
+      return false;
+    }
+    TreeInfo[] neutralTreesBetween = rc.senseNearbyTrees(newLoc, RobotType.TANK.bodyRadius,
+        Team.NEUTRAL);
+    if (neutralTreesBetween.length == 0
+        || (neutralTreesBetween.length != 0 && neutralTreesBetween[0].getHealth() <= 200)) {
       return true;
     }
     return false;
@@ -413,8 +423,15 @@ public class RobotUtils extends Globals {
     if (!rc.canMove(direction)) {
       return false;
     }
-    TreeInfo treeBetween = rc.senseTreeAtLocation(here.add(direction, RobotType.TANK.strideRadius + RobotType.TANK.bodyRadius));
-    if (treeBetween == null || treeBetween.getTeam() != us || (treeBetween.getTeam() == Team.NEUTRAL && treeBetween.getHealth() <= 200)) {
+    MapLocation newLoc = here.add(direction, RobotType.TANK.strideRadius);
+    TreeInfo[] friendlyTreesBetween = rc.senseNearbyTrees(newLoc, RobotType.TANK.bodyRadius, us);
+    if (friendlyTreesBetween.length != 0) {
+      return false;
+    }
+    TreeInfo[] neutralTreesBetween = rc.senseNearbyTrees(newLoc, RobotType.TANK.bodyRadius,
+        Team.NEUTRAL);
+    if (neutralTreesBetween.length == 0
+        || (neutralTreesBetween.length != 0 && neutralTreesBetween[0].getHealth() <= 200)) {
       return true;
     }
     return false;
