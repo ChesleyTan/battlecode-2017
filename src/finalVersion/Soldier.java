@@ -39,6 +39,21 @@ public class Soldier extends Globals {
     }
     squad_channel = DEFENSE_START_CHANNEL;
   }
+  
+  private static boolean pentadShotGardener(TreeInfo treeBetween, MapLocation gardenerLocation){
+    RobotInfo[] friendlies = rc.senseNearbyRobots(gardenerLocation, 5, us);
+    int soldierCount = 0;
+    for(RobotInfo r: friendlies){
+      if (r.getType() == RobotType.SOLDIER){
+        soldierCount ++;
+        if (soldierCount == 3){
+          break;
+        }
+      }
+    }
+    return ((RobotUtils.getBugCount() > 10 || soldierCount >= 2)
+        && (treeBetween != null && treeBetween.getTeam() == them));
+  }
 
   /*
    * Assumes target has already been seen and is a local variable
@@ -52,8 +67,7 @@ public class Soldier extends Globals {
     Direction towardsEnemy = here.directionTo(targetLocation);
     TreeInfo treeBetween = rc
         .senseTreeAtLocation(here.add(towardsEnemy, RobotType.SOLDIER.bodyRadius + 1));
-    boolean pentadShotGardener = (RobotUtils.getBugCount() > 10
-        && (treeBetween != null && treeBetween.getTeam() == them));
+    boolean pentadShotGardener = pentadShotGardener(treeBetween, targetLocation);
     if (SOLDIER_DEBUG) {
       System.out.println("pentadshotgardener: " + pentadShotGardener);
     }
@@ -68,7 +82,7 @@ public class Soldier extends Globals {
         System.out.println("clearShot to target");
       }
       float distanceEnemy = here.distanceTo(targetLocation);
-      if ((distanceEnemy <= 6 || robots.length > 2) && rc.canFirePentadShot()) {
+      if ((distanceEnemy <= 6 || robots.length > 2) && rc.canFirePentadShot() && rc.getTreeCount() > 1) {
         rc.firePentadShot(towardsEnemy);
       }
       else {

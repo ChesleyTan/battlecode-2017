@@ -15,7 +15,7 @@ public class Tank extends Globals {
   private static Direction mydir;
   private static RobotInfo target;
   private static MapLocation enemyArchonLocation;
-  private static final boolean SOLDIER_DEBUG = true;
+  private static final boolean TANK_DEBUG = true;
   private static boolean hasReportedDeath = false;
   private static boolean visitedEnemyArchon = true;
 
@@ -123,16 +123,13 @@ public class Tank extends Globals {
     int i = DEFENSE_START_CHANNEL;
     while (i < DEFENSE_END_CHANNEL) {
       int squad_count = rc.readBroadcast(i);
-      /*if (SOLDIER_DEBUG) {
-        System.out.println(squad_count);
-      }*/
       if (squad_count == 0) {
         // Clear out target field
         rc.broadcast(i + 1, -1);
       }
       if (squad_count < 3) {
         squad_channel = i;
-        if (SOLDIER_DEBUG) {
+        if (TANK_DEBUG) {
           System.out.println("Squad channel: " + i);
         }
         rc.broadcast(i, squad_count + 1);
@@ -186,7 +183,7 @@ public class Tank extends Globals {
    * make sure whenever this is called, person has not moved yet
    */
   private static void attack(RobotInfo target) throws GameActionException {
-    if (SOLDIER_DEBUG) {
+    if (TANK_DEBUG) {
       System.out.println("attacking");
     }
     MapLocation targetLocation = target.getLocation();
@@ -200,7 +197,7 @@ public class Tank extends Globals {
     }
     //RobotUtils.tryMoveDestination(targetLocation);
     if (TargetingUtils.clearShot(here, target) || pentadShotGardener) {
-      if (SOLDIER_DEBUG) {
+      if (TANK_DEBUG) {
         System.out.println("clearShot to target");
       }
       Direction towardsEnemy = here.directionTo(targetLocation);
@@ -256,7 +253,7 @@ public class Tank extends Globals {
       int priority = priority(enemies);
       if (priority != -1) {
         target = enemies[priority];
-        if (SOLDIER_DEBUG) {
+        if (TANK_DEBUG) {
           System.out.println(target.ID);
         }
         mode = ATTACK;
@@ -265,7 +262,7 @@ public class Tank extends Globals {
       else {
         int cacheTarget = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL);
         if (cacheTarget != 0) {
-          if (SOLDIER_DEBUG) {
+          if (TANK_DEBUG) {
             System.out.println("Using target from gardener cache: " + cacheTarget);
           }
           int data = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL + 1);
@@ -327,7 +324,7 @@ public class Tank extends Globals {
       else {
         // If he can see the person he's supposed to attack
         if (rc.canSenseRobot(targetID)) {
-          if (SOLDIER_DEBUG) {
+          if (TANK_DEBUG) {
             System.out.println("acquired target");
           }
           target = rc.senseRobot(targetID);
@@ -338,7 +335,7 @@ public class Tank extends Globals {
         }
         else {
           //Either he's not in the vicinity or he died
-          if (SOLDIER_DEBUG) {
+          if (TANK_DEBUG) {
             System.out.println("Moving to target");
           }
           int xCor = rc.readBroadcast(squad_channel + 2);
@@ -363,7 +360,7 @@ public class Tank extends Globals {
       }
     }
     else {
-      if (SOLDIER_DEBUG) {
+      if (TANK_DEBUG) {
         System.out.println("attacking target: " + target.ID);
       }
       int broadcasted = rc.readBroadcast(squad_channel + 1);
@@ -438,7 +435,7 @@ public class Tank extends Globals {
           value = 0;
           break;
       }
-      if (SOLDIER_DEBUG) {
+      if (TANK_DEBUG) {
         System.out.println("Value: " + value);
       }
       if (value > currValue) {
@@ -485,7 +482,7 @@ public class Tank extends Globals {
     while (true) {
       Globals.update();
       try {
-        if (SOLDIER_DEBUG) {
+        if (TANK_DEBUG) {
           System.out.println(mode);
         }
         if (mode == ATTACK) {
@@ -493,7 +490,7 @@ public class Tank extends Globals {
             //hasn't found him or he recently died
             int targetID = rc.readBroadcast(squad_channel + 1);
             if (targetID == -1) {
-              if (SOLDIER_DEBUG) {
+              if (TANK_DEBUG) {
                 System.out.println("null target, roaming");
               }
               mode = ROAM;
@@ -501,13 +498,13 @@ public class Tank extends Globals {
             }
             else {
               // if there is a target requested but not yet seen
-              if (SOLDIER_DEBUG) {
+              if (TANK_DEBUG) {
                 System.out.println("null target, moving to attack");
               }
               int xCor = rc.readBroadcast(squad_channel + 2);
               int yCor = rc.readBroadcast(squad_channel + 3);
               MapLocation destination = new MapLocation(xCor, yCor);
-              if (SOLDIER_DEBUG) {
+              if (TANK_DEBUG) {
                 System.out.println(destination);
               }
               if (here.distanceTo(destination) <= RobotType.TANK.sensorRadius
@@ -536,7 +533,7 @@ public class Tank extends Globals {
             }
           }
           else {
-            if (SOLDIER_DEBUG) {
+            if (TANK_DEBUG) {
               System.out.println("target ID: " + target.ID);
             }
             // if target != null
