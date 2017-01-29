@@ -380,31 +380,31 @@ public class Gardener extends Globals {
     if (rc.canBuildRobot(t, randomDir)) {
       rc.buildRobot(t, randomDir);
       if (t == RobotType.SOLDIER) {
-        if (rc.getRoundNum() % 10 != 0){
+        if (rc.getRoundNum() % 10 != 0) {
           int soldier_count = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
           rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldier_count + 1);
         }
-        else{
+        else {
           int soldier_count = rc.readBroadcast(SOLDIER_REPORT_CHANNEL);
           rc.broadcast(SOLDIER_REPORT_CHANNEL, soldier_count + 1);
         }
       }
       if (t == RobotType.LUMBERJACK) {
-        if (rc.getRoundNum() % 10 != 0){
+        if (rc.getRoundNum() % 10 != 0) {
           int lumber_count = rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL);
           rc.broadcast(LUMBERJACK_PRODUCTION_CHANNEL, lumber_count + 1);
         }
-        else{
+        else {
           int lumber_count = rc.readBroadcast(LUMBERJACK_REPORT_CHANNEL);
           rc.broadcast(LUMBERJACK_REPORT_CHANNEL, lumber_count + 1);
         }
       }
-      if (t == RobotType.TANK){
-        if (rc.getRoundNum() % 10 != 0){
+      if (t == RobotType.TANK) {
+        if (rc.getRoundNum() % 10 != 0) {
           int tank_count = rc.readBroadcast(TANK_PRODUCTION_CHANNEL);
           rc.broadcast(TANK_PRODUCTION_CHANNEL, tank_count + 1);
         }
-        else{
+        else {
           int tank_count = rc.readBroadcast(TANK_REPORT_CHANNEL);
           rc.broadcast(TANK_REPORT_CHANNEL, tank_count + 1);
         }
@@ -461,6 +461,10 @@ public class Gardener extends Globals {
     while (true) {
       try {
         Globals.update();
+        if (GARDENER_DEBUG) {
+          System.out.println("Soldier count: " + rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL));
+          System.out.println("Soldier hard cap: " + soldierHardCap);
+        }
         int unitCount = rc.readBroadcast(EARLY_UNITS_CHANNEL);
         RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(6, them);
         TreeInfo[] nearbyTrees = rc.senseNearbyTrees(3, us);
@@ -526,9 +530,9 @@ public class Gardener extends Globals {
           if (soldierCount < soldierHardCap) {
             spawnRobot(RobotType.SOLDIER);
           }
-          else{
+          else {
             int tankCount = rc.readBroadcast(TANK_PRODUCTION_CHANNEL);
-            if (tankCount < tankHardCap){
+            if (tankCount < tankHardCap) {
               spawnRobot(RobotType.TANK);
             }
           }
@@ -674,10 +678,11 @@ public class Gardener extends Globals {
         RobotUtils.shakeNearbyTrees();
         trackEnemyGardeners();
         RobotUtils.notifyBytecodeLimitBreach();
-        if (!adjustedCaps){
+        if (!adjustedCaps) {
           updateMapBoundaries();
-          if (minX != UNKNOWN && maxX != UNKNOWN && minY != UNKNOWN && maxY != UNKNOWN){
-            float diagonal = (float) Math.sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY));
+          if (minX != UNKNOWN && maxX != UNKNOWN && minY != UNKNOWN && maxY != UNKNOWN) {
+            float diagonal = (float) Math
+                .sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY));
             soldierHardCap = (int) (diagonal / 2 * 0.8);
             tankHardCap = (int) soldierHardCap / 4;
             adjustedCaps = true;

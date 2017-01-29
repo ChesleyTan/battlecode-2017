@@ -174,9 +174,11 @@ public class Soldier extends Globals {
               while (i < DEFENSE_END_CHANNEL) {
                 int target = rc.readBroadcast(i + 1);
                 if (target != -1) {
-                  rc.broadcast(squad_channel + 1, target);
                   int xCor = rc.readBroadcast(i + 2);
                   int yCor = rc.readBroadcast(i + 3);
+                  rc.broadcast(squad_channel + 1, target);
+                  rc.broadcast(squad_channel + 2, xCor);
+                  rc.broadcast(squad_channel + 3, yCor);
                   MapLocation destination = new MapLocation(xCor, yCor);
                   roamCount = 0;
                   mode = ATTACK;
