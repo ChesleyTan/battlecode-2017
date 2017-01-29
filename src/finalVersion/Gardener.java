@@ -575,11 +575,26 @@ public class Gardener extends Globals {
                 int lumberCount = rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL);
                 if (producedUnits % 10 == 2 && lumberCount < 15) {
                   rc.buildRobot(RobotType.LUMBERJACK, freeSpaces[0]);
+                  if (rc.getRoundNum() % 10 != 0){
+                    int lumberjack_count = rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL);
+                    rc.broadcast(LUMBERJACK_PRODUCTION_CHANNEL, lumberjack_count + 1);
+                  }
+                  else{
+                    int lumberjack_count = rc.readBroadcast(LUMBERJACK_REPORT_CHANNEL);
+                    rc.broadcast(LUMBERJACK_REPORT_CHANNEL, lumberjack_count + 1);
+                  }
                   producedUnits++;
                 }
                 else {
                   if (soldierCount < soldierHardCap) {
                     rc.buildRobot(RobotType.SOLDIER, freeSpaces[0]);
+                    if (rc.getRoundNum() % 10 != 0){
+                      rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldierCount + 1);
+                    }
+                    else{
+                      soldierCount = rc.readBroadcast(SOLDIER_REPORT_CHANNEL);
+                      rc.broadcast(SOLDIER_REPORT_CHANNEL, soldierCount + 1);
+                    }
                   }
                   producedUnits++;
                 }

@@ -19,6 +19,7 @@ public class Soldier extends Globals {
   private static boolean hasReportedDeath = false;
   private static boolean visitedEnemyArchon = true;
   private static int roamCount = 0;
+  private static int roundStarted = rc.getRoundNum();
 
   private static void findSquad() throws GameActionException {
     int i = DEFENSE_START_CHANNEL;
@@ -352,7 +353,7 @@ public class Soldier extends Globals {
         rc.broadcast(squad_channel + 1, 0);
         rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
         rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
-        visitedEnemyArchon = false;
+        visitedEnemyArchon = currentRoundNum > 1000;
         myDir = here.directionTo(enemyArchonLocation);
       }
       else {
@@ -361,7 +362,7 @@ public class Soldier extends Globals {
           rc.broadcast(squad_channel + 1, 0);
           rc.broadcast(squad_channel + 2, (int) enemyArchonLocation.x);
           rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
-          visitedEnemyArchon = false;
+          visitedEnemyArchon = rc.getRoundNum() > 1200;
           myDir = here.directionTo(enemyArchonLocation);
         }
         else {
@@ -378,6 +379,9 @@ public class Soldier extends Globals {
       try {
         if (SOLDIER_DEBUG) {
           System.out.println(mode);
+        }
+        if (!visitedEnemyArchon && currentRoundNum - roundStarted > 300){
+          visitedEnemyArchon = true;
         }
         if (mode == ATTACK) {
           if (target == null) {
