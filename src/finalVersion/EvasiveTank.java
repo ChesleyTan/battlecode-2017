@@ -250,7 +250,7 @@ public class EvasiveTank extends Globals {
             distToLoc -= target.getType().bodyRadius;
           }
           if (distToLoc > 1) {
-            RobotUtils.tryMoveDestination(destination);
+            RobotUtils.tryMoveDestinationTank(destination);
           }
         }
       }
