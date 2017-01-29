@@ -380,12 +380,34 @@ public class Gardener extends Globals {
     if (rc.canBuildRobot(t, randomDir)) {
       rc.buildRobot(t, randomDir);
       if (t == RobotType.SOLDIER) {
-        int soldier_count = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
-        rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldier_count + 1);
+        if (rc.getRoundNum() % 10 != 0){
+          int soldier_count = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
+          rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldier_count + 1);
+        }
+        else{
+          int soldier_count = rc.readBroadcast(SOLDIER_REPORT_CHANNEL);
+          rc.broadcast(SOLDIER_REPORT_CHANNEL, soldier_count + 1);
+        }
       }
       if (t == RobotType.LUMBERJACK) {
-        int lumber_count = rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL);
-        rc.broadcast(LUMBERJACK_PRODUCTION_CHANNEL, lumber_count + 1);
+        if (rc.getRoundNum() % 10 != 0){
+          int lumber_count = rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL);
+          rc.broadcast(LUMBERJACK_PRODUCTION_CHANNEL, lumber_count + 1);
+        }
+        else{
+          int lumber_count = rc.readBroadcast(LUMBERJACK_REPORT_CHANNEL);
+          rc.broadcast(LUMBERJACK_REPORT_CHANNEL, lumber_count + 1);
+        }
+      }
+      if (t == RobotType.TANK){
+        if (rc.getRoundNum() % 10 != 0){
+          int tank_count = rc.readBroadcast(TANK_PRODUCTION_CHANNEL);
+          rc.broadcast(TANK_PRODUCTION_CHANNEL, tank_count + 1);
+        }
+        else{
+          int tank_count = rc.readBroadcast(TANK_REPORT_CHANNEL);
+          rc.broadcast(TANK_REPORT_CHANNEL, tank_count + 1);
+        }
       }
       return true;
     }
@@ -637,13 +659,16 @@ public class Gardener extends Globals {
         RobotUtils.shakeNearbyTrees();
         trackEnemyGardeners();
         RobotUtils.notifyBytecodeLimitBreach();
-        Clock.yield();
-        if (!adjustedCaps && (minX != UNKNOWN && maxX != UNKNOWN && minY != UNKNOWN && maxY != UNKNOWN)){
-          float diagonal = (float) Math.sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY));
-          soldierHardCap = (int) (diagonal / 2 * 0.8);
-          tankHardCap = (int) soldierHardCap / 4;
-          adjustedCaps = true;
+        if (!adjustedCaps){
+          updateMapBoundaries();
+          if (minX != UNKNOWN && maxX != UNKNOWN && minY != UNKNOWN && maxY != UNKNOWN){
+            float diagonal = (float) Math.sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY));
+            soldierHardCap = (int) (diagonal / 2 * 0.8);
+            tankHardCap = (int) soldierHardCap / 4;
+            adjustedCaps = true;
+          }
         }
+        Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();
         Clock.yield();
