@@ -365,7 +365,7 @@ public class Soldier extends Globals {
                 if (!visitedEnemyArchon && destination.distanceTo(enemyArchonLocation) < 1.5f) {
                   visitedEnemyArchon = true;
                 }
-                // Disengage, because target could not be found at last known location
+                // Keep moving towards archon location
                 if (!visitedEnemyArchon) {
                   rc.broadcast(squad_channel + 1, 0);
                   destination = enemyArchonLocation;
@@ -373,6 +373,7 @@ public class Soldier extends Globals {
                   rc.broadcast(squad_channel + 3, (int) enemyArchonLocation.y);
                   moveToAttack(destination);
                 }
+                // Disengage because target not found in last location
                 else {
                   mode = ROAM;
                   rc.broadcast(squad_channel + 1, -1);
@@ -386,20 +387,20 @@ public class Soldier extends Globals {
           }
           else {
             if (SOLDIER_DEBUG) {
-              System.out.println("target ID: " + target.ID);
+              System.out.println("target ID: " + target.getID());
             }
             // if target != null
-            if (rc.canSenseRobot(target.ID)) {
+            if (rc.canSenseRobot(target.getID())) {
               RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
               target = enemies[priority(enemies)];
-              rc.broadcast(squad_channel + 1, target.ID);
-              rc.broadcast(squad_channel + 2, (int) target.location.x);
-              rc.broadcast(squad_channel + 3, (int) target.location.y);
+              rc.broadcast(squad_channel + 1, target.getID());
+              rc.broadcast(squad_channel + 2, (int) target.getLocation().x);
+              rc.broadcast(squad_channel + 3, (int) target.getLocation().y);
               attack(target);
             }
             else {
               int ogTarget = rc.readBroadcast(squad_channel + 1);
-              if (target.ID == ogTarget) {
+              if (target.getID() == ogTarget) {
                 int xCor = rc.readBroadcast(squad_channel + 2);
                 int yCor = rc.readBroadcast(squad_channel + 3);
                 MapLocation targetLocation = new MapLocation(xCor, yCor);
@@ -441,8 +442,7 @@ public class Soldier extends Globals {
           roam();
           // check defense every turn, if so then head to defend target
         }
-        float myHP = rc.getHealth();
-        if (!hasReportedDeath && myHP < 6) {
+        if (!hasReportedDeath && rc.getHealth() < 6) {
           int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
           hasReportedDeath = true;
           rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldiers - 1);
