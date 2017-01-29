@@ -9,6 +9,7 @@ public class Gardener extends Globals {
 
   private static float detectRadius = 3f;
   private static boolean shouldPlant = false;
+  private static boolean clearSpace = false;
   private static int numCheckSpaces = 0;
   private static Direction startDirection = null;
   private static boolean production_gardener = false;
@@ -305,17 +306,14 @@ public class Gardener extends Globals {
         here = rc.getLocation();
       }
       else {
-        if (!shouldPlant) {
-          boolean clearSpace = !rc.isCircleOccupiedExceptByThisRobot(here, detectRadius);
+        if (!clearSpace) {
+          clearSpace = !rc.isCircleOccupiedExceptByThisRobot(here, detectRadius);
           if (GARDENER_DEBUG) {
             System.out.println("Clear space: " + clearSpace);
           }
           if (!clearSpace) {
             checkspace();
             ++numCheckSpaces;
-          }
-          else if (clearSpace) {
-            shouldPlant = true;
           }
         }
         if (!rc.hasMoved()) {
@@ -500,12 +498,13 @@ public class Gardener extends Globals {
           }
         }
         if (production_gardener) {
-          if (soldierCount < rc.getTreeCount() * 2){
+          if (soldierCount < rc.getTreeCount() * 2) {
             spawnRobot(RobotType.SOLDIER);
           }
         }
         else {
-          if ((!reportedTrees || !spawnedLumberjack) && rc.senseNearbyTrees(6, Team.NEUTRAL).length > 2) {
+          if ((!reportedTrees || !spawnedLumberjack)
+              && rc.senseNearbyTrees(6, Team.NEUTRAL).length > 2) {
             if (!reportedTrees) {
               BroadcastUtils.addRegionDirective(7, 1, here, 6);
               reportedTrees = true;
@@ -519,9 +518,12 @@ public class Gardener extends Globals {
           Direction[] freeSpaces = possibleTrees();
           if (GARDENER_DEBUG) {
             System.out.println("shouldPlant: " + shouldPlant);
+            System.out.println("clearSpace: " + clearSpace);
             System.out.println("numCheckspaces: " + numCheckSpaces);
           }
-          if (((spawnedEarlySoldier && spawnedEarlyScout) && (shouldPlant || numCheckSpaces > 25) && noNearbyGardeners()) && freeSpaces[1] != null
+          if (((spawnedEarlySoldier && spawnedEarlyScout)
+              && (shouldPlant || clearSpace || numCheckSpaces > 25)
+              && (shouldPlant || noNearbyGardeners())) && freeSpaces[1] != null
               && rc.canPlantTree(freeSpaces[1])) {
             /*
             if (!rc.hasMoved() && rc.canMove(freeSpaces[1], 0.3f)) {
@@ -545,14 +547,14 @@ public class Gardener extends Globals {
                   producedUnits++;
                 }
                 else {
-                  if (soldierCount < rc.getTreeCount() * 2){
+                  if (soldierCount < rc.getTreeCount() * 2) {
                     rc.buildRobot(RobotType.SOLDIER, freeSpaces[0]);
                   }
                   producedUnits++;
                 }
               }
               else {
-                if (soldierCount < rc.getTreeCount() * 2){
+                if (soldierCount < rc.getTreeCount() * 2) {
                   spawnRobot(RobotType.SOLDIER);
                 }
               }
@@ -584,7 +586,8 @@ public class Gardener extends Globals {
         // Call for defensive backup
         if (attacker != null) {
           float myHP = rc.getHealth();
-          if (currentRoundNum - calledForBackupRound > 100 && myHP > RobotType.GARDENER.maxHealth / 2) {
+          if (currentRoundNum - calledForBackupRound > 100
+              && myHP > RobotType.GARDENER.maxHealth / 2) {
             rc.setIndicatorDot(here, 255, 255, 255);
             boolean calledForBackup = false;
             for (int channel = DEFENSE_START_CHANNEL; channel < DEFENSE_END_CHANNEL; channel += DEFENSE_BLOCK_WIDTH) {
@@ -618,7 +621,7 @@ public class Gardener extends Globals {
             }
           }
         }
-        if (currentRoundNum % 10 == 0){
+        if (currentRoundNum % 10 == 0) {
           report();
         }
         RobotUtils.donateEverythingAtTheEnd();
