@@ -14,7 +14,7 @@ public class RobotUtils extends Globals {
   private static int bugCount;
   private static Direction lastDirection;
 
-  public static void bugStart(MapLocation finalLoc) {
+  public static void bugStart(MapLocation finalLoc) throws GameActionException {
     bugStartLocation = here;
     bugState = BUG;
     bugStartDirection = here.directionTo(finalLoc);
@@ -23,19 +23,19 @@ public class RobotUtils extends Globals {
     Direction leftDir = bugStartDirection;
     Direction rightDir = bugStartDirection;
     int attempts = 0;
-    while (!rc.canMove(leftDir) && attempts < 18) {
+    while (!canMove(leftDir) && attempts < 18) {
       leftDir = leftDir.rotateLeftDegrees(10);
       attempts++;
     }
     attempts = 0;
-    while (!rc.canMove(rightDir) && attempts < 18) {
+    while (!canMove(rightDir) && attempts < 18) {
       rightDir = rightDir.rotateRightDegrees(10);
       attempts++;
     }
-    if (!rc.canMove(leftDir)) {
+    if (!canMove(leftDir)) {
       wallSideLeft = false;
     }
-    else if (!rc.canMove(rightDir)) {
+    else if (!canMove(rightDir)) {
       wallSideLeft = true;
     }
     else {
@@ -63,7 +63,7 @@ public class RobotUtils extends Globals {
     if (DEBUG) {
       System.out.println("start direction: " + bugStartDirection.getAngleDegrees());
     }
-    if (rc.canMove(here.directionTo(bugDestinationLocation)) && bugCount > 1) {
+    if (canMove(here.directionTo(bugDestinationLocation)) && bugCount > 1) {
       rc.move(bugStartDirection);
       endBug();
       return true;
@@ -71,20 +71,20 @@ public class RobotUtils extends Globals {
     Direction startDir = bugStartDirection;
     int rotationAmount = wallSideLeft ? 10 : -10;
     int attempts = 0;
-    while (!rc.canMove(startDir) && attempts < 18) {
+    while (!canMove(startDir) && attempts < 18) {
       startDir = startDir.rotateLeftDegrees(rotationAmount);
       attempts++;
     }
-    if (!rc.canMove(startDir)) {
+    if (!canMove(startDir)) {
       attempts = 0;
       startDir = bugStartDirection;
       wallSideLeft = !wallSideLeft;
-      while (!rc.canMove(startDir) && attempts < 18) {
+      while (!canMove(startDir) && attempts < 18) {
         startDir = startDir.rotateRightDegrees(rotationAmount);
         attempts++;
       }
     }
-    if (rc.canMove(startDir)) {
+    if (canMove(startDir)) {
       rc.move(startDir);
       bugCount++;
       return true;
@@ -128,6 +128,33 @@ public class RobotUtils extends Globals {
     }
   }
 
+  public static boolean canMove(Direction dir) throws GameActionException {
+    if (myType != RobotType.TANK) {
+      return rc.canMove(dir);
+    }
+    else {
+      return tankCanMove(dir);
+    }
+  }
+
+  public static boolean canMove(MapLocation loc) throws GameActionException {
+    if (myType != RobotType.TANK) {
+      return rc.canMove(loc);
+    }
+    else {
+      return tankCanMove(loc);
+    }
+  }
+
+  public static boolean canMove(Direction dir, float dist) throws GameActionException {
+    if (myType != RobotType.TANK) {
+      return rc.canMove(dir, dist);
+    }
+    else {
+      return tankCanMove(dir, dist);
+    }
+  }
+
   public static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide)
       throws GameActionException {
 
@@ -135,7 +162,7 @@ public class RobotUtils extends Globals {
       return bugMove();
     }
     // First, try intended direction
-    if (rc.canMove(dir)) {
+    if (canMove(dir)) {
       rc.move(dir);
       return true;
     }
@@ -149,13 +176,13 @@ public class RobotUtils extends Globals {
       }
       // Try the offset of the left side
       //rc.setIndicatorLine(here, here.add(dir.rotateLeftDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
-      if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
+      if (canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck))) {
         rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck));
         return true;
       }
       // Try the offset on the right side
       //rc.setIndicatorLine(here, here.add(dir.rotateRightDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
-      if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
+      if (canMove(dir.rotateRightDegrees(degreeOffset * currentCheck))) {
         rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck));
         return true;
       }
@@ -173,7 +200,7 @@ public class RobotUtils extends Globals {
     //System.out.println("Called tryMove");
     MapLocation newLoc = here.add(dir, myType.strideRadius);
     rc.setIndicatorLine(here, newLoc, 0, 255, 0);
-    if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+    if (canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
       //System.out.println("tryMove: " + newLoc);
       rc.move(newLoc);
       return true;
@@ -190,7 +217,7 @@ public class RobotUtils extends Globals {
       float offset = degreeOffset * currentCheck;
       newLoc = here.add(dir.rotateLeftDegrees(offset), myType.strideRadius);
       rc.setIndicatorLine(here, newLoc, 255, 0, 0);
-      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+      if (canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
         rc.move(newLoc);
         //System.out.println("tryMove: " + newLoc);
         return true;
@@ -201,7 +228,7 @@ public class RobotUtils extends Globals {
       newLoc = here.add(dir.rotateRightDegrees(offset), myType.strideRadius);
       rc.setIndicatorLine(here, newLoc, 255, 0, 0);
       // Try the offset on the right side
-      if (rc.canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
+      if (canMove(newLoc) && isLocationSafe(nearbyBullets, newLoc)) {
         rc.move(newLoc);
         //System.out.println("tryMove: " + newLoc);
         return true;
@@ -245,32 +272,7 @@ public class RobotUtils extends Globals {
     //System.out.println(target.x);
     //System.out.println(target.y);
     bugStartDirection = here.directionTo(target);
-    if (rc.canMove(bugStartDirection)) {
-      rc.move(bugStartDirection);
-      if (bugState == BUG) {
-        endBug();
-      }
-    }
-    else {
-      if (bugState == BUG) {
-        bugDestinationLocation = target;
-      }
-      else {
-        bugStart(target);
-      }
-      bugMove();
-    }
-    return bugState == BUG;
-  }
-
-  public static boolean tryMoveDestinationTank(MapLocation target) throws GameActionException {
-    if (DEBUG) {
-      System.out.println("tryMoveDestination");
-    }
-    //System.out.println(target.x);
-    //System.out.println(target.y);
-    bugStartDirection = here.directionTo(target);
-    if (tankCanMove(bugStartDirection)) {
+    if (canMove(bugStartDirection)) {
       rc.move(bugStartDirection);
       if (bugState == BUG) {
         endBug();
@@ -292,7 +294,7 @@ public class RobotUtils extends Globals {
       int checksPerSide) throws GameActionException {
 
     // First, try intended direction
-    if (rc.canMove(dir, distance)) {
+    if (canMove(dir, distance)) {
       rc.move(dir, distance);
       return true;
     }
@@ -307,13 +309,13 @@ public class RobotUtils extends Globals {
       }
       // Try the offset of the left side
       //rc.setIndicatorLine(here, here.add(dir.rotateLeftDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
-      if (rc.canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck), distance)) {
+      if (canMove(dir.rotateLeftDegrees(degreeOffset * currentCheck), distance)) {
         rc.move(dir.rotateLeftDegrees(degreeOffset * currentCheck), distance);
         return true;
       }
       // Try the offset on the right side
       //rc.setIndicatorLine(here, here.add(dir.rotateRightDegrees(degreeOffset * currentCheck), 3), 255, 0, 0);
-      if (rc.canMove(dir.rotateRightDegrees(degreeOffset * currentCheck), distance)) {
+      if (canMove(dir.rotateRightDegrees(degreeOffset * currentCheck), distance)) {
         rc.move(dir.rotateRightDegrees(degreeOffset * currentCheck), distance);
         return true;
       }
@@ -424,6 +426,24 @@ public class RobotUtils extends Globals {
       return false;
     }
     MapLocation newLoc = here.add(direction, RobotType.TANK.strideRadius);
+    TreeInfo[] friendlyTreesBetween = rc.senseNearbyTrees(newLoc, RobotType.TANK.bodyRadius, us);
+    if (friendlyTreesBetween.length != 0) {
+      return false;
+    }
+    TreeInfo[] neutralTreesBetween = rc.senseNearbyTrees(newLoc, RobotType.TANK.bodyRadius,
+        Team.NEUTRAL);
+    if (neutralTreesBetween.length == 0
+        || (neutralTreesBetween.length != 0 && neutralTreesBetween[0].getHealth() <= 200)) {
+      return true;
+    }
+    return false;
+  }
+
+  public static boolean tankCanMove(Direction direction, float dist) throws GameActionException {
+    if (!rc.canMove(direction, dist)) {
+      return false;
+    }
+    MapLocation newLoc = here.add(direction, dist);
     TreeInfo[] friendlyTreesBetween = rc.senseNearbyTrees(newLoc, RobotType.TANK.bodyRadius, us);
     if (friendlyTreesBetween.length != 0) {
       return false;
