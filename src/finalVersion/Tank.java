@@ -19,27 +19,6 @@ public class Tank extends Globals {
   private static boolean hasReportedDeath = false;
   private static boolean visitedEnemyArchon = true;
 
-  private static boolean tankCanMove(MapLocation destination) throws GameActionException {
-    if (!rc.canMove(destination)) {
-      return false;
-    }
-    float distToDest = here.distanceTo(destination);
-    if (rc.senseTreeAtLocation(here.add(here.directionTo(destination), Math.max(distToDest, RobotType.TANK.strideRadius))) != null) {
-      return false;
-    }
-    return true;
-  }
-
-  private static boolean tankCanMove(Direction direction) throws GameActionException {
-    if (!rc.canMove(direction)) {
-      return false;
-    }
-    if (rc.senseTreeAtLocation(here.add(direction, RobotType.TANK.strideRadius)) != null) {
-      return false;
-    }
-    return true;
-  }
-
   private static void findSquad() throws GameActionException {
     int i = DEFENSE_START_CHANNEL;
     while (i < DEFENSE_END_CHANNEL) {
@@ -171,14 +150,14 @@ public class Tank extends Globals {
         else {
           if (!rc.hasMoved()) {
             int attempts = 0;
-            while (!tankCanMove(myDir) && attempts < 20) {
+            while (!RobotUtils.tankCanMove(myDir) && attempts < 20) {
               if (Clock.getBytecodesLeft() < 2000) {
                 break;
               }
               myDir = RobotUtils.randomDirection();
               attempts++;
             }
-            if (tankCanMove(myDir)) {
+            if (RobotUtils.tankCanMove(myDir)) {
               rc.move(myDir);
             }
           }
