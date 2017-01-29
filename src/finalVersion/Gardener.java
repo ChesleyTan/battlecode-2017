@@ -527,14 +527,13 @@ public class Gardener extends Globals {
           }
         }
         if (production_gardener) {
-          if (soldierCount < soldierHardCap) {
-            spawnRobot(RobotType.SOLDIER);
+          int tankCount = rc.readBroadcast(TANK_PRODUCTION_CHANNEL);
+          boolean spawnedTank = false;
+          if (tankCount < tankHardCap) {
+            spawnedTank = spawnRobot(RobotType.TANK);
           }
-          else {
-            int tankCount = rc.readBroadcast(TANK_PRODUCTION_CHANNEL);
-            if (tankCount < tankHardCap) {
-              spawnRobot(RobotType.TANK);
-            }
+          if (soldierCount < soldierHardCap && !spawnedTank) {
+            spawnRobot(RobotType.SOLDIER);
           }
         }
         else {
