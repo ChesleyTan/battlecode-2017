@@ -198,6 +198,9 @@ public class Lumberjack extends Globals {
     float minDistTreeDist = 9999f;
     TreeInfo minDistTree = null;
     for (TreeInfo t : allNearbyTrees) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        return minDistTree;
+      }
       if (t.getID() == treeBlacklist && currentRoundNum - treeBlacklistRound < 30) {
         continue;
       }
@@ -221,6 +224,9 @@ public class Lumberjack extends Globals {
     float minDistRobotDist = 9999f;
     RobotInfo minDistRobot = null;
     for (RobotInfo r : nearbyEnemies) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        return minDistRobot;
+      }
       if (r.getID() == targetBlacklist && currentRoundNum - targetBlacklistRound < 30) {
         continue;
       }
@@ -337,6 +343,9 @@ public class Lumberjack extends Globals {
     float minDist = 9999f;
     boolean minDistTreeContainsRobot = false;
     for (TreeInfo ti : nearbyTrees) {
+      if (Clock.getBytecodesLeft() < 6000) {
+        return closestTree;
+      }
       if (ti.getID() == treeBlacklist && currentRoundNum - treeBlacklistRound < 30) {
         continue;
       }
@@ -358,6 +367,9 @@ public class Lumberjack extends Globals {
     float minDist = 9999f;
     int minDistRobotPriority = -1;
     for (RobotInfo ri : nearbyEnemies) {
+      if (Clock.getBytecodesLeft() < 3000) {
+        return closestRobot;
+      }
       if (ri.getID() == targetBlacklist && currentRoundNum - targetBlacklistRound < 30) {
         continue;
       }
