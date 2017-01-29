@@ -42,16 +42,16 @@ public class Tank extends Globals {
   
   private static boolean pentadShotGardener(TreeInfo treeBetween, MapLocation gardenerLocation){
     RobotInfo[] friendlies = rc.senseNearbyRobots(gardenerLocation, 5, us);
-    int TANKCount = 0;
+    int tankCount = 0;
     for(RobotInfo r: friendlies){
       if (r.getType() == RobotType.TANK){
-        TANKCount ++;
-        if (TANKCount == 3){
+        tankCount ++;
+        if (tankCount == 3){
           break;
         }
       }
     }
-    return ((RobotUtils.getBugCount() > 10 || TANKCount >= 2)
+    return ((RobotUtils.getBugCount() > 10 || tankCount >= 2)
         && (treeBetween != null && treeBetween.getTeam() == them));
   }
 
@@ -66,15 +66,15 @@ public class Tank extends Globals {
     MapLocation targetLocation = target.getLocation();
     Direction towardsEnemy = here.directionTo(targetLocation);
     TreeInfo treeBetween = rc
-        .senseTreeAtLocation(here.add(towardsEnemy, RobotType.SOLDIER.bodyRadius + 1));
+        .senseTreeAtLocation(here.add(towardsEnemy, RobotType.TANK.bodyRadius + 1));
     boolean pentadShotGardener = pentadShotGardener(treeBetween, targetLocation);
     if (TANK_DEBUG) {
       System.out.println("pentadshotgardener: " + pentadShotGardener);
     }
-    RobotInfo[] robots = rc.senseNearbyRobots(EvasiveSoldier.ENEMY_DETECT_RADIUS, them);
+    RobotInfo[] robots = rc.senseNearbyRobots(EvasiveTank.ENEMY_DETECT_RADIUS, them);
     if (target.getType() != RobotType.GARDENER || !pentadShotGardener) {
-      BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveSoldier.BULLET_DETECT_RADIUS);
-      EvasiveSoldier.move(bullets, robots, target, targetLocation);
+      BulletInfo[] bullets = rc.senseNearbyBullets(EvasiveTank.BULLET_DETECT_RADIUS);
+      EvasiveTank.move(bullets, robots, target, targetLocation);
     }
     //RobotUtils.tryMoveDestination(targetLocation);
     if (pentadShotGardener || TargetingUtils.clearShot(here, target)) {
@@ -97,7 +97,7 @@ public class Tank extends Globals {
   }
 
   /* Moves in the direction of attacking and fires if reasonable
-   * Assumes Tank has neither moved nor attacked
+   * Assumes tank has neither moved nor attacked
    * Also assumes that there is a target
    */
   private static void moveToAttack(MapLocation destination) throws GameActionException {
@@ -111,7 +111,7 @@ public class Tank extends Globals {
       }
     }
     else {
-      EvasiveSoldier.move(bullets, enemies, target, destination);
+      EvasiveTank.move(bullets, enemies, target, destination);
     }
   }
 
@@ -220,7 +220,7 @@ public class Tank extends Globals {
             // I have to find him
             //BulletInfo[] nearbyBullets = rc.senseNearbyBullets();
             //RobotInfo[] nearbyRobots = rc.senseNearbyRobots(-1, them);
-            //EvasiveSoldier.move(nearbyBullets, nearbyRobots, here.directionTo(targetLocation), targetLocation);
+            //EvasiveTank.move(nearbyBullets, nearbyRobots, here.directionTo(targetLocation), targetLocation);
             RobotUtils.tryMoveDestination(targetLocation);
           }
         }

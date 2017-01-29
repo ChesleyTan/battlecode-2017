@@ -20,7 +20,8 @@ public class EvasiveSoldier extends Globals {
     }
   }*/
 
-  static boolean move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots, RobotInfo target, MapLocation destination) {
+  static boolean move(BulletInfo[] nearbyBullets, RobotInfo[] nearbyRobots, RobotInfo target,
+      MapLocation destination) {
     // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
     try {
       Globals.update();
@@ -31,18 +32,17 @@ public class EvasiveSoldier extends Globals {
         System.out.println(here);
       }
       */
-      if (target == null || 
-          target.getType() == RobotType.SOLDIER || 
-          target.getType() == RobotType.LUMBERJACK || 
-          target.getType() == RobotType.TANK){
+      if (target == null || target.getType() == RobotType.SOLDIER
+          || target.getType() == RobotType.LUMBERJACK || target.getType() == RobotType.TANK) {
         for (int angle = 0; angle < 8; ++angle) {
           angleDirections[angle] = new Direction((float) (angle * Math.PI / 4));
         }
       }
-      else{
-        float toTarget = here.directionTo(target.location).radians;
-        for (int angle = 0; angle < 8; ++angle){
-          angleDirections[angle] = new Direction((float) (angle * Math.PI / 8 - Math.PI / 2 + toTarget));
+      else {
+        float toTarget = here.directionTo(target.getLocation()).radians;
+        for (int angle = 0; angle < 8; ++angle) {
+          angleDirections[angle] = new Direction(
+              (float) (angle * Math.PI / 8 - Math.PI / 2 + toTarget));
         }
       }
       for (int angleIndex = 0; angleIndex < 8; ++angleIndex) {
@@ -58,7 +58,10 @@ public class EvasiveSoldier extends Globals {
         // Only avoid lumberjacks if within strike distance
         RobotType enemyType = ri.getType();
         MapLocation enemyLoc = ri.getLocation();
-        if (enemyType.canAttack() && ((enemyType != RobotType.LUMBERJACK) || (here.distanceTo(enemyLoc) < RobotType.LUMBERJACK.bodyRadius + RobotType.SCOUT.bodyRadius + RobotType.LUMBERJACK.strideRadius + GameConstants.LUMBERJACK_STRIKE_RADIUS))) {
+        if (enemyType.canAttack() && ((enemyType != RobotType.LUMBERJACK)
+            || (here.distanceTo(enemyLoc) < RobotType.LUMBERJACK.bodyRadius
+                + RobotType.SCOUT.bodyRadius + RobotType.LUMBERJACK.strideRadius
+                + GameConstants.LUMBERJACK_STRIKE_RADIUS))) {
           unsafeFromUnit = true;
           Direction enemyAngle = here.directionTo(enemyLoc);
           /*
@@ -80,15 +83,15 @@ public class EvasiveSoldier extends Globals {
                 break;
               case SOLDIER:
                 weightOffset = (150 * (90 - angleDelta))
-                  + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
                 break;
               case SCOUT:
                 weightOffset = (-10 * (90 - angleDelta))
-                  + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
                 break;
               case TANK:
                 weightOffset = (200 * (90 - angleDelta))
-                  + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
+                    + 1000 * Math.max(0, EVASION_STRIDE_RADIUS + ENEMY_DETECT_RADIUS - distBetween);
                 break;
               default:
                 break;
@@ -201,7 +204,7 @@ public class EvasiveSoldier extends Globals {
         int moveAngleIndex = 0;
         int attempts = 0;
         boolean moved = false;
-        
+
         int movementBiasSeed = Math.abs(rand.nextInt());
         do {
           // Prevent clockwise bias in movement angle starting from 0 degrees
@@ -240,9 +243,15 @@ public class EvasiveSoldier extends Globals {
         } while (!moved && ++attempts <= 6);
         return moved;
       }
-      else{
-        if (destination != null && here.distanceTo(destination) - myType.bodyRadius - target.getType().bodyRadius > 1){
-          RobotUtils.tryMoveDestination(destination);
+      else {
+        if (destination != null) {
+          float distToLoc = here.distanceTo(destination) - RobotType.SOLDIER.bodyRadius;
+          if (target != null) {
+            distToLoc -= target.getType().bodyRadius;
+          }
+          if (distToLoc > 1) {
+            RobotUtils.tryMoveDestination(destination);
+          }
         }
       }
       //System.out.println("Used: " + (Clock.getBytecodeNum() - startBytecodes));
