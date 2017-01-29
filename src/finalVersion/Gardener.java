@@ -23,6 +23,9 @@ public class Gardener extends Globals {
   private static final boolean GARDENER_DEBUG = false;
   private static int producedUnits = 0;
   private static int calledForBackupRound = -9999;
+  private static int soldierHardCap = 25;
+  private static int tankHardCap = 8;
+  private static boolean adjustedCaps = false;
 
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
@@ -498,8 +501,14 @@ public class Gardener extends Globals {
           }
         }
         if (production_gardener) {
-          if (soldierCount < rc.getTreeCount() * 2) {
+          if (soldierCount < soldierHardCap) {
             spawnRobot(RobotType.SOLDIER);
+          }
+          else{
+            int tankCount = rc.readBroadcast(TANK_PRODUCTION_CHANNEL);
+            if (tankCount < tankHardCap){
+              spawnRobot(RobotType.TANK);
+            }
           }
         }
         else {
@@ -547,14 +556,14 @@ public class Gardener extends Globals {
                   producedUnits++;
                 }
                 else {
-                  if (soldierCount < rc.getTreeCount() * 2) {
+                  if (soldierCount < soldierHardCap) {
                     rc.buildRobot(RobotType.SOLDIER, freeSpaces[0]);
                   }
                   producedUnits++;
                 }
               }
               else {
-                if (soldierCount < rc.getTreeCount() * 2) {
+                if (soldierCount < soldierHardCap) {
                   spawnRobot(RobotType.SOLDIER);
                 }
               }
@@ -629,6 +638,12 @@ public class Gardener extends Globals {
         trackEnemyGardeners();
         RobotUtils.notifyBytecodeLimitBreach();
         Clock.yield();
+        if (!adjustedCaps && (minX != UNKNOWN && maxX != UNKNOWN && minY != UNKNOWN && maxY != UNKNOWN)){
+          float diagonal = (float) Math.sqrt((maxX - minX) * (maxX - minX) + (maxY - minY) * (maxY - minY));
+          soldierHardCap = (int) (diagonal / 2 * 0.8);
+          tankHardCap = (int) soldierHardCap / 4;
+          adjustedCaps = true;
+        }
       } catch (Exception e) {
         e.printStackTrace();
         Clock.yield();

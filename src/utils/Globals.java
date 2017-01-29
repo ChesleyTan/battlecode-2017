@@ -261,14 +261,22 @@ public class Globals {
   }
   
   public static void report() throws GameActionException{
-    if (myType == RobotType.SOLDIER){
+    
+    switch(myType){
+    case SOLDIER:
       rc.broadcast(SOLDIER_REPORT_CHANNEL, rc.readBroadcast(SOLDIER_REPORT_CHANNEL) + 1);
-    }
-    if (myType == RobotType.GARDENER){
+      return;
+    case GARDENER:
       rc.broadcast(GARDENER_REPORT_CHANNEL, rc.readBroadcast(GARDENER_REPORT_CHANNEL) + 1);
-    }
-    if (myType == RobotType.LUMBERJACK){
+      return;
+    case LUMBERJACK:
       rc.broadcast(LUMBERJACK_REPORT_CHANNEL, rc.readBroadcast(LUMBERJACK_REPORT_CHANNEL) + 1);
+      return;
+    case TANK:
+      rc.broadcast(TANK_REPORT_CHANNEL, rc.readBroadcast(TANK_REPORT_CHANNEL) + 1);
+      return;
+    default:
+      break;
     }
   }
   public static int determineMapSymmetry(MapLocation[] myArchons, MapLocation[] enemyArchons) throws GameActionException {
