@@ -660,7 +660,7 @@ public class Gardener extends Globals {
               calledForBackupRound = currentRoundNum;
             }
           }
-          else if (!hasReportedDeath && myHP < 3) {
+          else if (!hasReportedDeath && myHP < 5) {
             int gardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
             hasReportedDeath = true;
             rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners - 1);
