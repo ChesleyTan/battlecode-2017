@@ -319,7 +319,7 @@ public class Gardener extends Globals {
           }
         }
         if (!rc.hasMoved()) {
-          if (!rc.onTheMap(here, detectRadius) || !noNearbyGardeners()) {
+          if (!rc.onTheMap(here, detectRadius) || (!shouldPlant && !noNearbyGardeners())) {
             checkspace();
             ++numCheckSpaces;
           }
