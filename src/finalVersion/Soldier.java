@@ -160,9 +160,13 @@ public class Soldier extends Globals {
           rc.broadcast(squad_channel + 3, cacheTargetY);
           rc.broadcast(GARDENER_TARGET_CACHE_CHANNEL, 0);
           roamCount = 0;
+          mode = ATTACK;
           moveToAttack(new MapLocation(cacheTargetX, cacheTargetY));
         }
         else {
+          if (SOLDIER_DEBUG) {
+            System.out.println("Roam count: " + roamCount);
+          }
           if (!rc.hasMoved()) {
             if (roamCount >= 30){
               int i = DEFENSE_START_CHANNEL;
@@ -170,10 +174,11 @@ public class Soldier extends Globals {
                 int target = rc.readBroadcast(i + 1);
                 if (target != -1) {
                   rc.broadcast(squad_channel + 1, target);
-                  int xCor = rc.readBroadcast(squad_channel + 2);
-                  int yCor = rc.readBroadcast(squad_channel + 3);
+                  int xCor = rc.readBroadcast(i + 2);
+                  int yCor = rc.readBroadcast(i + 3);
                   MapLocation destination = new MapLocation(xCor, yCor);
                   roamCount = 0;
+                  mode = ATTACK;
                   moveToAttack(destination);
                   return;
                 }
@@ -191,7 +196,7 @@ public class Soldier extends Globals {
               }
               if (rc.canMove(myDir)) {
                 rc.move(myDir);
-                roamCount ++;
+                ++roamCount;
               }
             }
           }
