@@ -26,7 +26,9 @@ public class Archon extends Globals {
     do {
       if (rc.canHireGardener(attemptedDirection)) {
         rc.hireGardener(attemptedDirection);
+        assert producedGardeners != -1;
         rc.broadcast(PRODUCED_GARDENERS_CHANNEL, producedGardeners + 1);
+        assert rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL) == producedGardeners + 1;
         break;
       }
       attemptedDirection = attemptedDirection.rotateLeftDegrees(10);
@@ -43,13 +45,13 @@ public class Archon extends Globals {
         int gardeners = rc.readBroadcast(GARDENER_REPORT_CHANNEL);
         int tanks = rc.readBroadcast(TANK_REPORT_CHANNEL);
         rc.broadcast(LUMBERJACK_PRODUCTION_CHANNEL, lumberjacks);
-        rc.broadcast(LUMBERJACK_REPORT_CHANNEL, -1);
+        rc.broadcast(LUMBERJACK_REPORT_CHANNEL, 0);
         rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldiers);
-        rc.broadcast(SOLDIER_REPORT_CHANNEL, -1);
+        rc.broadcast(SOLDIER_REPORT_CHANNEL, 0);
         rc.broadcast(PRODUCED_GARDENERS_CHANNEL, gardeners);
-        rc.broadcast(GARDENER_REPORT_CHANNEL, -1);
+        rc.broadcast(GARDENER_REPORT_CHANNEL, 0);
         rc.broadcast(TANK_PRODUCTION_CHANNEL, tanks);
-        rc.broadcast(TANK_REPORT_CHANNEL, -1);
+        rc.broadcast(TANK_REPORT_CHANNEL, 0);
         rc.broadcast(LAST_UPDATED_REPORT_CHANNEL, currentRoundNum);
       }
     }
@@ -76,6 +78,7 @@ public class Archon extends Globals {
       EvasiveArchon.init();
       
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
+      System.out.println(producedGardeners);
       if (producedGardeners == 0) {
         trySpawnGardener(producedGardeners);
         determineMapSymmetry(myArchons, enemyArchons);
@@ -99,6 +102,7 @@ public class Archon extends Globals {
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
           int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
           int treeCount = rc.getTreeCount();
+          System.out.println(producedGardeners);
           if (((producedGardeners == 0 || (soldiers >= 2 && producedGardeners == 1 && treeCount >= 2)) || producedGardeners < treeCount * 3.5
               || productionGardeners < requiredProductionGardeners) && rc.senseNearbyRobots(3, us).length < 2) {
             if (soldiers >= (int) producedGardeners * 1.5){
@@ -118,7 +122,9 @@ public class Archon extends Globals {
         RobotUtils.shakeNearbyTrees();
         trackEnemyGardeners();
         RobotUtils.notifyBytecodeLimitBreach();
-        replaceCount();
+        if (currentRoundNum > 10){
+          replaceCount();
+        }
         Clock.yield();
       } catch (Exception e) {
         e.printStackTrace();
