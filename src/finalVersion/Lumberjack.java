@@ -22,7 +22,7 @@ public class Lumberjack extends Globals {
   private static int treeBlacklist;
   private static int treeBlacklistRound;
   private static MapLocation destination;
-  private static final boolean LUMBERJACK_DEBUG = true;
+  private static final boolean LUMBERJACK_DEBUG = false;
 
   public static TreeInfo[] getAllTrees() {
     TreeInfo[] union;
