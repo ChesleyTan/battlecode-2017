@@ -35,11 +35,11 @@ public class Archon extends Globals {
       attempts++;
     } while (attempts < 36);
   }
-  
-  private static void replaceCount() throws GameActionException{
-    if (currentRoundNum % 10 == 1){
+
+  private static void replaceCount() throws GameActionException {
+    if (currentRoundNum % 10 == 1) {
       int roundLastUpdated = rc.readBroadcast(LAST_UPDATED_REPORT_CHANNEL);
-      if (roundLastUpdated != currentRoundNum){
+      if (roundLastUpdated != currentRoundNum) {
         int lumberjacks = rc.readBroadcast(LUMBERJACK_REPORT_CHANNEL);
         int soldiers = rc.readBroadcast(SOLDIER_REPORT_CHANNEL);
         int gardeners = rc.readBroadcast(GARDENER_REPORT_CHANNEL);
@@ -76,7 +76,7 @@ public class Archon extends Globals {
       rc.disintegrate();
       */
       EvasiveArchon.init();
-      
+
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
       System.out.println(producedGardeners);
       if (producedGardeners == 0) {
@@ -102,10 +102,12 @@ public class Archon extends Globals {
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
           int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
           int treeCount = rc.getTreeCount();
-          System.out.println(producedGardeners);
-          if (((producedGardeners == 0 || (soldiers >= 2 && producedGardeners == 1 && treeCount >= 2)) || producedGardeners < treeCount * 3.5
-              || productionGardeners < requiredProductionGardeners) && rc.senseNearbyRobots(3, us).length < 2) {
-            if (soldiers >= (int) producedGardeners * 1.5){
+          if (((producedGardeners == 0
+              || (soldiers >= 2 && producedGardeners == 1 && treeCount >= 2))
+              || producedGardeners < treeCount * 3.5
+              || productionGardeners < requiredProductionGardeners)
+              && rc.senseNearbyRobots(3, us).length < 2) {
+            if (soldiers >= (int) producedGardeners * 1.5) {
               trySpawnGardener(producedGardeners);
             }
           }
@@ -122,7 +124,7 @@ public class Archon extends Globals {
         RobotUtils.shakeNearbyTrees();
         trackEnemyGardeners();
         RobotUtils.notifyBytecodeLimitBreach();
-        if (currentRoundNum > 10){
+        if (currentRoundNum > 10) {
           replaceCount();
         }
         Clock.yield();
