@@ -35,7 +35,7 @@ public class EvasiveLumberjack extends Globals {
 
       boolean unsafeFromBullet = false;
       for (int i = 0; i < nearbyBullets.length; ++i) {
-        if (Clock.getBytecodesLeft() < 2000) {
+        if (Clock.getBytecodesLeft() < 5000) {
           break;
         }
         //int startBytecodes = Clock.getBytecodeNum();

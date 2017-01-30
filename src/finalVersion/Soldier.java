@@ -494,7 +494,8 @@ public class Soldier extends Globals {
           int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
           hasReportedDeath = true;
           rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldiers - 1);
-          rc.broadcast(squad_channel, rc.readBroadcast(squad_channel - 1));
+          int squad_count = rc.readBroadcast(squad_channel);
+          rc.broadcast(squad_channel, squad_count - 1);
         }
         if (currentRoundNum % 10 == 0) {
           report();
