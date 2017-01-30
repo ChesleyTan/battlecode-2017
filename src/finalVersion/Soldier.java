@@ -15,7 +15,7 @@ public class Soldier extends Globals {
   private static Direction myDir;
   private static RobotInfo target;
   private static MapLocation enemyArchonLocation;
-  private static final boolean SOLDIER_DEBUG = false;
+  private static final boolean SOLDIER_DEBUG = true;
   private static boolean hasReportedDeath = false;
   private static boolean visitedEnemyArchon = true;
   private static int roamCount = 0;
@@ -106,10 +106,25 @@ public class Soldier extends Globals {
     BulletInfo[] bullets = rc.senseNearbyBullets();
     RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
     if (enemies.length != 0) {
-      int index = priority(enemies);
-      if (index != -1) {
-        target = enemies[index];
-        attack(target);
+      RobotInfo priorityEnemy = null;
+      int nullifiedCount = enemies.length;
+      while(priorityEnemy == null && nullifiedCount > 0){
+        int index = priority(enemies);
+        if (index != -1) {
+          priorityEnemy = enemies[index];
+          if (priorityEnemy.getType() != RobotType.SCOUT 
+              || rc.senseTreeAtLocation(here.add(here.directionTo(priorityEnemy.location), Math.min(RobotType.SOLDIER.sensorRadius - 0.1f, here.distanceTo(priorityEnemy.location)))) == null){
+            target = priorityEnemy;
+            attack(target);
+          }
+          else{
+            priorityEnemy = null;
+            nullifiedCount --;
+          }
+        }
+      }
+      if (priorityEnemy == null){
+        EvasiveSoldier.move(bullets, enemies, target, destination);
       }
     }
     else {
@@ -136,18 +151,30 @@ public class Soldier extends Globals {
       }
       RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
       //BulletInfo[] bullets = rc.senseNearbyBullets();
-
-      int priority = priority(enemies);
-      if (priority != -1) {
-        target = enemies[priority];
-        if (SOLDIER_DEBUG) {
-          System.out.println(target.getID());
+      if (enemies.length > 0){
+        RobotInfo priorityEnemy = null;
+        int nullifiedCount = enemies.length;
+        while(priorityEnemy == null && nullifiedCount > 0){
+          int priority = priority(enemies);
+          if (priority != -1) {
+            priorityEnemy = enemies[priority];
+            if (priorityEnemy.getType() != RobotType.SCOUT || rc.senseTreeAtLocation(here.add(here.directionTo(priorityEnemy.location), Math.min(RobotType.SOLDIER.sensorRadius - 0.1f, here.distanceTo(priorityEnemy.location)))) == null){
+              if (SOLDIER_DEBUG) {
+                System.out.println(priorityEnemy.getID());
+              }
+              target = priorityEnemy;
+              mode = ATTACK;
+              roamCount = 0;
+              attack(target);
+            }
+            else{
+              priorityEnemy = null;
+              nullifiedCount --;
+            }
+          }
         }
-        mode = ATTACK;
-        roamCount = 0;
-        attack(target);
       }
-      else {
+      if (target == null) {
         int cacheTarget = rc.readBroadcast(GARDENER_TARGET_CACHE_CHANNEL);
         if (cacheTarget != 0) {
           if (SOLDIER_DEBUG) {
@@ -440,11 +467,31 @@ public class Soldier extends Globals {
             // if target != null
             if (rc.canSenseRobot(target.getID())) {
               RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
-              target = enemies[priority(enemies)];
-              rc.broadcast(squad_channel + 1, target.getID());
-              rc.broadcast(squad_channel + 2, (int) target.getLocation().x);
-              rc.broadcast(squad_channel + 3, (int) target.getLocation().y);
-              attack(target);
+              int priorityIndex = priority(enemies);
+              int nullifiedCount = enemies.length;
+              target = null;
+              while(target == null && nullifiedCount > 0){
+                RobotInfo priority = enemies[priorityIndex];
+                MapLocation location = priority.getLocation();
+                if (priority.getType() != RobotType.SCOUT 
+                    || rc.senseTreeAtLocation(here.add(here.directionTo(priority.location), Math.min(RobotType.SOLDIER.sensorRadius - 0.1f, here.distanceTo(priority.location)))) == null){
+                  target = priority;
+                  rc.broadcast(squad_channel + 1, target.getID());
+                  rc.broadcast(squad_channel + 2, (int) location.x);
+                  rc.broadcast(squad_channel + 3, (int) location.y);
+                  attack(target);
+                }
+                else{
+                  enemies[priorityIndex] = null;
+                  nullifiedCount --;
+                  priorityIndex = priority(enemies);
+                }
+              }
+              if (target == null){
+                mode = ROAM;
+                rc.broadcast(squad_channel + 1, -1);
+                roam();
+              }
             }
             else {
               int ogTarget = rc.readBroadcast(squad_channel + 1);
