@@ -10,7 +10,13 @@ class FuzzyOR extends Antecedent {
     this.right = right;
   }
 
+  @Override
   public double evaluate() {
     return Math.max(left.evaluate(),right.evaluate());
+  }
+
+  @Override
+  public String toString() {
+    return new StringBuilder("(").append(left).append(") || (").append(right).append(")").toString();
   }
 }

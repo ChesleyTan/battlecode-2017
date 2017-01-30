@@ -17,5 +17,10 @@ public class Consequent {
     return term.getValue();
   }
 
+  @Override
+  public String toString() {
+    return term.getName();
+  }
+
 
 }

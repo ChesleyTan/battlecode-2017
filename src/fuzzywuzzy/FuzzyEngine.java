@@ -30,4 +30,12 @@ public class FuzzyEngine {
     return result/weightSum;
   }
 
+  public String describeRules() {
+    StringBuilder result = new StringBuilder();
+    for (FuzzyRule r : rules) {
+      result.append(r).append("\n");
+    }
+    return result.toString();
+  }
+
 }

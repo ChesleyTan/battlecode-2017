@@ -1,5 +1,8 @@
 package fuzzywuzzy.rules;
 
+import fuzzywuzzy.InputVariable;
+import fuzzywuzzy.OutputVariable;
+
 /**
  * Created by Ryan on 1/26/2017.
  */
@@ -19,5 +22,10 @@ public class FuzzyRule {
 
   public double getTargetValue() {
     return c.getValue();
+  }
+
+  @Override
+  public String toString() {
+    return new StringBuilder("if ").append(a).append(" then ").append(c).toString();
   }
 }
