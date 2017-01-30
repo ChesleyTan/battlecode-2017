@@ -97,9 +97,10 @@ public class Archon extends Globals {
         else {
           producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
-          if ((producedGardeners < 3 || currentRoundNum % 80 == 0
+          int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
+          int treeCount = rc.getTreeCount();
+          if (((producedGardeners == 0 || (soldiers >= 2 && producedGardeners == 1 && treeCount >= 2)) || producedGardeners < treeCount * 3.5
               || productionGardeners < requiredProductionGardeners) && rc.senseNearbyRobots(3, us).length < 2) {
-            int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
             if (soldiers >= (int) producedGardeners * 1.5){
               trySpawnGardener(producedGardeners);
             }

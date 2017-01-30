@@ -532,7 +532,7 @@ public class Gardener extends Globals {
           if (tankCount < tankHardCap) {
             spawnedTank = spawnRobot(RobotType.TANK);
           }
-          if (soldierCount < soldierHardCap && !spawnedTank) {
+          if (soldierCount < soldierHardCap && !spawnedTank && soldierCount < rc.getTreeCount() * 2) {
             spawnRobot(RobotType.SOLDIER);
           }
         }
@@ -589,7 +589,7 @@ public class Gardener extends Globals {
                   producedUnits++;
                 }
                 else {
-                  if (soldierCount < soldierHardCap) {
+                  if (soldierCount < soldierHardCap && soldierCount < rc.getTreeCount() * 2) {
                     rc.buildRobot(RobotType.SOLDIER, freeSpaces[0]);
                     if (rc.getRoundNum() % 10 != 0){
                       rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldierCount + 1);
@@ -603,8 +603,9 @@ public class Gardener extends Globals {
                 }
               }
               else {
-                if (soldierCount < soldierHardCap) {
+                if (soldierCount < soldierHardCap && soldierCount < rc.getTreeCount() * 2) {
                   spawnRobot(RobotType.SOLDIER);
+                  producedUnits++;
                 }
               }
             }

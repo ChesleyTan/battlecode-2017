@@ -476,6 +476,7 @@ public class Lumberjack extends Globals {
             if (LUMBERJACK_DEBUG) {
               System.out.println("looking for region directives");
             }
+            System.out.println("Bytecodes before:" + Clock.getBytecodesLeft());
             Directive[] directives = BroadcastUtils.getRegionDirectives((int) here.x, (int) here.y);
             for (Directive d : directives) {
               // CUT
@@ -491,11 +492,12 @@ public class Lumberjack extends Globals {
                     break;
                   }
                   else {
-                    BroadcastUtils.addRegionDirective(0, 0, 0, 0, 0);
+                    BroadcastUtils.addRegionDirective(0, d.priority, 0, 0, 0);
                   }
                 }
               }
             }
+            System.out.println("Bytecodes after:" + Clock.getBytecodesLeft());
             if (targetTree == null) {
               if (LUMBERJACK_DEBUG) {
                 System.out.println("sensing nearby trees");
