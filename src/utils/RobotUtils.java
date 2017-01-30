@@ -34,14 +34,17 @@ public class RobotUtils extends Globals {
     }
     if (!canMove(leftDir)) {
       wallSideLeft = false;
+      //lastDirection = rightDir;
     }
     else if (!canMove(rightDir)) {
       wallSideLeft = true;
+      //lastDirection = leftDir;
     }
     else {
       float distanceLeft = here.add(leftDir, rc.getType().strideRadius).distanceTo(finalLoc);
       float distanceRight = here.add(rightDir, rc.getType().strideRadius).distanceTo(finalLoc);
-      wallSideLeft = distanceLeft < distanceRight;
+      wallSideLeft = distanceLeft > distanceRight;
+      //lastDirection = wallSideLeft? rightDir : leftDir;
     }
     /*if (bugStartDirection.getDeltaX(1) * bugStartDirection.getDeltaY(1) > 0){
       wallSideLeft = false;
@@ -63,29 +66,67 @@ public class RobotUtils extends Globals {
     if (DEBUG) {
       System.out.println("start direction: " + bugStartDirection.getAngleDegrees());
     }
-    if (canMove(here.directionTo(bugDestinationLocation)) && bugCount > 1) {
+    if (canMove(bugStartDirection) && bugCount > 1) {
       rc.move(bugStartDirection);
       endBug();
       return true;
     }
-    Direction startDir = bugStartDirection;
     int rotationAmount = wallSideLeft ? 10 : -10;
+    //Direction startDir = lastDirection.rotateLeftDegrees(rotationAmount * 2);
+    Direction startDir = bugStartDirection;
     int attempts = 0;
     while (!canMove(startDir) && attempts < 18) {
-      startDir = startDir.rotateLeftDegrees(rotationAmount);
+      System.out.println(startDir.getAngleDegrees());
+      rc.setIndicatorLine(here.add(startDir), here.add(startDir, 2), 255, 70, 101);
+      System.out.println(MathUtils.isNear(startDir, NORTH, 10));
+      System.out.println("can move north: " + rc.canMove(NORTH));
+      System.out.println(MathUtils.isNear(startDir, SOUTH, 10));
+      System.out.println("can move south: " + rc.canMove(SOUTH));
+      System.out.println(MathUtils.isNear(startDir, EAST, 10));
+      System.out.println("can move east: " + rc.canMove(EAST));
+      System.out.println(MathUtils.isNear(startDir, WEST, 10));
+      System.out.println("can move west: " + rc.canMove(WEST));
+      if (MathUtils.isNear(startDir, NORTH, 5)){
+        if (canMove(NORTH)) {
+          startDir = NORTH;
+          break;
+        }
+      }
+      else if (MathUtils.isNear(startDir, SOUTH, 5)){
+        if (canMove(SOUTH)){
+          startDir = SOUTH;
+          break;
+        }
+      }
+      else if (MathUtils.isNear(startDir, EAST, 5)){
+        if (canMove(EAST)){
+          startDir = EAST;
+          break;
+        }
+      }
+      else if (MathUtils.isNear(startDir, WEST, 5)){
+        if (canMove(WEST)){
+          startDir = WEST;
+          break;
+        }
+      }
+      startDir = startDir.rotateRightDegrees(rotationAmount);
       attempts++;
     }
+    System.out.println("startdir:" + startDir.getAngleDegrees());
+    System.out.println("canmove startDir" + canMove(startDir));
     if (!canMove(startDir)) {
       attempts = 0;
       startDir = bugStartDirection;
       wallSideLeft = !wallSideLeft;
       while (!canMove(startDir) && attempts < 18) {
-        startDir = startDir.rotateRightDegrees(rotationAmount);
+        startDir = startDir.rotateLeftDegrees(rotationAmount);
         attempts++;
       }
     }
     if (canMove(startDir)) {
       rc.move(startDir);
+      //lastDirection = startDir;
       bugCount++;
       return true;
     }
@@ -263,6 +304,7 @@ public class RobotUtils extends Globals {
     bugStartLocation = null;
     bugState = DIRECT;
     bugCount = 0;
+    //lastDirection = null;
   }
 
   public static boolean tryMoveDestination(MapLocation target) throws GameActionException {
