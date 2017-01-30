@@ -32,10 +32,16 @@ public class EvasiveTank extends Globals {
         System.out.println(here);
       }
       */
-      if (target == null || target.getType() == RobotType.SOLDIER
-          || target.getType() == RobotType.LUMBERJACK || target.getType() == RobotType.TANK) {
+      if (target == null && destination == null) {
         for (int angle = 0; angle < 8; ++angle) {
           angleDirections[angle] = new Direction((float) (angle * Math.PI / 4));
+        }
+      }
+      else if (target == null && destination != null) {
+        float toTarget = here.directionTo(destination).radians;
+        for (int angle = 0; angle < 8; ++angle) {
+          angleDirections[angle] = new Direction(
+              (float) (angle * Math.PI / 8 - Math.PI / 2 + toTarget));
         }
       }
       else {
@@ -52,7 +58,7 @@ public class EvasiveTank extends Globals {
 
       boolean unsafeFromUnit = false;
       for (RobotInfo ri : nearbyRobots) {
-        if (Clock.getBytecodesLeft() < 4000) {
+        if (Clock.getBytecodesLeft() < 10000) {
           break;
         }
         // Only avoid lumberjacks if within strike distance
@@ -109,7 +115,7 @@ public class EvasiveTank extends Globals {
       }
       boolean unsafeFromBullet = false;
       for (int i = 0; i < nearbyBullets.length; ++i) {
-        if (Clock.getBytecodesLeft() < 3000) {
+        if (Clock.getBytecodesLeft() < 6000) {
           break;
         }
         BulletInfo bi = nearbyBullets[i];

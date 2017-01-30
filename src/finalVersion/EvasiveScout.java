@@ -36,7 +36,7 @@ public class EvasiveScout extends Globals {
 
       boolean unsafeFromUnit = false;
       for (RobotInfo ri : nearbyRobots) {
-        if (Clock.getBytecodesLeft() < 3000) {
+        if (Clock.getBytecodesLeft() < 4000) {
           break;
         }
         // Only avoid lumberjacks if within strike distance
@@ -93,7 +93,7 @@ public class EvasiveScout extends Globals {
       }
       boolean unsafeFromBullet = false;
       for (int i = 0; i < nearbyBullets.length; ++i) {
-        if (Clock.getBytecodesLeft() < 2000) {
+        if (Clock.getBytecodesLeft() < 3000) {
           break;
         }
         //int startBytecodes = Clock.getBytecodeNum();

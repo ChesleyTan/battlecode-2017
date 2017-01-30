@@ -11,13 +11,14 @@ import battlecode.common.GameActionException;
 /**
  * Targeting utilities to be used throughout the codebase.
  */
-public class TargetingUtils extends Globals{
+public class TargetingUtils extends Globals {
 
   /**
    * Determines if the shooter can shoot the target location without hitting
    * friendlies or trees.
    */
-  public static boolean clearShot(MapLocation shooterLoc, RobotInfo target) throws GameActionException{
+  public static boolean clearShot(MapLocation shooterLoc, RobotInfo target)
+      throws GameActionException {
     if (shooterLoc.equals(target.getLocation())) {
       return false;
     }
@@ -42,26 +43,27 @@ public class TargetingUtils extends Globals{
         return false;
       }
     }
-    MapLocation closest = target.getLocation().add(targetDir.opposite(), target.getRadius());
-    TreeInfo overlap = null;
-    Globals.update();
-    if (here.distanceTo(closest) < myType.sensorRadius){
-      overlap = rc.senseTreeAtLocation(closest);
-    }
-    if (overlap != null){
-      if (shooterLoc.distanceTo(overlap.location) - overlap.getRadius() < distanceTarget - 1){
-        //System.out.println("overlap");
-        return false;
-      }
-    }
     TreeInfo[] trees = rc.senseNearbyTrees(distanceTarget);
     if (target.getType() == RobotType.SCOUT) {
+      MapLocation closest = target.getLocation().add(targetDir.opposite(), target.getRadius());
+      TreeInfo overlap = null;
+      Globals.update();
+      if (here.distanceTo(closest) < myType.sensorRadius) {
+        overlap = rc.senseTreeAtLocation(closest);
+      }
+      if (overlap != null) {
+        if (shooterLoc.distanceTo(overlap.location) - overlap.getRadius() < distanceTarget
+            - target.getRadius()) {
+          //System.out.println("overlap");
+          return false;
+        }
+      }
       for (TreeInfo t : trees) {
         // TODO do we need an epsilon?
         if (Clock.getBytecodesLeft() < 2000) {
           return false;
         }
-        if (t.equals(overlap)){
+        if (t.equals(overlap)) {
           continue;
         }
         else if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.getLocation(),
@@ -76,7 +78,9 @@ public class TargetingUtils extends Globals{
           return false;
         }
         if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.getLocation(),
-          t.getRadius()) && here.distanceTo(t.getLocation()) - t.getRadius() < distanceTarget - target.getRadius()) {
+            t.getRadius())
+            && here.distanceTo(t.getLocation()) - t.getRadius() < distanceTarget
+                - target.getRadius()) {
           //System.out.println("collide tree");
           return false;
         }
@@ -85,7 +89,8 @@ public class TargetingUtils extends Globals{
     return true;
   }
 
-  public static boolean clearShot(MapLocation shooterLoc, MapLocation targetLoc, float targetRadius){
+  public static boolean clearShot(MapLocation shooterLoc, MapLocation targetLoc,
+      float targetRadius) {
     if (shooterLoc.equals(targetLoc)) {
       return false;
     }
@@ -111,7 +116,32 @@ public class TargetingUtils extends Globals{
         return false;
       }
       if ((RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, t.getLocation(),
-        t.getRadius()) && here.distanceTo(t.getLocation()) - t.getRadius() < distanceTarget - targetRadius)) {
+          t.getRadius())
+          && here.distanceTo(t.getLocation()) - t.getRadius() < distanceTarget - targetRadius)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  public static boolean clearChop(MapLocation shooterLoc, MapLocation targetLoc,
+      float targetRadius) {
+    if (shooterLoc.equals(targetLoc)) {
+      return false;
+    }
+    Direction targetDir = shooterLoc.directionTo(targetLoc);
+    if (targetDir == null) {
+      return false;
+    }
+    float distanceTarget = shooterLoc.distanceTo(targetLoc);
+    MapLocation outerEdge = shooterLoc.add(targetDir, myType.bodyRadius + 0.1f);
+    RobotInfo[] friendlies = rc.senseNearbyRobots(distanceTarget, Globals.us);
+    for (RobotInfo r : friendlies) {
+      if (Clock.getBytecodesLeft() < 2000) {
+        return false;
+      }
+      if (RobotUtils.willCollideWithTargetLocation(outerEdge, targetDir, r.getLocation(),
+          r.getRadius())) {
         return false;
       }
     }
@@ -119,7 +149,7 @@ public class TargetingUtils extends Globals{
   }
 
   public static MapLocation getLinearTargetPoint(MData target, MapLocation shooter,
-      double bulletSpeed){
+      double bulletSpeed) {
     //LINEAR TARGETING ALGORITHM//////
     double targetBearing = target.getAngle();
     double targetSpeed = target.getSpeed();

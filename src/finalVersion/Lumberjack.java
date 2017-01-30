@@ -22,7 +22,7 @@ public class Lumberjack extends Globals {
   private static int treeBlacklist;
   private static int treeBlacklistRound;
   private static MapLocation destination;
-  private static final boolean LUMBERJACK_DEBUG = false;
+  private static final boolean LUMBERJACK_DEBUG = true;
 
   public static TreeInfo[] getAllTrees() {
     TreeInfo[] union;
@@ -34,9 +34,10 @@ public class Lumberjack extends Globals {
       }
     }
     union = new TreeInfo[count];
+    count = 0;
     for (TreeInfo ti : nearbyTrees) {
       if (ti.team != us) {
-        union[--count] = ti;
+        union[count++] = ti;
       }
     }
     return union;
@@ -256,6 +257,7 @@ public class Lumberjack extends Globals {
   public static void tryChop() throws GameActionException {
     if (LUMBERJACK_DEBUG) {
       System.out.println("Trying to chop: " + targetTree.getID());
+      rc.setIndicatorDot(targetTree.getLocation(), 255, 0, 0);
     }
     if (rc.canSenseTree(targetTree.ID)) {
       targetTree = rc.senseTree(targetTree.ID);
@@ -344,6 +346,12 @@ public class Lumberjack extends Globals {
     boolean minDistTreeContainsRobot = false;
     for (TreeInfo ti : nearbyTrees) {
       if (Clock.getBytecodesLeft() < 6000) {
+        for (TreeInfo t : nearbyTrees) {
+          if (t.getID() == treeBlacklist && currentRoundNum - treeBlacklistRound < 30) {
+            continue;
+          }
+          return t;
+        }
         return closestTree;
       }
       if (ti.getID() == treeBlacklist && currentRoundNum - treeBlacklistRound < 30) {
@@ -352,8 +360,8 @@ public class Lumberjack extends Globals {
       MapLocation treeLoc = ti.getLocation();
       boolean containsRobot = ti.containedRobot != null;
       float treeDist = treeLoc.distanceTo(here);
-      if ((treeDist < minDist || (!minDistTreeContainsRobot && containsRobot))
-          && TargetingUtils.clearShot(here, treeLoc, ti.getRadius())) {
+      if (((treeDist < minDist && (minDistTreeContainsRobot == containsRobot)) || (!minDistTreeContainsRobot && containsRobot))
+          && TargetingUtils.clearChop(here, treeLoc, ti.getRadius())) {
         closestTree = ti;
         minDist = treeDist;
         minDistTreeContainsRobot = containsRobot;
