@@ -16,11 +16,13 @@ public class InputVariable {
   }
 
   public Antecedent is(InputTerm term) {
-    return new FuzzyComparison(() -> {return term.getMembership(value);});
+    String str = new StringBuilder(name).append(" == ").append(term.getName()).toString();
+    return new FuzzyComparison(str, () -> {return term.getMembership(value);});
   }
 
   public Antecedent isNot(InputTerm term) {
-    return new FuzzyComparison(() -> {return 1-term.getMembership(value);});
+    String str = new StringBuilder(name).append(" != ").append(term.getName()).toString();
+    return new FuzzyComparison(str, () -> {return 1-term.getMembership(value);});
   }
 
   public String getName() {

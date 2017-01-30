@@ -11,8 +11,13 @@ class FuzzyAND extends Antecedent {
     this.right = right;
   }
 
+  @Override
   public double evaluate() {
-
     return Math.min(left.evaluate(),right.evaluate());
+  }
+
+  @Override
+  public String toString() {
+    return new StringBuilder("(").append(left).append(") && (").append(right).append(")").toString();
   }
 }

@@ -20,4 +20,7 @@ public abstract class Antecedent {
    */
   public abstract double evaluate();
 
+  @Override
+  public abstract String toString();
+
 }

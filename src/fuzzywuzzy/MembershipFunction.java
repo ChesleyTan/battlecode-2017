@@ -1,5 +1,7 @@
 package fuzzywuzzy;
 
+import java.util.function.DoubleSupplier;
+
 /**
  * Created by Ryan on 1/29/2017.
  */
