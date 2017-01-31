@@ -51,7 +51,7 @@ public class Scout extends Globals {
       return false;
     }
     for (RobotInfo ri : nearbyEnemies) {
-      if (Clock.getBytecodesLeft() < 2000) {
+      if (Clock.getBytecodesLeft() < 3000) {
         return true;
       }
       else {
@@ -321,7 +321,7 @@ public class Scout extends Globals {
             System.out.println("Is perched: " + isPerchedInTree);
           }
           for (TreeInfo ti : nearbyTrees) {
-            if (Clock.getBytecodesLeft() < 2000) {
+            if (Clock.getBytecodesLeft() < 3000) {
               break;
             }
             // Try to avoid staying in 1 tree
@@ -345,7 +345,7 @@ public class Scout extends Globals {
           // TODO how is this affected by perching?
           if (optimalLoc == null && (!isPerchedInTree || !currentlyHasClearShot)) {
             for (int i = 0; i < GARDENER_PENETRATION_ANGLES.length; ++i) {
-              if (Clock.getBytecodesLeft() < 2000) {
+              if (Clock.getBytecodesLeft() < 3000) {
                 break;
               }
               MapLocation newLoc = targetRobot.getLocation().add(GARDENER_PENETRATION_ANGLES[i],
@@ -408,7 +408,7 @@ public class Scout extends Globals {
           if (targetRobot.type != RobotType.LUMBERJACK) {
             TreeInfo[] nearbyTrees = rc.senseNearbyTrees(5f);
             for (TreeInfo ti : nearbyTrees) {
-              if (Clock.getBytecodesLeft() < 2000) {
+              if (Clock.getBytecodesLeft() < 3000) {
                 break;
               }
               if (!MathUtils.isInRange(0.99f, 1.1f, ti.radius)) {
