@@ -15,7 +15,7 @@ public class Soldier extends Globals {
   private static Direction myDir;
   private static RobotInfo target;
   private static MapLocation enemyArchonLocation;
-  private static final boolean SOLDIER_DEBUG = true;
+  private static final boolean SOLDIER_DEBUG = false;
   private static boolean hasReportedDeath = false;
   private static boolean visitedEnemyArchon = true;
   private static int roamCount = 0;

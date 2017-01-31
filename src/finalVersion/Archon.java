@@ -87,7 +87,7 @@ public class Archon extends Globals {
       EvasiveArchon.init();
 
       producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
-      System.out.println(producedGardeners);
+      //System.out.println(producedGardeners);
       if (producedGardeners == 0) {
         trySpawnGardener(producedGardeners);
         calculateDistanceBetweenArchons();
