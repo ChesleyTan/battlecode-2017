@@ -13,6 +13,8 @@ public class RobotUtils extends Globals {
   private static Direction bugStartDirection;
   private static int bugCount;
   private static Direction lastDirection;
+  private static Direction mazeStartDir;
+  private static float mazeMoveDist;
 
   public static void bugStart(MapLocation finalLoc) throws GameActionException {
     bugStartLocation = here;
@@ -58,6 +60,256 @@ public class RobotUtils extends Globals {
     return bugCount;
   }
 
+  public static boolean mazePathHelper(Direction startDir) throws GameActionException {
+    // TODO optimize the shit out of this
+    mazeMoveDist = myType.strideRadius;
+    if (MathUtils.isNear(startDir, NORTH, 10)) {
+      if (canMove(NORTH)) {
+        mazeStartDir = NORTH;
+        return true;
+      }
+      MapLocation t1Loc = here.add((float) Math.PI / 6, myType.bodyRadius + 1f);
+      rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
+      TreeInfo[] t1 = rc.senseNearbyTrees(t1Loc, 1f, Team.NEUTRAL);
+      if (t1.length != 0) {
+        MapLocation t2Loc = here.add((float) Math.PI * 5f / 6f, myType.bodyRadius + 1f);
+        TreeInfo[] t2 = rc.senseNearbyTrees(t2Loc, 1f, Team.NEUTRAL);
+        rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
+        if (t2.length != 0) {
+          int minDistPairIdx = 0;
+          for (int i = 1; i < t2.length; ++i) {
+            if (t1[0].getLocation().distanceTo(t2[i].getLocation()) < t1[0].getLocation()
+                .distanceTo(t2[minDistPairIdx].getLocation())) {
+              minDistPairIdx = 1;
+            }
+          }
+          Direction axis = t1[0].getLocation().directionTo(t2[minDistPairIdx].getLocation());
+          MapLocation t1Edge = t1[0].getLocation().add(axis, t1[0].getRadius());
+          MapLocation t2Edge = t2[minDistPairIdx].getLocation().add(axis.opposite(),
+              t2[minDistPairIdx].getRadius());
+          if (MathUtils.isNear(t1Edge.distanceTo(t2Edge), myType.bodyRadius * 2, 0.5)) {
+            MapLocation between = new MapLocation((t1Edge.x + t2Edge.x) / 2,
+                (t1Edge.y + t2Edge.y) / 2);
+            rc.setIndicatorDot(between, 0, 255, 0);
+            if (rc.canSenseAllOfCircle(between, myType.bodyRadius - 0.01f)
+                && !rc.isCircleOccupiedExceptByThisRobot(between, myType.bodyRadius - 0.01f)) {
+              if (canMove(between)) {
+                if (between.x == here.x) {
+                  mazeStartDir = NORTH;
+                  return true;
+                }
+                else {
+                  mazeStartDir = here.directionTo(between);
+                  mazeMoveDist = here.distanceTo(between);
+                  return true;
+                }
+              }
+              else if (canMove(new MapLocation(between.x, here.y))) {
+                MapLocation centered = new MapLocation(between.x, here.y);
+                if (here.equals(centered)) {
+                  if (canMove(NORTH)) {
+                    mazeStartDir = NORTH;
+                    return true;
+                  }
+                }
+                else {
+                  mazeStartDir = here.directionTo(centered);
+                  mazeMoveDist = here.distanceTo(centered);
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    else if (MathUtils.isNear(startDir, SOUTH, 10)) {
+      if (canMove(SOUTH)) {
+        mazeStartDir = SOUTH;
+        return true;
+      }
+      MapLocation t1Loc = here.add((float) Math.PI * 7f / 6f, myType.bodyRadius + 1f);
+      rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
+      TreeInfo[] t1 = rc.senseNearbyTrees(t1Loc, 1f, Team.NEUTRAL);
+      if (t1.length != 0) {
+        MapLocation t2Loc = here.add((float) Math.PI * 11f / 6f, myType.bodyRadius + 1f);
+        TreeInfo[] t2 = rc.senseNearbyTrees(t2Loc, 1f, Team.NEUTRAL);
+        rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
+        if (t2.length != 0) {
+          int minDistPairIdx = 0;
+          for (int i = 1; i < t2.length; ++i) {
+            if (t1[0].getLocation().distanceTo(t2[i].getLocation()) < t1[0].getLocation()
+                .distanceTo(t2[minDistPairIdx].getLocation())) {
+              minDistPairIdx = 1;
+            }
+          }
+          Direction axis = t1[0].getLocation().directionTo(t2[minDistPairIdx].getLocation());
+          MapLocation t1Edge = t1[0].getLocation().add(axis, t1[0].getRadius());
+          MapLocation t2Edge = t2[minDistPairIdx].getLocation().add(axis.opposite(),
+              t2[minDistPairIdx].getRadius());
+          if (MathUtils.isNear(t1Edge.distanceTo(t2Edge), myType.bodyRadius * 2, 0.5)) {
+            MapLocation between = new MapLocation((t1Edge.x + t2Edge.x) / 2,
+                (t1Edge.y + t2Edge.y) / 2);
+            rc.setIndicatorDot(between, 0, 255, 0);
+            if (rc.canSenseAllOfCircle(between, myType.bodyRadius - 0.01f)
+                && !rc.isCircleOccupiedExceptByThisRobot(between, myType.bodyRadius - 0.01f)) {
+              if (canMove(between)) {
+                if (between.x == here.x) {
+                  mazeStartDir = SOUTH;
+                  return true;
+                }
+                else {
+                  mazeStartDir = here.directionTo(between);
+                  mazeMoveDist = here.distanceTo(between);
+                  return true;
+                }
+              }
+              else if (canMove(new MapLocation(between.x, here.y))) {
+                MapLocation centered = new MapLocation(between.x, here.y);
+                if (here.equals(centered)) {
+                  if (canMove(SOUTH)) {
+                    mazeStartDir = SOUTH;
+                    return true;
+                  }
+                }
+                else {
+                  mazeStartDir = here.directionTo(centered);
+                  mazeMoveDist = here.distanceTo(centered);
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    else if (MathUtils.isNear(startDir, EAST, 10)) {
+      if (canMove(EAST)) {
+        mazeStartDir = EAST;
+        return true;
+      }
+      MapLocation t1Loc = here.add((float) Math.PI * 2f / 6f, myType.bodyRadius + 1f);
+      rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
+      TreeInfo[] t1 = rc.senseNearbyTrees(t1Loc, 1f, Team.NEUTRAL);
+      if (t1.length != 0) {
+        MapLocation t2Loc = here.add((float) Math.PI * 10f / 6f, myType.bodyRadius + 1f);
+        TreeInfo[] t2 = rc.senseNearbyTrees(t2Loc, 1f, Team.NEUTRAL);
+        rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
+        if (t2.length != 0) {
+          int minDistPairIdx = 0;
+          for (int i = 1; i < t2.length; ++i) {
+            if (t1[0].getLocation().distanceTo(t2[i].getLocation()) < t1[0].getLocation()
+                .distanceTo(t2[minDistPairIdx].getLocation())) {
+              minDistPairIdx = 1;
+            }
+          }
+          Direction axis = t1[0].getLocation().directionTo(t2[minDistPairIdx].getLocation());
+          MapLocation t1Edge = t1[0].getLocation().add(axis, t1[0].getRadius());
+          MapLocation t2Edge = t2[minDistPairIdx].getLocation().add(axis.opposite(),
+              t2[minDistPairIdx].getRadius());
+          if (MathUtils.isNear(t1Edge.distanceTo(t2Edge), myType.bodyRadius * 2, 0.5)) {
+            MapLocation between = new MapLocation((t1Edge.x + t2Edge.x) / 2,
+                (t1Edge.y + t2Edge.y) / 2);
+            rc.setIndicatorDot(between, 0, 255, 0);
+            if (rc.canSenseAllOfCircle(between, myType.bodyRadius - 0.01f)
+                && !rc.isCircleOccupiedExceptByThisRobot(between, myType.bodyRadius - 0.01f)) {
+              if (canMove(between)) {
+                if (between.y == here.y) {
+                  mazeStartDir = EAST;
+                  return true;
+                }
+                else {
+                  mazeStartDir = here.directionTo(between);
+                  mazeMoveDist = here.distanceTo(between);
+                  return true;
+                }
+              }
+              else if (canMove(new MapLocation(here.x, between.y))) {
+                MapLocation centered = new MapLocation(here.x, between.y);
+                if (here.equals(centered)) {
+                  if (canMove(EAST)) {
+                    mazeStartDir = EAST;
+                    return true;
+                  }
+                }
+                else {
+                  mazeStartDir = here.directionTo(centered);
+                  mazeMoveDist = here.distanceTo(centered);
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    else if (MathUtils.isNear(startDir, WEST, 10)) {
+      if (canMove(WEST)) {
+        mazeStartDir = WEST;
+        return true;
+      }
+      MapLocation t1Loc = here.add((float) Math.PI * 4f / 6f, myType.bodyRadius + 1f);
+      rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
+      TreeInfo[] t1 = rc.senseNearbyTrees(t1Loc, 1f, Team.NEUTRAL);
+      if (t1.length != 0) {
+        MapLocation t2Loc = here.add((float) Math.PI * 8f / 6f, myType.bodyRadius + 1f);
+        TreeInfo[] t2 = rc.senseNearbyTrees(t2Loc, 1f, Team.NEUTRAL);
+        rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
+        if (t2.length != 0) {
+          int minDistPairIdx = 0;
+          for (int i = 1; i < t2.length; ++i) {
+            if (t1[0].getLocation().distanceTo(t2[i].getLocation()) < t1[0].getLocation()
+                .distanceTo(t2[minDistPairIdx].getLocation())) {
+              minDistPairIdx = 1;
+            }
+          }
+          Direction axis = t1[0].getLocation().directionTo(t2[minDistPairIdx].getLocation());
+          MapLocation t1Edge = t1[0].getLocation().add(axis, t1[0].getRadius());
+          MapLocation t2Edge = t2[minDistPairIdx].getLocation().add(axis.opposite(),
+              t2[minDistPairIdx].getRadius());
+          if (MathUtils.isNear(t1Edge.distanceTo(t2Edge), myType.bodyRadius * 2, 0.5)) {
+            MapLocation between = new MapLocation((t1Edge.x + t2Edge.x) / 2,
+                (t1Edge.y + t2Edge.y) / 2);
+            System.out.println(between);
+            rc.setIndicatorDot(between, 0, 255, 0);
+            if (rc.canSenseAllOfCircle(between, myType.bodyRadius - 0.01f)
+                && !rc.isCircleOccupiedExceptByThisRobot(between, myType.bodyRadius - 0.01f)) {
+              System.out.println("Open space between");
+              if (canMove(between)) {
+                System.out.println("Can move between");
+                if (between.y == here.y) {
+                  mazeStartDir = WEST;
+                  return true;
+                }
+                else {
+                  mazeStartDir = here.directionTo(between);
+                  mazeMoveDist = here.distanceTo(between);
+                  return true;
+                }
+              }
+              else if (canMove(new MapLocation(here.x, between.y))) {
+                System.out.println("Can center");
+                MapLocation centered = new MapLocation(here.x, between.y);
+                if (here.equals(centered)) {
+                  if (canMove(WEST)) {
+                    mazeStartDir = WEST;
+                    return true;
+                  }
+                }
+                else {
+                  mazeStartDir = here.directionTo(centered);
+                  mazeMoveDist = here.distanceTo(centered);
+                  return true;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
   public static boolean bugMove() throws GameActionException {
     if (DEBUG) {
       System.out.println("bugging");
@@ -71,6 +323,7 @@ public class RobotUtils extends Globals {
       endBug();
       return true;
     }
+    float moveDist = myType.strideRadius;
     int rotationAmount = wallSideLeft ? 10 : -10;
     //Direction startDir = lastDirection.rotateLeftDegrees(rotationAmount * 2);
     Direction startDir = bugStartDirection;
@@ -79,53 +332,40 @@ public class RobotUtils extends Globals {
       System.out.println(startDir.getAngleDegrees());
       rc.setIndicatorLine(here.add(startDir), here.add(startDir, 2), 255, 70, 101);
       System.out.println(MathUtils.isNear(startDir, NORTH, 10));
-      System.out.println("can move north: " + rc.canMove(NORTH));
+      System.out.println("can move north: " + canMove(NORTH));
       System.out.println(MathUtils.isNear(startDir, SOUTH, 10));
-      System.out.println("can move south: " + rc.canMove(SOUTH));
+      System.out.println("can move south: " + canMove(SOUTH));
       System.out.println(MathUtils.isNear(startDir, EAST, 10));
-      System.out.println("can move east: " + rc.canMove(EAST));
+      System.out.println("can move east: " + canMove(EAST));
       System.out.println(MathUtils.isNear(startDir, WEST, 10));
-      System.out.println("can move west: " + rc.canMove(WEST));
-      if (MathUtils.isNear(startDir, NORTH, 5)){
-        if (canMove(NORTH)) {
-          startDir = NORTH;
-          break;
-        }
-      }
-      else if (MathUtils.isNear(startDir, SOUTH, 5)){
-        if (canMove(SOUTH)){
-          startDir = SOUTH;
-          break;
-        }
-      }
-      else if (MathUtils.isNear(startDir, EAST, 5)){
-        if (canMove(EAST)){
-          startDir = EAST;
-          break;
-        }
-      }
-      else if (MathUtils.isNear(startDir, WEST, 5)){
-        if (canMove(WEST)){
-          startDir = WEST;
-          break;
-        }
+      System.out.println("can move west: " + canMove(WEST));
+      if (mazePathHelper(startDir)) {
+        startDir = mazeStartDir;
+        moveDist = mazeMoveDist;
+        break;
       }
       startDir = startDir.rotateRightDegrees(rotationAmount);
       attempts++;
     }
     System.out.println("startdir:" + startDir.getAngleDegrees());
-    System.out.println("canmove startDir" + canMove(startDir));
-    if (!canMove(startDir)) {
+    System.out.println("canmove startDir:" + canMove(startDir, moveDist));
+    if (!canMove(startDir, moveDist)) {
       attempts = 0;
       startDir = bugStartDirection;
       wallSideLeft = !wallSideLeft;
       while (!canMove(startDir) && attempts < 18) {
+        rc.setIndicatorLine(here.add(startDir), here.add(startDir, 2), 101, 70, 255);
+        if (mazePathHelper(startDir)) {
+          startDir = mazeStartDir;
+          moveDist = mazeMoveDist;
+          break;
+        }
         startDir = startDir.rotateLeftDegrees(rotationAmount);
         attempts++;
       }
     }
-    if (canMove(startDir)) {
-      rc.move(startDir);
+    if (canMove(startDir, moveDist)) {
+      rc.move(startDir, moveDist);
       lastDirection = startDir;
       bugCount++;
       return true;
