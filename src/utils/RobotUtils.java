@@ -69,12 +69,12 @@ public class RobotUtils extends Globals {
         return true;
       }
       MapLocation t1Loc = here.add((float) Math.PI / 6, myType.bodyRadius + 1f);
-      rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
+      //rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
       TreeInfo[] t1 = rc.senseNearbyTrees(t1Loc, 1f, Team.NEUTRAL);
       if (t1.length != 0) {
         MapLocation t2Loc = here.add((float) Math.PI * 5f / 6f, myType.bodyRadius + 1f);
         TreeInfo[] t2 = rc.senseNearbyTrees(t2Loc, 1f, Team.NEUTRAL);
-        rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
+        //rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
         if (t2.length != 0) {
           int minDistPairIdx = 0;
           for (int i = 1; i < t2.length; ++i) {
@@ -93,7 +93,7 @@ public class RobotUtils extends Globals {
           if (MathUtils.isNear(t1Edge.distanceTo(t2Edge), myType.bodyRadius * 2, 0.5)) {
             MapLocation between = new MapLocation((t1Edge.x + t2Edge.x) / 2,
                 (t1Edge.y + t2Edge.y) / 2);
-            rc.setIndicatorDot(between, 0, 255, 0);
+            //rc.setIndicatorDot(between, 0, 255, 0);
             if (rc.canSenseAllOfCircle(between, myType.bodyRadius - 0.01f)
                 && !rc.isCircleOccupiedExceptByThisRobot(between, myType.bodyRadius - 0.01f)) {
               if (canMove(between)) {
@@ -132,12 +132,12 @@ public class RobotUtils extends Globals {
         return true;
       }
       MapLocation t1Loc = here.add((float) Math.PI * 7f / 6f, myType.bodyRadius + 1f);
-      rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
+      //rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
       TreeInfo[] t1 = rc.senseNearbyTrees(t1Loc, 1f, Team.NEUTRAL);
       if (t1.length != 0) {
         MapLocation t2Loc = here.add((float) Math.PI * 11f / 6f, myType.bodyRadius + 1f);
         TreeInfo[] t2 = rc.senseNearbyTrees(t2Loc, 1f, Team.NEUTRAL);
-        rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
+        //rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
         if (t2.length != 0) {
           int minDistPairIdx = 0;
           for (int i = 1; i < t2.length; ++i) {
@@ -156,7 +156,7 @@ public class RobotUtils extends Globals {
           if (MathUtils.isNear(t1Edge.distanceTo(t2Edge), myType.bodyRadius * 2, 0.5)) {
             MapLocation between = new MapLocation((t1Edge.x + t2Edge.x) / 2,
                 (t1Edge.y + t2Edge.y) / 2);
-            rc.setIndicatorDot(between, 0, 255, 0);
+            //rc.setIndicatorDot(between, 0, 255, 0);
             if (rc.canSenseAllOfCircle(between, myType.bodyRadius - 0.01f)
                 && !rc.isCircleOccupiedExceptByThisRobot(between, myType.bodyRadius - 0.01f)) {
               if (canMove(between)) {
@@ -195,12 +195,12 @@ public class RobotUtils extends Globals {
         return true;
       }
       MapLocation t1Loc = here.add((float) Math.PI * 2f / 6f, myType.bodyRadius + 1f);
-      rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
+      //rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
       TreeInfo[] t1 = rc.senseNearbyTrees(t1Loc, 1f, Team.NEUTRAL);
       if (t1.length != 0) {
         MapLocation t2Loc = here.add((float) Math.PI * 10f / 6f, myType.bodyRadius + 1f);
         TreeInfo[] t2 = rc.senseNearbyTrees(t2Loc, 1f, Team.NEUTRAL);
-        rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
+        //rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
         if (t2.length != 0) {
           int minDistPairIdx = 0;
           for (int i = 1; i < t2.length; ++i) {
@@ -219,7 +219,7 @@ public class RobotUtils extends Globals {
           if (MathUtils.isNear(t1Edge.distanceTo(t2Edge), myType.bodyRadius * 2, 0.5)) {
             MapLocation between = new MapLocation((t1Edge.x + t2Edge.x) / 2,
                 (t1Edge.y + t2Edge.y) / 2);
-            rc.setIndicatorDot(between, 0, 255, 0);
+            //rc.setIndicatorDot(between, 0, 255, 0);
             if (rc.canSenseAllOfCircle(between, myType.bodyRadius - 0.01f)
                 && !rc.isCircleOccupiedExceptByThisRobot(between, myType.bodyRadius - 0.01f)) {
               if (canMove(between)) {
@@ -258,12 +258,12 @@ public class RobotUtils extends Globals {
         return true;
       }
       MapLocation t1Loc = here.add((float) Math.PI * 4f / 6f, myType.bodyRadius + 1f);
-      rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
+      //rc.setIndicatorLine(here, t1Loc, 255, 0, 0);
       TreeInfo[] t1 = rc.senseNearbyTrees(t1Loc, 1f, Team.NEUTRAL);
       if (t1.length != 0) {
         MapLocation t2Loc = here.add((float) Math.PI * 8f / 6f, myType.bodyRadius + 1f);
         TreeInfo[] t2 = rc.senseNearbyTrees(t2Loc, 1f, Team.NEUTRAL);
-        rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
+        //rc.setIndicatorLine(here, t2Loc, 255, 0, 0);
         if (t2.length != 0) {
           int minDistPairIdx = 0;
           for (int i = 1; i < t2.length; ++i) {
@@ -283,7 +283,7 @@ public class RobotUtils extends Globals {
             MapLocation between = new MapLocation((t1Edge.x + t2Edge.x) / 2,
                 (t1Edge.y + t2Edge.y) / 2);
             //System.out.println(between);
-            rc.setIndicatorDot(between, 0, 255, 0);
+            //rc.setIndicatorDot(between, 0, 255, 0);
             if (rc.canSenseAllOfCircle(between, myType.bodyRadius - 0.01f)
                 && !rc.isCircleOccupiedExceptByThisRobot(between, myType.bodyRadius - 0.01f)) {
               //System.out.println("Open space between");
