@@ -361,7 +361,7 @@ public class Lumberjack extends Globals {
       boolean containsRobot = ti.containedRobot != null;
       float treeDist = treeLoc.distanceTo(here);
       if (((treeDist < minDist && (minDistTreeContainsRobot == containsRobot)) || (!minDistTreeContainsRobot && containsRobot))
-          && TargetingUtils.clearChop(here, treeLoc, ti.getRadius())) {
+          && TargetingUtils.clearShot(here, treeLoc, ti.getRadius())) {
         closestTree = ti;
         minDist = treeDist;
         minDistTreeContainsRobot = containsRobot;
