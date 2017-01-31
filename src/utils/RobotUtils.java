@@ -80,8 +80,11 @@ public class RobotUtils extends Globals {
           for (int i = 1; i < t2.length; ++i) {
             if (t1[0].getLocation().distanceTo(t2[i].getLocation()) < t1[0].getLocation()
                 .distanceTo(t2[minDistPairIdx].getLocation())) {
-              minDistPairIdx = 1;
+              minDistPairIdx = i;
             }
+          }
+          if (t1[0].equals(t2[minDistPairIdx])) {
+            return false;
           }
           Direction axis = t1[0].getLocation().directionTo(t2[minDistPairIdx].getLocation());
           MapLocation t1Edge = t1[0].getLocation().add(axis, t1[0].getRadius());
@@ -140,8 +143,11 @@ public class RobotUtils extends Globals {
           for (int i = 1; i < t2.length; ++i) {
             if (t1[0].getLocation().distanceTo(t2[i].getLocation()) < t1[0].getLocation()
                 .distanceTo(t2[minDistPairIdx].getLocation())) {
-              minDistPairIdx = 1;
+              minDistPairIdx = i;
             }
+          }
+          if (t1[0].equals(t2[minDistPairIdx])) {
+            return false;
           }
           Direction axis = t1[0].getLocation().directionTo(t2[minDistPairIdx].getLocation());
           MapLocation t1Edge = t1[0].getLocation().add(axis, t1[0].getRadius());
@@ -200,8 +206,11 @@ public class RobotUtils extends Globals {
           for (int i = 1; i < t2.length; ++i) {
             if (t1[0].getLocation().distanceTo(t2[i].getLocation()) < t1[0].getLocation()
                 .distanceTo(t2[minDistPairIdx].getLocation())) {
-              minDistPairIdx = 1;
+              minDistPairIdx = i;
             }
+          }
+          if (t1[0].equals(t2[minDistPairIdx])) {
+            return false;
           }
           Direction axis = t1[0].getLocation().directionTo(t2[minDistPairIdx].getLocation());
           MapLocation t1Edge = t1[0].getLocation().add(axis, t1[0].getRadius());
@@ -260,8 +269,11 @@ public class RobotUtils extends Globals {
           for (int i = 1; i < t2.length; ++i) {
             if (t1[0].getLocation().distanceTo(t2[i].getLocation()) < t1[0].getLocation()
                 .distanceTo(t2[minDistPairIdx].getLocation())) {
-              minDistPairIdx = 1;
+              minDistPairIdx = i;
             }
+          }
+          if (t1[0].equals(t2[minDistPairIdx])) {
+            return false;
           }
           Direction axis = t1[0].getLocation().directionTo(t2[minDistPairIdx].getLocation());
           MapLocation t1Edge = t1[0].getLocation().add(axis, t1[0].getRadius());
