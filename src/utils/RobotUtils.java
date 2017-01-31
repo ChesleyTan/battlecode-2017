@@ -34,17 +34,17 @@ public class RobotUtils extends Globals {
     }
     if (!canMove(leftDir)) {
       wallSideLeft = false;
-      //lastDirection = rightDir;
+      lastDirection = rightDir;
     }
     else if (!canMove(rightDir)) {
       wallSideLeft = true;
-      //lastDirection = leftDir;
+      lastDirection = leftDir;
     }
     else {
       float distanceLeft = here.add(leftDir, rc.getType().strideRadius).distanceTo(finalLoc);
       float distanceRight = here.add(rightDir, rc.getType().strideRadius).distanceTo(finalLoc);
       wallSideLeft = distanceLeft > distanceRight;
-      //lastDirection = wallSideLeft? rightDir : leftDir;
+      lastDirection = wallSideLeft? rightDir : leftDir;
     }
     /*if (bugStartDirection.getDeltaX(1) * bugStartDirection.getDeltaY(1) > 0){
       wallSideLeft = false;
@@ -126,7 +126,7 @@ public class RobotUtils extends Globals {
     }
     if (canMove(startDir)) {
       rc.move(startDir);
-      //lastDirection = startDir;
+      lastDirection = startDir;
       bugCount++;
       return true;
     }
