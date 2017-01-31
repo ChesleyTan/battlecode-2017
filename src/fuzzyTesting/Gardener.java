@@ -514,19 +514,21 @@ public class Gardener extends Globals {
         testing.soldierCount.setValue(rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL));
         testing.treeCount.setValue(treeCount);
         testing.lumberCount.setValue(rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL));
-        testing.treeDensity.setValue(rc.senseNearbyTrees().length);
+        testing.treeDensity.setValue(rc.senseNearbyTrees(-1,Team.NEUTRAL).length);
         double value = testing.engine.evaluate();
-        System.out.println(value);
+        //System.out.println(value);
         int result;
-        if (value == Double.NaN){
+        if (Double.isNaN(value)){
           result = 6;
         }else{
           result = (int)(Math.round(value));
         }
+        System.out.printf("value: %f, result: %d\n", value, result);
         switch(result){
           case 0: // tree
             System.out.println("tree");
             //rc.plantTree(RobotUtils.randomDirection());
+            break;
           case 1: //tank
             System.out.println("tank");
             //spawnRobot(RobotType.TANK);
@@ -535,7 +537,7 @@ public class Gardener extends Globals {
             System.out.println("scout");
             //spawnRobot(RobotType.SCOUT);
             break;
-          case 3: //soldier
+          case 3: default: //soldier
             System.out.println("soldier");
             //spawnRobot(RobotType.SOLDIER);
             break;
@@ -543,9 +545,6 @@ public class Gardener extends Globals {
             System.out.println("lumberjack");
             //spawnRobot(RobotType.LUMBERJACK);
             break;
-          default:
-            break;
-            
         }
         withinArchonRange = false;
         if (!spawnedLumberjack) {
