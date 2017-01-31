@@ -325,44 +325,45 @@ public class RobotUtils extends Globals {
     }
     float moveDist = myType.strideRadius;
     int rotationAmount = wallSideLeft ? 10 : -10;
-    //Direction startDir = lastDirection.rotateLeftDegrees(rotationAmount * 2);
-    Direction startDir = bugStartDirection;
+    Direction startDir = lastDirection.rotateRightDegrees(rotationAmount * 9);
+    //Direction startDir = bugStartDirection;
     int attempts = 0;
-    while (!canMove(startDir) && attempts < 18) {
-      System.out.println(startDir.getAngleDegrees());
-      rc.setIndicatorLine(here.add(startDir), here.add(startDir, 2), 255, 70, 101);
-      System.out.println(MathUtils.isNear(startDir, NORTH, 10));
-      System.out.println("can move north: " + canMove(NORTH));
-      System.out.println(MathUtils.isNear(startDir, SOUTH, 10));
-      System.out.println("can move south: " + canMove(SOUTH));
-      System.out.println(MathUtils.isNear(startDir, EAST, 10));
-      System.out.println("can move east: " + canMove(EAST));
-      System.out.println(MathUtils.isNear(startDir, WEST, 10));
-      System.out.println("can move west: " + canMove(WEST));
-      if (mazePathHelper(startDir)) {
-        startDir = mazeStartDir;
-        moveDist = mazeMoveDist;
-        break;
+    if (rc.canMove(startDir)){
+      while(rc.canMove(startDir)){
+        startDir = startDir.rotateLeftDegrees(rotationAmount);
       }
       startDir = startDir.rotateRightDegrees(rotationAmount);
-      attempts++;
     }
-    System.out.println("startdir:" + startDir.getAngleDegrees());
-    System.out.println("canmove startDir:" + canMove(startDir, moveDist));
-    if (!canMove(startDir, moveDist)) {
-      attempts = 0;
-      startDir = bugStartDirection;
-      wallSideLeft = !wallSideLeft;
+    else{
       while (!canMove(startDir) && attempts < 18) {
-        rc.setIndicatorLine(here.add(startDir), here.add(startDir, 2), 101, 70, 255);
+        System.out.println(startDir.getAngleDegrees());
+        rc.setIndicatorLine(here.add(startDir), here.add(startDir, 2), 255, 70, 101);
+        System.out.println(MathUtils.isNear(startDir, NORTH, 10));
+        System.out.println("can move north: " + canMove(NORTH));
+        System.out.println(MathUtils.isNear(startDir, SOUTH, 10));
+        System.out.println("can move south: " + canMove(SOUTH));
+        System.out.println(MathUtils.isNear(startDir, EAST, 10));
+        System.out.println("can move east: " + canMove(EAST));
+        System.out.println(MathUtils.isNear(startDir, WEST, 10));
+        System.out.println("can move west: " + canMove(WEST));
         if (mazePathHelper(startDir)) {
           startDir = mazeStartDir;
           moveDist = mazeMoveDist;
           break;
         }
-        startDir = startDir.rotateLeftDegrees(rotationAmount);
+        startDir = startDir.rotateRightDegrees(rotationAmount);
         attempts++;
       }
+    }
+    System.out.println("startdir:" + startDir.getAngleDegrees());
+    System.out.println("canmove startDir:" + canMove(startDir, moveDist));
+    if (!canMove(startDir, moveDist)) {
+      attempts = 0;
+      startDir = lastDirection.opposite();
+      while(rc.canMove(startDir)){
+        startDir = startDir.rotateLeftDegrees(rotationAmount);
+      }
+      startDir = startDir.rotateRightDegrees(rotationAmount);
     }
     if (canMove(startDir, moveDist)) {
       rc.move(startDir, moveDist);
