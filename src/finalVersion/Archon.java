@@ -18,6 +18,15 @@ public class Archon extends Globals {
         break;
       }
     }
+    MapLocation myStart = myArchons[me];
+    float shortestDistance = Float.MAX_VALUE;
+    for (MapLocation m: enemyArchons){
+      float dist;
+      if ((dist = myStart.distanceTo(m)) < shortestDistance){
+        shortestDistance = dist;
+      }
+    }
+    rc.broadcast(ARCHON_DISTANCE_CHANNEL, (int)shortestDistance);
   }
 
   private static void trySpawnGardener(int producedGardeners) throws GameActionException {
@@ -81,6 +90,7 @@ public class Archon extends Globals {
       System.out.println(producedGardeners);
       if (producedGardeners == 0) {
         trySpawnGardener(producedGardeners);
+        calculateDistanceBetweenArchons();
         determineMapSymmetry(myArchons, enemyArchons);
       }
       //calculateDistanceBetweenArchons();
@@ -102,8 +112,8 @@ public class Archon extends Globals {
           int productionGardeners = rc.readBroadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL);
           int soldiers = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
           int treeCount = rc.getTreeCount();
-          if ((((producedGardeners == 0
-              || (soldiers >= 2 && producedGardeners == 1 && treeCount >= 2))
+          if (((producedGardeners == 0
+              || (soldiers >= 2 && producedGardeners == 1 && treeCount >= 2)
               || producedGardeners < treeCount / 3.5)
               && rc.senseNearbyRobots(4, us).length < 2)
               || productionGardeners < requiredProductionGardeners) {

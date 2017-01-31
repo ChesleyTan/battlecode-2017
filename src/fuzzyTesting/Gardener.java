@@ -488,7 +488,7 @@ public class Gardener extends Globals {
         }
         // Either plant a tree or produce a unit
         // Initial setup moves to a clear spot and spawns 3 scouts
-        if (!spawnedEarlySoldier || !spawnedEarlyScout) {
+        /*if (!spawnedEarlySoldier || !spawnedEarlyScout) {
           if (rc.senseNearbyTrees(6, Team.NEUTRAL).length > 2 && !spawnedLumberjack) {
             if (spawnRobot(RobotType.LUMBERJACK) && unitCount < 3) {
               BroadcastUtils.addRegionDirective(7, 1, here, 6);
@@ -508,7 +508,7 @@ public class Gardener extends Globals {
               spawnedEarlyScout = true;
             }
           }
-        }
+        }*/
         int soldierCount = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
         int gardenerCount = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
         testing.gardenerCount.setValue(gardenerCount);

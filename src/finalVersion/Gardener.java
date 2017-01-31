@@ -15,17 +15,19 @@ public class Gardener extends Globals {
   private static boolean production_gardener = false;
   private static boolean hasReportedDeath = false;
   private static MapLocation queuedMove = null;
-  private static boolean spawnedEarlySoldier = false;
+  private static int spawnedEarlySoldier = 0;
   private static boolean spawnedEarlyScout = false;
   private static boolean spawnedLumberjack = false;
   private static boolean reportedTrees = false;
   private static boolean withinArchonRange = false;
-  private static final boolean GARDENER_DEBUG = false;
+  private static final boolean GARDENER_DEBUG = true;
   private static int producedUnits = 0;
   private static int calledForBackupRound = -9999;
   private static int soldierHardCap = 25;
   private static int tankHardCap = 8;
   private static boolean adjustedCaps = false;
+  private static int plantedTrees = 0;
+
 
   /*
   public static void dodge(BulletInfo[] bullets, RobotInfo[] robots) throws GameActionException {
@@ -131,6 +133,15 @@ public class Gardener extends Globals {
   }
   */
 
+  public static boolean shouldGoAhead(int soldierCount) throws GameActionException{
+    if(plantedTrees >= 2){
+      int producedGardeners = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
+      if (soldierCount / producedGardeners < 1 || !spawnedEarlyScout){
+        return false;
+      }
+    }
+    return true;
+  }
   /*
    * Checks that there is enough space around the unit to begin planting
    */
@@ -451,9 +462,10 @@ public class Gardener extends Globals {
         rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, productionGardeners + 1);
       }
       if (currentRoundNum > 20) {
-        spawnedEarlySoldier = true;
+        spawnedEarlySoldier = 3;
         spawnedEarlyScout = true;
       }
+      
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -486,7 +498,8 @@ public class Gardener extends Globals {
         }
         // Either plant a tree or produce a unit
         // Initial setup moves to a clear spot and spawns 3 scouts
-        if (!spawnedEarlySoldier || !spawnedEarlyScout) {
+        int requiredEarlySoldiers = rc.readBroadcast(ARCHON_DISTANCE_CHANNEL) < 30? 1 : 2;
+        if (spawnedEarlySoldier < requiredEarlySoldiers || !spawnedEarlyScout) {
           if (rc.senseNearbyTrees(6, Team.NEUTRAL).length > 2 && !spawnedLumberjack) {
             if (spawnRobot(RobotType.LUMBERJACK) && unitCount < 3) {
               BroadcastUtils.addRegionDirective(7, 1, here, 6);
@@ -494,10 +507,10 @@ public class Gardener extends Globals {
               spawnedLumberjack = true;
             }
           }
-          if (!spawnedEarlySoldier && unitCount < 3) {
+          if (spawnedEarlySoldier < requiredEarlySoldiers && unitCount < 2) {
             if (spawnRobot(RobotType.SOLDIER)) {
               rc.broadcast(EARLY_UNITS_CHANNEL, ++unitCount);
-              spawnedEarlySoldier = true;
+              spawnedEarlySoldier ++;
             }
           }
           else if (!spawnedEarlyScout && unitCount < 3) {
@@ -555,7 +568,8 @@ public class Gardener extends Globals {
             System.out.println("clearSpace: " + clearSpace);
             System.out.println("numCheckspaces: " + numCheckSpaces);
           }
-          if (((spawnedEarlySoldier && spawnedEarlyScout)
+          if (((unitCount >= 2)
+              && shouldGoAhead(soldierCount)
               && (shouldPlant || clearSpace || numCheckSpaces > 25)
               && (shouldPlant || noNearbyGardeners())) && freeSpaces[1] != null
               && rc.canPlantTree(freeSpaces[1])) {
@@ -570,6 +584,7 @@ public class Gardener extends Globals {
             */
             rc.plantTree(freeSpaces[1]);
             shouldPlant = true;
+            plantedTrees ++;
           }
           else {
             int division_factor = (int) (154 / (rc.getTreeCount() + 1));
