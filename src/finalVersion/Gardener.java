@@ -461,9 +461,12 @@ public class Gardener extends Globals {
         production_gardener = true;
         rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, productionGardeners + 1);
       }
-      if (currentRoundNum > 20) {
+      if (rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL) != 1 || currentRoundNum > 100) {
         spawnedEarlySoldier = 3;
         spawnedEarlyScout = true;
+        if (rc.readBroadcast(EARLY_UNITS_CHANNEL) <= 2){
+          rc.broadcast(EARLY_UNITS_CHANNEL, 4);
+        }
       }
       
     } catch (Exception e) {
@@ -499,6 +502,8 @@ public class Gardener extends Globals {
         // Either plant a tree or produce a unit
         // Initial setup moves to a clear spot and spawns 3 scouts
         int requiredEarlySoldiers = rc.readBroadcast(ARCHON_DISTANCE_CHANNEL) < 30? 1 : 2;
+        System.out.println("spawned early soldier" + spawnedEarlySoldier);
+        System.out.println("spawned early scout" + spawnedEarlyScout);
         if (spawnedEarlySoldier < requiredEarlySoldiers || !spawnedEarlyScout) {
           if (rc.senseNearbyTrees(6, Team.NEUTRAL).length > 2 && !spawnedLumberjack) {
             if (spawnRobot(RobotType.LUMBERJACK) && unitCount < 3) {
@@ -507,7 +512,7 @@ public class Gardener extends Globals {
               spawnedLumberjack = true;
             }
           }
-          if (spawnedEarlySoldier < requiredEarlySoldiers && unitCount < 2) {
+          else if (spawnedEarlySoldier < requiredEarlySoldiers && unitCount < 2) {
             if (spawnRobot(RobotType.SOLDIER)) {
               rc.broadcast(EARLY_UNITS_CHANNEL, ++unitCount);
               spawnedEarlySoldier ++;
@@ -567,11 +572,13 @@ public class Gardener extends Globals {
             System.out.println("shouldPlant: " + shouldPlant);
             System.out.println("clearSpace: " + clearSpace);
             System.out.println("numCheckspaces: " + numCheckSpaces);
+            System.out.println("unitCount: " + unitCount);
           }
           if (((unitCount >= 2)
               && shouldGoAhead(soldierCount)
               && (shouldPlant || clearSpace || numCheckSpaces > 25)
-              && (shouldPlant || noNearbyGardeners())) && freeSpaces[1] != null
+              && (shouldPlant || noNearbyGardeners())) 
+              && freeSpaces[1] != null
               && rc.canPlantTree(freeSpaces[1])) {
             /*
             if (!rc.hasMoved() && rc.canMove(freeSpaces[1], 0.3f)) {
