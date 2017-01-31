@@ -551,8 +551,6 @@ public class Gardener extends Globals {
           case 6: // soldier
             System.out.println("soldier");
             break;
-          default:
-            break;
         }
         withinArchonRange = false;
         if (!spawnedLumberjack) {
