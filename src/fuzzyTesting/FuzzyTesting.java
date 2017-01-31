@@ -4,7 +4,7 @@ import fuzzywuzzy.*;
 import static fuzzywuzzy.rules.FuzzyLogic.*;
 
 public class FuzzyTesting {
-  
+
   InputVariable archonDistance = new InputVariable("archonDistance");
   InputVariable soldierCount = new InputVariable("soldierCount");
   InputVariable lumberCount = new InputVariable("lumberCount");
@@ -12,24 +12,28 @@ public class FuzzyTesting {
   InputVariable treeDensity = new InputVariable("treeDensity");
   InputVariable tankCount = new InputVariable("tankCount");
   InputVariable treeCount = new InputVariable("treeCount");
-  
+  InputVariable solTreeRatio = new InputVariable("Soldier-Tree ratio");
+
   OutputVariable type = new OutputVariable("type");
-  
+
   InputTerm fewUnits = new InputTerm("few", 0, 0, 1, 5, 1);
   InputTerm mediumUnits = new InputTerm ("medium", 4, 10, 18, 25, 1);
   InputTerm manyUnits = new InputTerm("many", 23, 26, Double.MAX_VALUE, Double.MAX_VALUE, 1);
-  
+
   InputTerm archonNear = new InputTerm("near", 0,0, 20, 35, 1);
   InputTerm archonFar = new InputTerm("far", 30, 40, Double.MAX_VALUE, Double.MAX_VALUE, 1);
-  
+
   InputTerm sparseTrees = new InputTerm("sparse", 0,0, 1, 3, 1);
   InputTerm denseTrees = new InputTerm("dense", 2, 2, 4, 5, 1);
   InputTerm packedTrees = new InputTerm("packed", 4.5, 6, Double.MAX_VALUE, Double.MAX_VALUE, 1);
-  
+
   InputTerm fewTrees = new InputTerm("few", 0,0, 1, 2, 1);
   InputTerm mediumTrees = new InputTerm("medium", 1, 2, 3, 4, 1);
-  InputTerm manyTres = new InputTerm("many", 4, 5, Double.MAX_VALUE, Double.MAX_VALUE, 1);
-  
+  InputTerm manyTrees = new InputTerm("many", 4, 5, Double.MAX_VALUE, Double.MAX_VALUE, 1);
+
+  InputTerm badRatio = new InputTerm("bad", 0,0, 0.5, 1.2, 1);
+  InputTerm goodRatio = new InputTerm("decent", 1, 1, Double.MAX_VALUE, Double.MAX_VALUE, 1);
+
   OutputTerm soldier = new OutputTerm("soldier", 3);
   OutputTerm tank = new OutputTerm("tank", 1);
   OutputTerm scout = new OutputTerm("scout", 2);
@@ -41,8 +45,9 @@ public class FuzzyTesting {
     and(archonDistance.is(archonNear), treeDensity.is(packedTrees), lumberCount.is(fewUnits)).then(type.set(lumberjack)),
     and(archonDistance.is(archonNear), treeDensity.is(denseTrees)).then(type.set(soldier)),
     and(lumberCount.is(fewUnits), treeDensity.is(denseTrees)).then(type.set(lumberjack)),
-    treeCount.is(fewTrees).then(type.set(tree))
+    treeCount.is(fewTrees).then(type.set(tree)),
+    and(treeCount.is(mediumTrees), solTreeRatio.is(goodRatio)).then(type.set(tree))
   );
-  
-  
+
+
 }

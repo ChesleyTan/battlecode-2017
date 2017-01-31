@@ -509,12 +509,15 @@ public class Gardener extends Globals {
             }
           }
         }
-        testing.gardenerCount.setValue(rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL));
+        int soldierCount = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
+        int gardenerCount = rc.readBroadcast(PRODUCED_GARDENERS_CHANNEL);
+        testing.gardenerCount.setValue(gardenerCount);
         testing.archonDistance.setValue(45);
-        testing.soldierCount.setValue(rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL));
+        testing.soldierCount.setValue(soldierCount);
         testing.treeCount.setValue(treeCount);
         testing.lumberCount.setValue(rc.readBroadcast(LUMBERJACK_PRODUCTION_CHANNEL));
         testing.treeDensity.setValue(rc.senseNearbyTrees().length);
+        testing.solTreeRatio.setValue(soldierCount / gardenerCount);
         double value = testing.engine.evaluate();
         System.out.println(value);
         int result;
@@ -527,6 +530,7 @@ public class Gardener extends Globals {
           case 0: // tree
             System.out.println("tree");
             //rc.plantTree(RobotUtils.randomDirection());
+            break;
           case 1: //tank
             System.out.println("tank");
             //spawnRobot(RobotType.TANK);
@@ -543,6 +547,9 @@ public class Gardener extends Globals {
             System.out.println("lumberjack");
             //spawnRobot(RobotType.LUMBERJACK);
             break;
+          case 6: // soldier
+            System.out.println("soldier");
+            break;
           default:
             break;
             
@@ -557,7 +564,6 @@ public class Gardener extends Globals {
             }
           }
         }
-        int soldierCount = rc.readBroadcast(SOLDIER_PRODUCTION_CHANNEL);
         if (soldierCount == 0) {
           spawnRobot(RobotType.SOLDIER);
         }
