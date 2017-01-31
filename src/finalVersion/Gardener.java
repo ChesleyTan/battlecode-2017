@@ -20,7 +20,7 @@ public class Gardener extends Globals {
   private static boolean spawnedLumberjack = false;
   private static boolean reportedTrees = false;
   private static boolean withinArchonRange = false;
-  private static final boolean GARDENER_DEBUG = true;
+  private static final boolean GARDENER_DEBUG = false;
   private static int producedUnits = 0;
   private static int calledForBackupRound = -9999;
   private static int soldierHardCap = 25;
@@ -141,6 +141,14 @@ public class Gardener extends Globals {
       }
     }
     return true;
+  }
+  
+  public static void report() throws GameActionException{
+    rc.broadcast(GARDENER_REPORT_CHANNEL, rc.readBroadcast(GARDENER_REPORT_CHANNEL) + 1);
+    if (production_gardener){
+      rc.broadcast(PRODUCTION_GARDENER_REPORT_CHANNEL, rc.readBroadcast(PRODUCTION_GARDENER_REPORT_CHANNEL) + 1);
+    }
+    return;
   }
   /*
    * Checks that there is enough space around the unit to begin planting

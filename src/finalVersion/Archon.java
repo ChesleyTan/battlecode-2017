@@ -53,6 +53,7 @@ public class Archon extends Globals {
         int soldiers = rc.readBroadcast(SOLDIER_REPORT_CHANNEL);
         int gardeners = rc.readBroadcast(GARDENER_REPORT_CHANNEL);
         int tanks = rc.readBroadcast(TANK_REPORT_CHANNEL);
+        int productionGardeners = rc.readBroadcast(PRODUCTION_GARDENER_REPORT_CHANNEL);
         rc.broadcast(LUMBERJACK_PRODUCTION_CHANNEL, lumberjacks);
         rc.broadcast(LUMBERJACK_REPORT_CHANNEL, 0);
         rc.broadcast(SOLDIER_PRODUCTION_CHANNEL, soldiers);
@@ -61,6 +62,8 @@ public class Archon extends Globals {
         rc.broadcast(GARDENER_REPORT_CHANNEL, 0);
         rc.broadcast(TANK_PRODUCTION_CHANNEL, tanks);
         rc.broadcast(TANK_REPORT_CHANNEL, 0);
+        rc.broadcast(PRODUCED_PRODUCTION_GARDENERS_CHANNEL, productionGardeners);
+        rc.broadcast(PRODUCTION_GARDENER_REPORT_CHANNEL, 0);
         rc.broadcast(LAST_UPDATED_REPORT_CHANNEL, currentRoundNum);
       }
     }

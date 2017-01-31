@@ -46,6 +46,7 @@ public class Globals {
   public static final int GARDENER_REPORT_CHANNEL = 1008;
   public static final int TANK_REPORT_CHANNEL = 1009;
   public static final int LAST_UPDATED_REPORT_CHANNEL = 1010;
+  public static final int PRODUCTION_GARDENER_REPORT_CHANNEL = 1011;
   public static Direction NORTH, SOUTH, EAST, WEST;
   public static final int UNKNOWN = Integer.MIN_VALUE;
   public static int minX = UNKNOWN;
