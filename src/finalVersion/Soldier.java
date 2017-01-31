@@ -41,14 +41,14 @@ public class Soldier extends Globals {
     }
     squad_channel = DEFENSE_START_CHANNEL;
   }
-  
-  private static boolean pentadShotGardener(TreeInfo treeBetween, MapLocation gardenerLocation){
+
+  private static boolean pentadShotGardener(TreeInfo treeBetween, MapLocation gardenerLocation) {
     RobotInfo[] friendlies = rc.senseNearbyRobots(gardenerLocation, 5, us);
     int soldierCount = 0;
-    for(RobotInfo r: friendlies){
-      if (r.getType() == RobotType.SOLDIER){
-        soldierCount ++;
-        if (soldierCount == 3){
+    for (RobotInfo r : friendlies) {
+      if (r.getType() == RobotType.SOLDIER) {
+        soldierCount++;
+        if (soldierCount == 3) {
           break;
         }
       }
@@ -84,7 +84,8 @@ public class Soldier extends Globals {
         System.out.println("clearShot to target");
       }
       float distanceEnemy = here.distanceTo(targetLocation);
-      if ((distanceEnemy <= 6 || robots.length > 2) && rc.canFirePentadShot() && rc.getTreeCount() > 1) {
+      if ((distanceEnemy <= 6 || robots.length > 2) && rc.canFirePentadShot()
+          && rc.getTreeCount() > 1) {
         rc.firePentadShot(towardsEnemy);
       }
       else {
@@ -108,22 +109,24 @@ public class Soldier extends Globals {
     if (enemies.length != 0) {
       RobotInfo priorityEnemy = null;
       int nullifiedCount = enemies.length;
-      while(priorityEnemy == null && nullifiedCount > 0){
+      while (priorityEnemy == null && nullifiedCount > 0) {
         int index = priority(enemies);
         if (index != -1) {
           priorityEnemy = enemies[index];
-          if (priorityEnemy.getType() != RobotType.SCOUT 
-              || rc.senseTreeAtLocation(here.add(here.directionTo(priorityEnemy.location), Math.min(RobotType.SOLDIER.sensorRadius - 0.1f, here.distanceTo(priorityEnemy.location)))) == null){
+          if (priorityEnemy.getType() != RobotType.SCOUT
+              || rc.senseTreeAtLocation(here.add(here.directionTo(priorityEnemy.location),
+                  Math.min(RobotType.SOLDIER.sensorRadius - 0.1f,
+                      here.distanceTo(priorityEnemy.location)))) == null) {
             target = priorityEnemy;
             attack(target);
           }
-          else{
+          else {
             priorityEnemy = null;
-            nullifiedCount --;
+            nullifiedCount--;
           }
         }
       }
-      if (priorityEnemy == null){
+      if (priorityEnemy == null) {
         EvasiveSoldier.move(bullets, enemies, target, destination);
       }
     }
@@ -151,14 +154,17 @@ public class Soldier extends Globals {
       }
       RobotInfo[] enemies = rc.senseNearbyRobots(-1, them);
       //BulletInfo[] bullets = rc.senseNearbyBullets();
-      if (enemies.length > 0){
+      if (enemies.length > 0) {
         RobotInfo priorityEnemy = null;
         int nullifiedCount = enemies.length;
-        while(priorityEnemy == null && nullifiedCount > 0){
+        while (priorityEnemy == null && nullifiedCount > 0) {
           int priority = priority(enemies);
           if (priority != -1) {
             priorityEnemy = enemies[priority];
-            if (priorityEnemy.getType() != RobotType.SCOUT || rc.senseTreeAtLocation(here.add(here.directionTo(priorityEnemy.location), Math.min(RobotType.SOLDIER.sensorRadius - 0.1f, here.distanceTo(priorityEnemy.location)))) == null){
+            if (priorityEnemy.getType() != RobotType.SCOUT
+                || rc.senseTreeAtLocation(here.add(here.directionTo(priorityEnemy.location),
+                    Math.min(RobotType.SOLDIER.sensorRadius - 0.1f,
+                        here.distanceTo(priorityEnemy.location)))) == null) {
               if (SOLDIER_DEBUG) {
                 System.out.println(priorityEnemy.getID());
               }
@@ -167,9 +173,9 @@ public class Soldier extends Globals {
               roamCount = 0;
               attack(target);
             }
-            else{
+            else {
               priorityEnemy = null;
-              nullifiedCount --;
+              nullifiedCount--;
             }
           }
         }
@@ -196,11 +202,11 @@ public class Soldier extends Globals {
             System.out.println("Roam count: " + roamCount);
           }
           if (!rc.hasMoved()) {
-            if (roamCount >= 30){
+            if (roamCount >= 30) {
               int i = DEFENSE_START_CHANNEL;
               while (i < DEFENSE_END_CHANNEL) {
                 int target = rc.readBroadcast(i + 1);
-                if (target != -1) {
+                if (target > 0) {
                   int xCor = rc.readBroadcast(i + 2);
                   int yCor = rc.readBroadcast(i + 3);
                   rc.broadcast(squad_channel + 1, target);
@@ -215,19 +221,17 @@ public class Soldier extends Globals {
                 i += DEFENSE_BLOCK_WIDTH;
               }
             }
-            else{
-              int attempts = 0;
-              while (!rc.canMove(myDir) && attempts < 20) {
-                if (Clock.getBytecodesLeft() < 2000) {
-                  break;
-                }
-                myDir = RobotUtils.randomDirection();
-                attempts++;
+            int attempts = 0;
+            while (!rc.canMove(myDir) && attempts < 20) {
+              if (Clock.getBytecodesLeft() < 2000) {
+                break;
               }
-              if (rc.canMove(myDir)) {
-                rc.move(myDir);
-                ++roamCount;
-              }
+              myDir = RobotUtils.randomDirection();
+              attempts++;
+            }
+            if (rc.canMove(myDir)) {
+              rc.move(myDir);
+              ++roamCount;
             }
           }
         }
@@ -409,7 +413,7 @@ public class Soldier extends Globals {
         if (SOLDIER_DEBUG) {
           System.out.println(mode);
         }
-        if (!visitedEnemyArchon && currentRoundNum - roundStarted > 300){
+        if (!visitedEnemyArchon && currentRoundNum - roundStarted > 300) {
           visitedEnemyArchon = true;
         }
         if (mode == ATTACK) {
@@ -470,24 +474,26 @@ public class Soldier extends Globals {
               int priorityIndex = priority(enemies);
               int nullifiedCount = enemies.length;
               target = null;
-              while(target == null && nullifiedCount > 0){
+              while (target == null && nullifiedCount > 0) {
                 RobotInfo priority = enemies[priorityIndex];
                 MapLocation location = priority.getLocation();
-                if (priority.getType() != RobotType.SCOUT 
-                    || rc.senseTreeAtLocation(here.add(here.directionTo(priority.location), Math.min(RobotType.SOLDIER.sensorRadius - 0.1f, here.distanceTo(priority.location)))) == null){
+                if (priority.getType() != RobotType.SCOUT
+                    || rc.senseTreeAtLocation(here.add(here.directionTo(priority.location),
+                        Math.min(RobotType.SOLDIER.sensorRadius - 0.1f,
+                            here.distanceTo(priority.location)))) == null) {
                   target = priority;
                   rc.broadcast(squad_channel + 1, target.getID());
                   rc.broadcast(squad_channel + 2, (int) location.x);
                   rc.broadcast(squad_channel + 3, (int) location.y);
                   attack(target);
                 }
-                else{
+                else {
                   enemies[priorityIndex] = null;
-                  nullifiedCount --;
+                  nullifiedCount--;
                   priorityIndex = priority(enemies);
                 }
               }
-              if (target == null){
+              if (target == null) {
                 mode = ROAM;
                 rc.broadcast(squad_channel + 1, -1);
                 roam();
