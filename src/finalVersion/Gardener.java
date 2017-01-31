@@ -320,7 +320,7 @@ public class Gardener extends Globals {
         here = rc.getLocation();
       }
       else {
-        if (!clearSpace) {
+        if (!clearSpace && !shouldPlant) {
           clearSpace = !rc.isCircleOccupiedExceptByThisRobot(here, detectRadius);
           if (GARDENER_DEBUG) {
             System.out.println("Clear space: " + clearSpace);
