@@ -351,7 +351,7 @@ public class RobotUtils extends Globals {
           moveDist = mazeMoveDist;
           break;
         }
-        startDir = startDir.rotateRightDegrees(rotationAmount);
+        startDir = startDir.rotateLeftDegrees(rotationAmount);
         attempts++;
       }
     }
