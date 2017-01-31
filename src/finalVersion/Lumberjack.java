@@ -361,7 +361,7 @@ public class Lumberjack extends Globals {
       boolean containsRobot = ti.containedRobot != null;
       float treeDist = treeLoc.distanceTo(here);
       if (((treeDist < minDist && (minDistTreeContainsRobot == containsRobot)) || (!minDistTreeContainsRobot && containsRobot))
-          && TargetingUtils.clearChop(here, treeLoc, ti.getRadius())) {
+          && TargetingUtils.clearShot(here, treeLoc, ti.getRadius())) {
         closestTree = ti;
         minDist = treeDist;
         minDistTreeContainsRobot = containsRobot;
@@ -484,7 +484,6 @@ public class Lumberjack extends Globals {
             if (LUMBERJACK_DEBUG) {
               System.out.println("looking for region directives");
             }
-            System.out.println("Bytecodes before:" + Clock.getBytecodesLeft());
             Directive[] directives = BroadcastUtils.getRegionDirectives((int) here.x, (int) here.y);
             for (Directive d : directives) {
               // CUT
@@ -505,7 +504,6 @@ public class Lumberjack extends Globals {
                 }
               }
             }
-            System.out.println("Bytecodes after:" + Clock.getBytecodesLeft());
             if (targetTree == null) {
               if (LUMBERJACK_DEBUG) {
                 System.out.println("sensing nearby trees");

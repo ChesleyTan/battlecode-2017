@@ -510,8 +510,8 @@ public class Gardener extends Globals {
         // Either plant a tree or produce a unit
         // Initial setup moves to a clear spot and spawns 3 scouts
         int requiredEarlySoldiers = rc.readBroadcast(ARCHON_DISTANCE_CHANNEL) < 30? 1 : 2;
-        System.out.println("spawned early soldier" + spawnedEarlySoldier);
-        System.out.println("spawned early scout" + spawnedEarlyScout);
+        //System.out.println("spawned early soldier" + spawnedEarlySoldier);
+        //System.out.println("spawned early scout" + spawnedEarlyScout);
         if (spawnedEarlySoldier < requiredEarlySoldiers || !spawnedEarlyScout) {
           if (rc.senseNearbyTrees(6, Team.NEUTRAL).length > 2 && !spawnedLumberjack) {
             if (spawnRobot(RobotType.LUMBERJACK) && unitCount < 3) {

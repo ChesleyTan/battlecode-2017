@@ -282,13 +282,13 @@ public class RobotUtils extends Globals {
           if (MathUtils.isNear(t1Edge.distanceTo(t2Edge), myType.bodyRadius * 2, 0.5)) {
             MapLocation between = new MapLocation((t1Edge.x + t2Edge.x) / 2,
                 (t1Edge.y + t2Edge.y) / 2);
-            System.out.println(between);
+            //System.out.println(between);
             rc.setIndicatorDot(between, 0, 255, 0);
             if (rc.canSenseAllOfCircle(between, myType.bodyRadius - 0.01f)
                 && !rc.isCircleOccupiedExceptByThisRobot(between, myType.bodyRadius - 0.01f)) {
-              System.out.println("Open space between");
+              //System.out.println("Open space between");
               if (canMove(between)) {
-                System.out.println("Can move between");
+                //System.out.println("Can move between");
                 if (between.y == here.y) {
                   mazeStartDir = WEST;
                   return true;
@@ -300,7 +300,7 @@ public class RobotUtils extends Globals {
                 }
               }
               else if (canMove(new MapLocation(here.x, between.y))) {
-                System.out.println("Can center");
+                //System.out.println("Can center");
                 MapLocation centered = new MapLocation(here.x, between.y);
                 if (here.equals(centered)) {
                   if (canMove(WEST)) {
@@ -341,6 +341,7 @@ public class RobotUtils extends Globals {
     Direction startDir = bugStartDirection;
     int attempts = 0;
     while (!canMove(startDir) && attempts < 18) {
+      /*
       System.out.println(startDir.getAngleDegrees());
       rc.setIndicatorLine(here.add(startDir), here.add(startDir, 2), 255, 70, 101);
       System.out.println(MathUtils.isNear(startDir, NORTH, 10));
@@ -351,6 +352,7 @@ public class RobotUtils extends Globals {
       System.out.println("can move east: " + canMove(EAST));
       System.out.println(MathUtils.isNear(startDir, WEST, 10));
       System.out.println("can move west: " + canMove(WEST));
+      */
       if (mazePathHelper(startDir)) {
         startDir = mazeStartDir;
         moveDist = mazeMoveDist;
@@ -359,14 +361,16 @@ public class RobotUtils extends Globals {
       startDir = startDir.rotateRightDegrees(rotationAmount);
       attempts ++;
     }
+    /*
     System.out.println("startdir:" + startDir.getAngleDegrees());
     System.out.println("canmove startDir:" + canMove(startDir, moveDist));
+    */
     if (!canMove(startDir, moveDist)) {
       attempts = 0;
       startDir = bugStartDirection;
       wallSideLeft = !wallSideLeft;
       while (!canMove(startDir) && attempts < 18) {
-        rc.setIndicatorLine(here.add(startDir), here.add(startDir, 2), 101, 70, 255);
+        //rc.setIndicatorLine(here.add(startDir), here.add(startDir, 2), 101, 70, 255);
         if (mazePathHelper(startDir)) {
           startDir = mazeStartDir;
           moveDist = mazeMoveDist;
