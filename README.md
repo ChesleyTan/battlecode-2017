@@ -1,3 +1,7 @@
+# MIT Battlecode AI competition
+This repository contains the code written by team SCB, a finalist in the 2017
+MIT Battlecode AI programming competition.
+
 Battlecode Project Scaffold
 ===========================
 
@@ -226,5 +230,3 @@ We recommend using the map editor to create maps. The map editor can be ran from
 Most contestants choose to write their players in Java, but we also support
 Scala (or a mix of Java and Scala) out of the box, with the standard install.
 =======
-# battleCode
-MIT battleCode AI competition
